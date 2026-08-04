@@ -34,9 +34,14 @@ on:
       voice:
         description: "Giọng đọc"
         required: true
-        default: nam_bac_news
+        default: nam_bac_noi_luc
         type: choice
-        options: [nam_bac_news, nu_viet_nam]
+        options:
+          - nam_bac_noi_luc
+          - nam_bac_truyen_cam
+          - nam_bac_nang_luong
+          - nam_bac_tu_nhien
+          - nu_viet_nam_ro_rang
 
 permissions:
   contents: read
@@ -67,6 +72,7 @@ jobs:
         id: voice
         run: |
           echo "name=${{ inputs.voice }}" >> "$GITHUB_OUTPUT"
+          echo "Đã chọn preset giọng: ${{ inputs.voice }}"
       - name: Tạo video
         run: |
           chmod +x make_video.sh
