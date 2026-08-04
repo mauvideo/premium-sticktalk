@@ -74,17 +74,28 @@ on:
           - trung_bình
           - nhiều
           - viral_tiktok
-      voice:
-        description: "Giọng đọc Edge TTS miễn phí"
+      vieneu_voice:
+        description: "Giọng VieNeu-TTS Premium"
         required: true
-        default: "Nam tiếng Việt — Tự nhiên"
+        default: "Mặc định — Trúc Ly"
         type: choice
         options:
-          - "Nam tiếng Việt — Tự nhiên"
-          - "Nam tiếng Việt — Nội lực"
-          - "Nam tiếng Việt — Phát thanh"
-          - "Nam tiếng Việt — Kể chuyện"
-          - "Nữ tiếng Việt — Tự nhiên"
+          - "Mặc định — Trúc Ly"
+          - "Bác sĩ Tuyên"
+          - "Nhập mã giọng khác"
+      custom_voice_id:
+        description: "Mã giọng VieNeu khác (chỉ điền khi chọn Nhập mã giọng khác)"
+        required: false
+        default: ""
+        type: string
+      voice_emotion:
+        description: "Cảm xúc giọng"
+        required: true
+        default: "Tự nhiên"
+        type: choice
+        options:
+          - "Tự nhiên"
+          - "Kể chuyện"
 
 permissions:
   contents: read
@@ -92,7 +103,7 @@ permissions:
 jobs:
   render:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
@@ -105,10 +116,21 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Cài FFmpeg và Chromium
+      - name: Cache model VieNeu và Hugging Face
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/huggingface
+            ~/.cache/vieneu
+            ~/.cache/torch
+          key: vieneu-${{ runner.os }}-py311-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            vieneu-${{ runner.os }}-py311-
+
+      - name: Cài FFmpeg, Chromium và eSpeak NG
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg chromium-browser || sudo apt-get install -y ffmpeg chromium
+          sudo apt-get install -y ffmpeg espeak-ng chromium-browser || sudo apt-get install -y ffmpeg espeak-ng chromium
 
       - name: Cài Python dependencies
         run: python -m pip install --upgrade pip && pip install -r requirements.txt
@@ -121,14 +143,11 @@ jobs:
         run: |
           echo "Ý tưởng: ${{ inputs.idea }}"
           echo "Thời lượng: ${{ inputs.duration }} giây"
-          echo "Giọng điệu: ${{ inputs.tone }}"
-          echo "Định dạng: ${{ inputs.content_format }}"
-          echo "Chế độ viết kịch bản: ${{ inputs.script_mode }}"
-          echo "Phong cách viết nội dung: ${{ inputs.writing_style }}"
           echo "Phong cách: ${{ inputs.style }}"
-          echo "Mức chuyển động: ${{ inputs.motion_level }}"
-          echo "Giọng đọc: ${{ inputs.voice }}"
-          echo "Nhà cung cấp giọng đọc: Microsoft Edge TTS miễn phí"
+          echo "Giọng VieNeu: ${{ inputs.vieneu_voice }}"
+          echo "Mã giọng tùy chỉnh: ${{ inputs.custom_voice_id }}"
+          echo "Cảm xúc giọng: ${{ inputs.voice_emotion }}"
+          echo "Hệ thống giọng đọc: VieNeu-TTS Premium"
 
       - name: Tạo video
         env:
@@ -140,15 +159,15 @@ jobs:
           VIDEO_WRITING_STYLE: ${{ inputs.writing_style }}
           VIDEO_STYLE: ${{ inputs.style }}
           VIDEO_MOTION_LEVEL: ${{ inputs.motion_level }}
-          VIDEO_VOICE: ${{ inputs.voice }}
-          TTS_PROVIDER: edge
-          TTS_VOICE: ${{ inputs.voice }}
+          VIENEU_VOICE: ${{ inputs.vieneu_voice }}
+          VIENEU_CUSTOM_VOICE_ID: ${{ inputs.custom_voice_id }}
+          VIENEU_EMOTION: ${{ inputs.voice_emotion }}
         run: |
           chmod +x make_video.sh
           ./make_video.sh
 
       - name: Kiểm tra video
-        run: test -s output/video.mp4 && test -s output/preview.png
+        run: test -s output/video.mp4 && test -s output/preview.png && test -s output/tts-info.json
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -160,6 +179,7 @@ jobs:
             output/script.txt
             output/story.json
             output/tts-info.json
+            assets/narration.wav
           if-no-files-found: error
           retention-days: 7
           compression-level: 0
