@@ -5,6 +5,7 @@ import {Stickman} from './engine/Stickman';
 import {TransitionEngine} from './engine/TransitionEngine';
 import {getStylePreset} from './engine/styles';
 import {Scene,Story} from './engine/types';
+import {PhacThaoScene,isSketchStyle} from './themes/phacThaoDienAnh';
 export type {Character,Scene,Story} from './engine/types';
 
 const Caption:React.FC<{scene:Scene;accent:string;foreground:string}>=({scene,accent,foreground})=>{const frame=useCurrentFrame(),{fps}=useVideoConfig(),cfg=scene.subtitle??{},animation=scene.subtitleAnimation??cfg.animation??'pop',progress=spring({frame,fps,config:{damping:14}}),words=scene.narration.split(/\s+/);let transform='',opacity=1;if(animation==='pop')transform=`scale(${.88+.12*progress})`;if(animation==='slide')transform=`translateY(${(1-progress)*70}px)`;if(animation==='fade')opacity=interpolate(frame,[0,fps*.4],[0,1],{extrapolateRight:'clamp'});
@@ -16,4 +17,4 @@ const SceneView:React.FC<{scene:Scene;style:string}>=({scene,style})=>{const pre
  <Caption scene={{...scene,subtitle:{...preset.subtitle,...scene.subtitle}}} accent={preset.colors.accent} foreground={preset.colors.foreground}/>
  </AbsoluteFill></CameraEngine></TransitionEngine>};
 
-export const StickTalkVideo:React.FC<Story>=(story)=>{let start=0;return <AbsoluteFill style={{background:'#050711'}}>{story.audio&&<Audio src={staticFile(story.audio)}/>} {story.scenes.map(scene=>{const from=Math.round(start*30),durationInFrames=Math.max(1,Math.round(scene.duration*30));start+=scene.duration;return <Sequence key={scene.id} from={from} durationInFrames={durationInFrames}><SceneView scene={scene} style={story.style}/></Sequence>})}</AbsoluteFill>};
+export const StickTalkVideo:React.FC<Story>=(story)=>{let start=0;return <AbsoluteFill style={{background:'#050711'}}>{story.audio&&<Audio src={staticFile(story.audio)}/>} {story.scenes.map(scene=>{const from=Math.round(start*30),durationInFrames=Math.max(1,Math.round(scene.duration*30));start+=scene.duration;return <Sequence key={scene.id} from={from} durationInFrames={durationInFrames}>{isSketchStyle(story.style)?<PhacThaoScene scene={scene} variant={story.style}/>:<SceneView scene={scene} style={story.style}/>}</Sequence>})}</AbsoluteFill>};

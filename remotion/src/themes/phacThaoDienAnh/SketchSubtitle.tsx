@@ -1,0 +1,2 @@
+import React from 'react';import {HighlightText} from './HighlightText';
+export const SketchSubtitle:React.FC<{text:string;keywords:string[];ink:string;accent:string}>=({text,keywords,ink,accent})=><div style={{position:'absolute',left:105,right:105,bottom:105,color:ink,fontFamily:'Arial,sans-serif',fontSize:43,lineHeight:1.3,textAlign:'center',fontWeight:600}}><HighlightText text={text} keywords={keywords} accent={accent}/></div>;

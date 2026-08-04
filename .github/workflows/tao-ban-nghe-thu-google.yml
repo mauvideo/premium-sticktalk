@@ -1,0 +1,47 @@
+name: Tạo bản nghe thử giọng Google
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  tao-ban-nghe-thu:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Kiểm tra và cấu hình Google Cloud
+        env:
+          GOOGLE_CLOUD_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CLOUD_CREDENTIALS_JSON }}
+        run: |
+          if [ -z "$GOOGLE_CLOUD_CREDENTIALS_JSON" ]; then
+            echo "Chưa cấu hình Google Cloud Text-to-Speech. Hãy thêm GitHub Secret GOOGLE_CLOUD_CREDENTIALS_JSON." >&2
+            exit 1
+          fi
+          printf '%s' "$GOOGLE_CLOUD_CREDENTIALS_JSON" > "$RUNNER_TEMP/google-cloud-credentials.json"
+          chmod 600 "$RUNNER_TEMP/google-cloud-credentials.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/google-cloud-credentials.json" >> "$GITHUB_ENV"
+      - name: Cài thư viện và tạo bản nghe thử
+        env:
+          TTS_PROVIDER: google
+        run: |
+          sudo apt-get update && sudo apt-get install -y ffmpeg
+          pip install -r requirements.txt
+          python scripts/tao_ban_nghe_thu_google.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data=json.loads(Path('output/tts-info.json').read_text())
+          assert data['nha_cung_cap']=='google', 'Nhà cung cấp thực tế không phải Google'
+          PY
+      - name: Tải lên bộ nghe thử
+        uses: actions/upload-artifact@v4
+        with:
+          name: ban-nghe-thu-giong-google
+          path: output/ban-nghe-thu-google/
+          if-no-files-found: error
+      - name: Xóa file thông tin xác thực tạm
+        if: always()
+        run: rm -f "$RUNNER_TEMP/google-cloud-credentials.json"
