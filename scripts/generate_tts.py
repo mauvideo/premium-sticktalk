@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tạo giọng đọc tiếng Việt bằng VieNeu-TTS với các giọng đặt sẵn."""
+"""Tạo giọng đọc tiếng Việt bằng VieNeu-TTS v3 Turbo (ONNX/CPU)."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ def clean_text(text: str) -> str:
     return re.sub(r"\s+([.!?,:;])", r"\1", text)
 
 
-def split_long_sentences(text: str, max_words: int = 34) -> str:
+def split_long_sentences(text: str, max_words: int = 32) -> str:
     output: list[str] = []
     for sentence in re.split(r"(?<=[.!?])\s+", text):
         words = sentence.split()
@@ -45,18 +45,31 @@ def load_story_text() -> str:
     return split_long_sentences(text)
 
 
-def normalize_voice_id(selected: str, custom_voice_id: str) -> str | None:
+def normalize_requested_voice(selected: str, custom_voice_id: str) -> str:
     value = selected.strip()
-    if value in {"", "default", "Mặc định — Trúc Ly"}:
-        return None
+    if value in {"", "default", "Mặc định — Trúc Ly", "Trúc Ly"}:
+        return "Trúc Ly"
     if value in {"Bác sĩ Tuyên", "bac_si_tuyen"}:
-        return "bac_si_tuyen"
+        return "Bác sĩ Tuyên"
     if value == "Nhập mã giọng khác":
         custom = custom_voice_id.strip()
         if not custom:
             raise ValueError("Bạn đã chọn nhập mã giọng khác nhưng chưa điền mã giọng VieNeu.")
         return custom
     return value
+
+
+def resolve_voice(available: list[tuple[str, str]], requested: str) -> tuple[str, str]:
+    """Trả về (nhãn giọng, mã giọng) từ danh sách thực tế của VieNeu."""
+    by_label = {label.casefold(): (label, voice_id) for label, voice_id in available}
+    by_id = {voice_id.casefold(): (label, voice_id) for label, voice_id in available}
+    key = requested.casefold()
+    if key in by_label:
+        return by_label[key]
+    if key in by_id:
+        return by_id[key]
+    choices = ", ".join(f"{label} ({voice_id})" for label, voice_id in available) or "không có"
+    raise RuntimeError(f"Giọng VieNeu '{requested}' không tồn tại. Các giọng hiện có: {choices}")
 
 
 def synthesize(voice_selection: str, custom_voice_id: str, emotion: str) -> None:
@@ -67,48 +80,44 @@ def synthesize(voice_selection: str, custom_voice_id: str, emotion: str) -> None
     wav_path.parent.mkdir(parents=True, exist_ok=True)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    emotion_code = {"Tự nhiên": "natural", "Kể chuyện": "storytelling", "natural": "natural", "storytelling": "storytelling"}.get(emotion)
-    if emotion_code is None:
+    style_code = {
+        "Tự nhiên": "tu_nhien",
+        "Kể chuyện": "ke_chuyen",
+        "tu_nhien": "tu_nhien",
+        "ke_chuyen": "ke_chuyen",
+    }.get(emotion)
+    if style_code is None:
         raise ValueError(f"Cảm xúc giọng không hợp lệ: {emotion}")
 
-    requested_voice_id = normalize_voice_id(voice_selection, custom_voice_id)
+    requested = normalize_requested_voice(voice_selection, custom_voice_id)
 
-    with Vieneu(mode="standard", emotion=emotion_code) as tts:
-        available = tts.list_preset_voices()
-        voice_map = {voice_id: description for description, voice_id in available}
+    # VieNeu 3.x mặc định dùng v3 Turbo. Ép backend ONNX để chạy CPU nhẹ,
+    # không dùng Standard/GGUF và không cần llama-cpp-python.
+    tts = Vieneu(backend="onnx")
+    available = list(tts.list_preset_voices())
+    label, voice_id = resolve_voice(available, requested)
 
-        if requested_voice_id is None:
-            voice_data = tts.get_preset_voice()
-            actual_voice_id = "default"
-            description = "Giọng mặc định VieNeu (Trúc Ly theo tài liệu chính thức)"
-        else:
-            if requested_voice_id not in voice_map:
-                ids = ", ".join(sorted(voice_map)) or "không có"
-                raise RuntimeError(
-                    f"Mã giọng VieNeu '{requested_voice_id}' không tồn tại. "
-                    f"Các mã hiện có: {ids}"
-                )
-            voice_data = tts.get_preset_voice(requested_voice_id)
-            actual_voice_id = requested_voice_id
-            description = voice_map[requested_voice_id]
+    print("========================================")
+    print("HỆ THỐNG GIỌNG ĐỌC: VieNeu-TTS")
+    print("ENGINE: v3 Turbo")
+    print("BACKEND: ONNX/CPU")
+    print(f"GIỌNG: {label}")
+    print(f"VOICE ID: {voice_id}")
+    print(f"PHONG CÁCH ĐỌC: {style_code}")
+    print("ĐẦU RA: WAV 48 kHz và MP3")
+    print("========================================")
 
-        print("========================================")
-        print("HỆ THỐNG GIỌNG ĐỌC: VieNeu-TTS")
-        print("CHẾ ĐỘ: Standard")
-        print(f"VOICE ID: {actual_voice_id}")
-        print(f"MÔ TẢ: {description}")
-        print(f"CẢM XÚC: {emotion_code}")
-        print("ĐẦU RA: WAV 24 kHz và MP3")
-        print("========================================")
-
-        audio = tts.infer(text=text, voice=voice_data)
-        tts.save(audio, str(wav_path))
+    audio = tts.infer(text, voice=label, style=style_code)
+    tts.save(audio, str(wav_path))
 
     if not wav_path.is_file() or wav_path.stat().st_size <= 0:
         raise RuntimeError("VieNeu không tạo được file WAV hợp lệ.")
 
     subprocess.run(
-        ["ffmpeg", "-y", "-i", str(wav_path), "-codec:a", "libmp3lame", "-b:a", "192k", str(mp3_path)],
+        [
+            "ffmpeg", "-y", "-i", str(wav_path),
+            "-codec:a", "libmp3lame", "-b:a", "192k", str(mp3_path),
+        ],
         check=True,
     )
     if not mp3_path.is_file() or mp3_path.stat().st_size <= 0:
@@ -117,28 +126,31 @@ def synthesize(voice_selection: str, custom_voice_id: str, emotion: str) -> None
     duration = MP3(mp3_path).info.length
     info = {
         "nha_cung_cap": "vieneu",
-        "che_do": "standard",
-        "voice_id": actual_voice_id,
-        "mo_ta_giong": description,
-        "cam_xuc": emotion_code,
-        "dinh_dang_goc": "WAV 24 kHz",
+        "engine": "v3_turbo",
+        "backend": "onnx_cpu",
+        "ten_giong": label,
+        "voice_id": voice_id,
+        "phong_cach_doc": style_code,
+        "dinh_dang_goc": "WAV 48 kHz",
         "dinh_dang_su_dung": "MP3 192 kbps",
         "thoi_luong_giay": round(duration, 3),
         "dung_luong_byte": mp3_path.stat().st_size,
     }
-    Path("output/tts-info.json").write_text(json.dumps(info, ensure_ascii=False, indent=2), encoding="utf-8")
+    Path("output/tts-info.json").write_text(
+        json.dumps(info, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
     print(f"Đã tạo giọng VieNeu: {duration:.2f} giây")
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Tạo giọng đọc bằng VieNeu-TTS")
-    parser.add_argument("--voice", default=os.getenv("VIENEU_VOICE", "default"))
+    parser = argparse.ArgumentParser(description="Tạo giọng đọc bằng VieNeu-TTS v3 Turbo")
+    parser.add_argument("--voice", default=os.getenv("VIENEU_VOICE", "Mặc định — Trúc Ly"))
     parser.add_argument("--custom-voice-id", default=os.getenv("VIENEU_CUSTOM_VOICE_ID", ""))
     parser.add_argument("--emotion", default=os.getenv("VIENEU_EMOTION", "Tự nhiên"))
     args = parser.parse_args()
     try:
         synthesize(args.voice, args.custom_voice_id, args.emotion)
-    except (ValueError, RuntimeError, subprocess.CalledProcessError) as error:
+    except (ValueError, RuntimeError, ImportError, subprocess.CalledProcessError) as error:
         parser.error(str(error))
 
 
