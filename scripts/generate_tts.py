@@ -8,6 +8,7 @@ import json
 import os
 import re
 import subprocess
+import unicodedata
 from pathlib import Path
 
 from mutagen.mp3 import MP3
@@ -64,26 +65,30 @@ def normalize_requested_voice(selected: str, custom_voice_id: str) -> str:
     return value
 
 
-def resolve_voice(available: list[tuple[str, str]], requested: str) -> tuple[str, str]:
-    """Trả về (nhãn giọng, mã giọng) từ danh sách thực tế của VieNeu."""
-    by_label = {label.casefold(): (label, voice_id) for label, voice_id in available}
-    by_id = {voice_id.casefold(): (label, voice_id) for label, voice_id in available}
-    key = requested.casefold()
-    if key in by_label:
-        return by_label[key]
-    if key in by_id:
-        return by_id[key]
-    choices = ", ".join(f"{label} ({voice_id})" for label, voice_id in available) or "không có"
-    raise RuntimeError(f"Giọng VieNeu '{requested}' không tồn tại. Các giọng hiện có: {choices}")
+def _key(value: object) -> str:
+    text = unicodedata.normalize("NFKC", str(value))
+    return re.sub(r"\s+", " ", text).strip().casefold()
+
+
+def describe_voice(available: list[tuple[object, object]], requested: str) -> tuple[str, str]:
+    """Tìm mô tả để ghi log, nhưng không chặn API VieNeu nếu cấu trúc tuple thay đổi."""
+    wanted = _key(requested)
+    for first, second in available:
+        first_text, second_text = str(first).strip(), str(second).strip()
+        if wanted in {_key(first_text), _key(second_text)}:
+            # API hiện trả mô tả ở phần tử đầu, tên giọng ở phần tử sau.
+            if requested.casefold() == second_text.casefold():
+                return second_text, first_text
+            return requested, first_text if len(first_text) >= len(second_text) else second_text
+    return requested, "Giọng dựng sẵn VieNeu"
 
 
 def synthesize(voice_selection: str, custom_voice_id: str, emotion: str) -> None:
     text = load_story_text()
     wav_path = Path("assets/narration.wav")
     mp3_path = Path("assets/narration.mp3")
-    output_dir = Path("output")
     wav_path.parent.mkdir(parents=True, exist_ok=True)
-    output_dir.mkdir(parents=True, exist_ok=True)
+    Path("output").mkdir(parents=True, exist_ok=True)
 
     style_code = {
         "Tự nhiên": "tu_nhien",
@@ -99,29 +104,34 @@ def synthesize(voice_selection: str, custom_voice_id: str, emotion: str) -> None
     requested = normalize_requested_voice(voice_selection, custom_voice_id)
     tts = Vieneu(backend="onnx")
     available = list(tts.list_preset_voices())
-    label, voice_id = resolve_voice(available, requested)
+    voice_name, description = describe_voice(available, requested)
 
     print("========================================")
     print("HỆ THỐNG GIỌNG ĐỌC: VieNeu-TTS")
     print("ENGINE: v3 Turbo")
     print("BACKEND: ONNX/CPU")
-    print(f"GIỌNG: {label}")
-    print(f"VOICE ID: {voice_id}")
+    print(f"GIỌNG YÊU CẦU: {requested}")
+    print(f"MÔ TẢ: {description}")
     print(f"PHONG CÁCH ĐỌC: {style_code}")
     print("ĐẦU RA: WAV 48 kHz và MP3")
     print("========================================")
 
-    audio = tts.infer(text, voice=label, style=style_code)
-    tts.save(audio, str(wav_path))
+    # VieNeu chính thức nhận trực tiếp tên giọng dựng sẵn, ví dụ voice="Trúc Ly".
+    # Không tự kiểm tra cứng cấu trúc list_preset_voices() để tránh báo sai giọng tồn tại.
+    try:
+        audio = tts.infer(text, voice=requested, style=style_code)
+    except Exception as error:
+        choices = ", ".join(str(item) for item in available) or "không có"
+        raise RuntimeError(
+            f"VieNeu không tạo được giọng '{requested}': {error}. Giọng hiện có: {choices}"
+        ) from error
 
+    tts.save(audio, str(wav_path))
     if not wav_path.is_file() or wav_path.stat().st_size <= 0:
         raise RuntimeError("VieNeu không tạo được file WAV hợp lệ.")
 
     subprocess.run(
-        [
-            "ffmpeg", "-y", "-i", str(wav_path),
-            "-codec:a", "libmp3lame", "-b:a", "192k", str(mp3_path),
-        ],
+        ["ffmpeg", "-y", "-i", str(wav_path), "-codec:a", "libmp3lame", "-b:a", "192k", str(mp3_path)],
         check=True,
     )
     if not mp3_path.is_file() or mp3_path.stat().st_size <= 0:
@@ -132,8 +142,9 @@ def synthesize(voice_selection: str, custom_voice_id: str, emotion: str) -> None
         "nha_cung_cap": "vieneu",
         "engine": "v3_turbo",
         "backend": "onnx_cpu",
-        "ten_giong": label,
-        "voice_id": voice_id,
+        "ten_giong": voice_name,
+        "voice_requested": requested,
+        "mo_ta_giong": description,
         "phong_cach_doc": style_code,
         "dinh_dang_goc": "WAV 48 kHz",
         "dinh_dang_su_dung": "MP3 192 kbps",
