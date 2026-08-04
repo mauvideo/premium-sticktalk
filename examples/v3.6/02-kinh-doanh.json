@@ -1,0 +1,1133 @@
+{
+  "phien_ban": "3.6",
+  "tieu_de": "5 sai lầm khiến cửa hàng nhỏ khó phát triển.",
+  "loai_noi_dung": "danh sách",
+  "cau_truc_kich_ban": "Mở đầu gây chú ý → Giới thiệu danh sách → Các mục thực hành → Tóm tắt → Lời kêu gọi",
+  "linh_vuc": "kinh doanh",
+  "phong_cach_viet": "thực tế, ngắn gọn",
+  "thoi_luong": 45,
+  "phong_cach": "dark_neon",
+  "giong_doc": "Nam miền Bắc Nội lực Plus",
+  "tom_tat": "Video danh sách về 5 sai lầm khiến cửa hàng nhỏ khó phát triển., được đạo diễn theo giọng sâu sắc.",
+  "thong_diep_chinh": "Hiểu và hành động phù hợp với 5 sai lầm khiến cửa hàng nhỏ khó phát triển..",
+  "canh": [
+    {
+      "id": 1,
+      "loai_canh": "mở đầu",
+      "vai_tro": "Mở đầu gây chú ý",
+      "thoi_luong": 6.64,
+      "loi_dan": "Cửa hàng nhỏ thường hụt hơi từ năm sai lầm rất cụ thể.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Mở đầu gây chú ý",
+      "tu_khoa": [
+        "khiến",
+        "hàng",
+        "phát"
+      ],
+      "boi_canh": "đường phố",
+      "bo_cuc": "nhân vật và số liệu lớn",
+      "camera": {
+        "type": "zoom-out",
+        "speed": 1.08,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 6.64
+      },
+      "chuyen_canh": {
+        "type": "whip",
+        "strength": 0.75,
+        "duration": 0.59
+      },
+      "hoat_anh_phu_de": "word",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "gật đầu",
+          "cam_xuc": "bất ngờ",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "gật đầu",
+          "gesture": "idle",
+          "emotion": "excited"
+        }
+      ],
+      "type": "intro",
+      "duration": 6.64,
+      "narration": "Cửa hàng nhỏ thường hụt hơi từ năm sai lầm rất cụ thể.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "whip",
+        "strength": 0.75,
+        "duration": 0.66
+      },
+      "emotion": "excited",
+      "gesture": "idle",
+      "zoom": 0.14,
+      "subtitleAnimation": "word",
+      "keywords": [
+        "khiến",
+        "hàng",
+        "phát"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "gật đầu",
+          "cam_xuc": "bất ngờ",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "gật đầu",
+          "gesture": "idle",
+          "emotion": "excited"
+        }
+      ],
+      "seed": 572726,
+      "layout": "nhân vật và số liệu lớn"
+    },
+    {
+      "id": 2,
+      "loai_canh": "danh sách",
+      "vai_tro": "Giới thiệu danh sách",
+      "thoi_luong": 6.27,
+      "loi_dan": "Sai lầm một: không biết ai là khách chính. Hàng hóa vì thế mua theo cảm tính.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Giới thiệu danh sách",
+      "tu_khoa": [
+        "khiến",
+        "hàng",
+        "phát"
+      ],
+      "boi_canh": "sân khấu",
+      "bo_cuc": "một nhân vật ở giữa",
+      "camera": {
+        "type": "dolly",
+        "speed": 0.94,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 6.27
+      },
+      "chuyen_canh": {
+        "type": "fade",
+        "strength": 0.75,
+        "duration": 0.67
+      },
+      "hoat_anh_phu_de": "fade",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "giơ tay",
+          "cam_xuc": "bối rối",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "giơ tay",
+          "gesture": "hands-up",
+          "emotion": "confused"
+        }
+      ],
+      "type": "explanation",
+      "duration": 6.27,
+      "narration": "Sai lầm một: không biết ai là khách chính. Hàng hóa vì thế mua theo cảm tính.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "fade",
+        "strength": 0.75,
+        "duration": 0.68
+      },
+      "emotion": "confused",
+      "gesture": "hands-up",
+      "zoom": 0.09,
+      "subtitleAnimation": "fade",
+      "keywords": [
+        "khiến",
+        "hàng",
+        "phát"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "giơ tay",
+          "cam_xuc": "bối rối",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "giơ tay",
+          "gesture": "hands-up",
+          "emotion": "confused"
+        }
+      ],
+      "seed": 749770,
+      "layout": "một nhân vật ở giữa"
+    },
+    {
+      "id": 3,
+      "loai_canh": "danh sách",
+      "vai_tro": "Giới thiệu danh sách",
+      "thoi_luong": 6.27,
+      "loi_dan": "Sai lầm hai: nhập quá nhiều món bán chậm. Tiền bị giữ trên kệ.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Giới thiệu danh sách",
+      "tu_khoa": [
+        "khiến",
+        "hàng",
+        "phát"
+      ],
+      "boi_canh": "đường phố",
+      "bo_cuc": "nhân vật và số liệu lớn",
+      "camera": {
+        "type": "orbit",
+        "speed": 0.89,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 6.27
+      },
+      "chuyen_canh": {
+        "type": "flash",
+        "strength": 0.75,
+        "duration": 0.55
+      },
+      "hoat_anh_phu_de": "karaoke",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "vui mừng",
+          "cam_xuc": "tự tin",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "vui mừng",
+          "gesture": "wave",
+          "emotion": "smile"
+        }
+      ],
+      "type": "explanation",
+      "duration": 6.27,
+      "narration": "Sai lầm hai: nhập quá nhiều món bán chậm. Tiền bị giữ trên kệ.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "flash",
+        "strength": 0.75,
+        "duration": 0.37
+      },
+      "emotion": "smile",
+      "gesture": "wave",
+      "zoom": 0.12,
+      "subtitleAnimation": "karaoke",
+      "keywords": [
+        "khiến",
+        "hàng",
+        "phát"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "vui mừng",
+          "cam_xuc": "tự tin",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "vui mừng",
+          "gesture": "wave",
+          "emotion": "smile"
+        }
+      ],
+      "seed": 894182,
+      "layout": "nhân vật và số liệu lớn"
+    },
+    {
+      "id": 4,
+      "loai_canh": "danh sách",
+      "vai_tro": "Các mục thực hành",
+      "thoi_luong": 6.27,
+      "loi_dan": "Sai lầm ba: giá bán không tính đủ chi phí. Càng đông khách, lợi nhuận càng mỏng.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Các mục thực hành",
+      "tu_khoa": [
+        "khiến",
+        "hàng",
+        "phát"
+      ],
+      "boi_canh": "sân khấu",
+      "bo_cuc": "một nhân vật ở giữa",
+      "camera": {
+        "type": "push",
+        "speed": 1.11,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 6.27
+      },
+      "chuyen_canh": {
+        "type": "slide",
+        "strength": 0.75,
+        "duration": 0.68
+      },
+      "hoat_anh_phu_de": "slide",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "dùng laptop",
+          "cam_xuc": "nghiêm túc",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "dùng laptop",
+          "gesture": "use-laptop",
+          "emotion": "serious"
+        }
+      ],
+      "type": "explanation",
+      "duration": 6.27,
+      "narration": "Sai lầm ba: giá bán không tính đủ chi phí. Càng đông khách, lợi nhuận càng mỏng.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "slide",
+        "strength": 0.75,
+        "duration": 0.39
+      },
+      "emotion": "serious",
+      "gesture": "use-laptop",
+      "zoom": 0.1,
+      "subtitleAnimation": "slide",
+      "keywords": [
+        "khiến",
+        "hàng",
+        "phát"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "dùng laptop",
+          "cam_xuc": "nghiêm túc",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "dùng laptop",
+          "gesture": "use-laptop",
+          "emotion": "serious"
+        }
+      ],
+      "seed": 211930,
+      "layout": "một nhân vật ở giữa"
+    },
+    {
+      "id": 5,
+      "loai_canh": "danh sách",
+      "vai_tro": "Tóm tắt",
+      "thoi_luong": 6.27,
+      "loi_dan": "Sai lầm bốn: trải nghiệm thiếu nhất quán. Khách tốt không có lý do quay lại.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Tóm tắt",
+      "tu_khoa": [
+        "khiến",
+        "hàng",
+        "phát"
+      ],
+      "boi_canh": "đường phố",
+      "bo_cuc": "nhân vật và số liệu lớn",
+      "camera": {
+        "type": "pull",
+        "speed": 1.12,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 6.27
+      },
+      "chuyen_canh": {
+        "type": "camera-cut",
+        "strength": 0.75,
+        "duration": 0.34
+      },
+      "hoat_anh_phu_de": "pop",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "đi bộ",
+          "cam_xuc": "thất vọng",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "đi bộ",
+          "gesture": "walk",
+          "emotion": "sad"
+        }
+      ],
+      "type": "explanation",
+      "duration": 6.27,
+      "narration": "Sai lầm bốn: trải nghiệm thiếu nhất quán. Khách tốt không có lý do quay lại.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "camera-cut",
+        "strength": 0.75,
+        "duration": 0.66
+      },
+      "emotion": "sad",
+      "gesture": "walk",
+      "zoom": 0.09,
+      "subtitleAnimation": "pop",
+      "keywords": [
+        "khiến",
+        "hàng",
+        "phát"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "đi bộ",
+          "cam_xuc": "thất vọng",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "đi bộ",
+          "gesture": "walk",
+          "emotion": "sad"
+        }
+      ],
+      "seed": 489531,
+      "layout": "nhân vật và số liệu lớn"
+    },
+    {
+      "id": 6,
+      "loai_canh": "danh sách",
+      "vai_tro": "Tóm tắt",
+      "thoi_luong": 6.27,
+      "loi_dan": "Sai lầm năm: chủ ôm mọi việc. Không ai đủ quyền xử lý khi chủ vắng mặt.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Tóm tắt",
+      "tu_khoa": [
+        "khiến",
+        "hàng",
+        "phát"
+      ],
+      "boi_canh": "sân khấu",
+      "bo_cuc": "một nhân vật ở giữa",
+      "camera": {
+        "type": "handheld",
+        "speed": 1.07,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 6.27
+      },
+      "chuyen_canh": {
+        "type": "blur",
+        "strength": 0.75,
+        "duration": 0.69
+      },
+      "hoat_anh_phu_de": "word",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "dùng điện thoại",
+          "cam_xuc": "bất ngờ",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "dùng điện thoại",
+          "gesture": "use-phone",
+          "emotion": "excited"
+        }
+      ],
+      "type": "explanation",
+      "duration": 6.27,
+      "narration": "Sai lầm năm: chủ ôm mọi việc. Không ai đủ quyền xử lý khi chủ vắng mặt.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "blur",
+        "strength": 0.75,
+        "duration": 0.39
+      },
+      "emotion": "excited",
+      "gesture": "use-phone",
+      "zoom": 0.08,
+      "subtitleAnimation": "word",
+      "keywords": [
+        "khiến",
+        "hàng",
+        "phát"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "dùng điện thoại",
+          "cam_xuc": "bất ngờ",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "dùng điện thoại",
+          "gesture": "use-phone",
+          "emotion": "excited"
+        }
+      ],
+      "seed": 599565,
+      "layout": "một nhân vật ở giữa"
+    },
+    {
+      "id": 7,
+      "loai_canh": "kết",
+      "vai_tro": "Lời kêu gọi",
+      "thoi_luong": 7.01,
+      "loi_dan": "Sửa đúng điểm nghẽn nhỏ, cửa hàng mới có chỗ để lớn. Chọn một điểm nghẽn và kiểm tra ngay hôm nay.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Lời kêu gọi",
+      "tu_khoa": [
+        "khiến",
+        "hàng",
+        "phát"
+      ],
+      "boi_canh": "đường phố",
+      "bo_cuc": "nhân vật và số liệu lớn",
+      "camera": {
+        "type": "pan-right",
+        "speed": 1.01,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 7.01
+      },
+      "chuyen_canh": {
+        "type": "scale",
+        "strength": 0.75,
+        "duration": 0.33
+      },
+      "hoat_anh_phu_de": "fade",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "chỉ tay",
+          "cam_xuc": "bối rối",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "chỉ tay",
+          "gesture": "point-right",
+          "emotion": "confused"
+        }
+      ],
+      "type": "outro",
+      "duration": 7.01,
+      "narration": "Sửa đúng điểm nghẽn nhỏ, cửa hàng mới có chỗ để lớn. Chọn một điểm nghẽn và kiểm tra ngay hôm nay.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "scale",
+        "strength": 0.75,
+        "duration": 0.7
+      },
+      "emotion": "confused",
+      "gesture": "point-right",
+      "zoom": 0.13,
+      "subtitleAnimation": "fade",
+      "keywords": [
+        "khiến",
+        "hàng",
+        "phát"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "chỉ tay",
+          "cam_xuc": "bối rối",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "chỉ tay",
+          "gesture": "point-right",
+          "emotion": "confused"
+        }
+      ],
+      "seed": 145112,
+      "layout": "nhân vật và số liệu lớn"
+    }
+  ],
+  "version": 3,
+  "title": "5 sai lầm khiến cửa hàng nhỏ khó phát triển.",
+  "hook": "Cửa hàng nhỏ thường hụt hơi từ năm sai lầm rất cụ thể.",
+  "cao_trao": "Sai lầm năm: chủ ôm mọi việc. Không ai đủ quyền xử lý khi chủ vắng mặt.",
+  "ket_luan": "Sửa đúng điểm nghẽn nhỏ, cửa hàng mới có chỗ để lớn.",
+  "message": "Hiểu rõ 5 sai lầm khiến cửa hàng nhỏ khó phát triển. trước khi hành động.",
+  "cta": "Sửa đúng điểm nghẽn nhỏ, cửa hàng mới có chỗ để lớn. Chọn một điểm nghẽn và kiểm tra ngay hôm nay.",
+  "duration": 45,
+  "style": "dark_neon",
+  "motionLevel": "medium",
+  "voice": "Nam miền Bắc Nội lực Plus",
+  "audio": "assets/narration.mp3",
+  "scenes": [
+    {
+      "id": 1,
+      "loai_canh": "mở đầu",
+      "vai_tro": "Mở đầu gây chú ý",
+      "thoi_luong": 6.64,
+      "loi_dan": "Cửa hàng nhỏ thường hụt hơi từ năm sai lầm rất cụ thể.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Mở đầu gây chú ý",
+      "tu_khoa": [
+        "khiến",
+        "hàng",
+        "phát"
+      ],
+      "boi_canh": "đường phố",
+      "bo_cuc": "nhân vật và số liệu lớn",
+      "camera": {
+        "type": "zoom-out",
+        "speed": 1.08,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 6.64
+      },
+      "chuyen_canh": {
+        "type": "whip",
+        "strength": 0.75,
+        "duration": 0.59
+      },
+      "hoat_anh_phu_de": "word",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "gật đầu",
+          "cam_xuc": "bất ngờ",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "gật đầu",
+          "gesture": "idle",
+          "emotion": "excited"
+        }
+      ],
+      "type": "intro",
+      "duration": 6.64,
+      "narration": "Cửa hàng nhỏ thường hụt hơi từ năm sai lầm rất cụ thể.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "whip",
+        "strength": 0.75,
+        "duration": 0.66
+      },
+      "emotion": "excited",
+      "gesture": "idle",
+      "zoom": 0.14,
+      "subtitleAnimation": "word",
+      "keywords": [
+        "khiến",
+        "hàng",
+        "phát"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "gật đầu",
+          "cam_xuc": "bất ngờ",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "gật đầu",
+          "gesture": "idle",
+          "emotion": "excited"
+        }
+      ],
+      "seed": 572726,
+      "layout": "nhân vật và số liệu lớn"
+    },
+    {
+      "id": 2,
+      "loai_canh": "danh sách",
+      "vai_tro": "Giới thiệu danh sách",
+      "thoi_luong": 6.27,
+      "loi_dan": "Sai lầm một: không biết ai là khách chính. Hàng hóa vì thế mua theo cảm tính.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Giới thiệu danh sách",
+      "tu_khoa": [
+        "khiến",
+        "hàng",
+        "phát"
+      ],
+      "boi_canh": "sân khấu",
+      "bo_cuc": "một nhân vật ở giữa",
+      "camera": {
+        "type": "dolly",
+        "speed": 0.94,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 6.27
+      },
+      "chuyen_canh": {
+        "type": "fade",
+        "strength": 0.75,
+        "duration": 0.67
+      },
+      "hoat_anh_phu_de": "fade",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "giơ tay",
+          "cam_xuc": "bối rối",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "giơ tay",
+          "gesture": "hands-up",
+          "emotion": "confused"
+        }
+      ],
+      "type": "explanation",
+      "duration": 6.27,
+      "narration": "Sai lầm một: không biết ai là khách chính. Hàng hóa vì thế mua theo cảm tính.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "fade",
+        "strength": 0.75,
+        "duration": 0.68
+      },
+      "emotion": "confused",
+      "gesture": "hands-up",
+      "zoom": 0.09,
+      "subtitleAnimation": "fade",
+      "keywords": [
+        "khiến",
+        "hàng",
+        "phát"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "giơ tay",
+          "cam_xuc": "bối rối",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "giơ tay",
+          "gesture": "hands-up",
+          "emotion": "confused"
+        }
+      ],
+      "seed": 749770,
+      "layout": "một nhân vật ở giữa"
+    },
+    {
+      "id": 3,
+      "loai_canh": "danh sách",
+      "vai_tro": "Giới thiệu danh sách",
+      "thoi_luong": 6.27,
+      "loi_dan": "Sai lầm hai: nhập quá nhiều món bán chậm. Tiền bị giữ trên kệ.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Giới thiệu danh sách",
+      "tu_khoa": [
+        "khiến",
+        "hàng",
+        "phát"
+      ],
+      "boi_canh": "đường phố",
+      "bo_cuc": "nhân vật và số liệu lớn",
+      "camera": {
+        "type": "orbit",
+        "speed": 0.89,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 6.27
+      },
+      "chuyen_canh": {
+        "type": "flash",
+        "strength": 0.75,
+        "duration": 0.55
+      },
+      "hoat_anh_phu_de": "karaoke",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "vui mừng",
+          "cam_xuc": "tự tin",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "vui mừng",
+          "gesture": "wave",
+          "emotion": "smile"
+        }
+      ],
+      "type": "explanation",
+      "duration": 6.27,
+      "narration": "Sai lầm hai: nhập quá nhiều món bán chậm. Tiền bị giữ trên kệ.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "flash",
+        "strength": 0.75,
+        "duration": 0.37
+      },
+      "emotion": "smile",
+      "gesture": "wave",
+      "zoom": 0.12,
+      "subtitleAnimation": "karaoke",
+      "keywords": [
+        "khiến",
+        "hàng",
+        "phát"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "vui mừng",
+          "cam_xuc": "tự tin",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "vui mừng",
+          "gesture": "wave",
+          "emotion": "smile"
+        }
+      ],
+      "seed": 894182,
+      "layout": "nhân vật và số liệu lớn"
+    },
+    {
+      "id": 4,
+      "loai_canh": "danh sách",
+      "vai_tro": "Các mục thực hành",
+      "thoi_luong": 6.27,
+      "loi_dan": "Sai lầm ba: giá bán không tính đủ chi phí. Càng đông khách, lợi nhuận càng mỏng.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Các mục thực hành",
+      "tu_khoa": [
+        "khiến",
+        "hàng",
+        "phát"
+      ],
+      "boi_canh": "sân khấu",
+      "bo_cuc": "một nhân vật ở giữa",
+      "camera": {
+        "type": "push",
+        "speed": 1.11,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 6.27
+      },
+      "chuyen_canh": {
+        "type": "slide",
+        "strength": 0.75,
+        "duration": 0.68
+      },
+      "hoat_anh_phu_de": "slide",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "dùng laptop",
+          "cam_xuc": "nghiêm túc",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "dùng laptop",
+          "gesture": "use-laptop",
+          "emotion": "serious"
+        }
+      ],
+      "type": "explanation",
+      "duration": 6.27,
+      "narration": "Sai lầm ba: giá bán không tính đủ chi phí. Càng đông khách, lợi nhuận càng mỏng.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "slide",
+        "strength": 0.75,
+        "duration": 0.39
+      },
+      "emotion": "serious",
+      "gesture": "use-laptop",
+      "zoom": 0.1,
+      "subtitleAnimation": "slide",
+      "keywords": [
+        "khiến",
+        "hàng",
+        "phát"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "dùng laptop",
+          "cam_xuc": "nghiêm túc",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "dùng laptop",
+          "gesture": "use-laptop",
+          "emotion": "serious"
+        }
+      ],
+      "seed": 211930,
+      "layout": "một nhân vật ở giữa"
+    },
+    {
+      "id": 5,
+      "loai_canh": "danh sách",
+      "vai_tro": "Tóm tắt",
+      "thoi_luong": 6.27,
+      "loi_dan": "Sai lầm bốn: trải nghiệm thiếu nhất quán. Khách tốt không có lý do quay lại.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Tóm tắt",
+      "tu_khoa": [
+        "khiến",
+        "hàng",
+        "phát"
+      ],
+      "boi_canh": "đường phố",
+      "bo_cuc": "nhân vật và số liệu lớn",
+      "camera": {
+        "type": "pull",
+        "speed": 1.12,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 6.27
+      },
+      "chuyen_canh": {
+        "type": "camera-cut",
+        "strength": 0.75,
+        "duration": 0.34
+      },
+      "hoat_anh_phu_de": "pop",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "đi bộ",
+          "cam_xuc": "thất vọng",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "đi bộ",
+          "gesture": "walk",
+          "emotion": "sad"
+        }
+      ],
+      "type": "explanation",
+      "duration": 6.27,
+      "narration": "Sai lầm bốn: trải nghiệm thiếu nhất quán. Khách tốt không có lý do quay lại.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "camera-cut",
+        "strength": 0.75,
+        "duration": 0.66
+      },
+      "emotion": "sad",
+      "gesture": "walk",
+      "zoom": 0.09,
+      "subtitleAnimation": "pop",
+      "keywords": [
+        "khiến",
+        "hàng",
+        "phát"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "đi bộ",
+          "cam_xuc": "thất vọng",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "đi bộ",
+          "gesture": "walk",
+          "emotion": "sad"
+        }
+      ],
+      "seed": 489531,
+      "layout": "nhân vật và số liệu lớn"
+    },
+    {
+      "id": 6,
+      "loai_canh": "danh sách",
+      "vai_tro": "Tóm tắt",
+      "thoi_luong": 6.27,
+      "loi_dan": "Sai lầm năm: chủ ôm mọi việc. Không ai đủ quyền xử lý khi chủ vắng mặt.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Tóm tắt",
+      "tu_khoa": [
+        "khiến",
+        "hàng",
+        "phát"
+      ],
+      "boi_canh": "sân khấu",
+      "bo_cuc": "một nhân vật ở giữa",
+      "camera": {
+        "type": "handheld",
+        "speed": 1.07,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 6.27
+      },
+      "chuyen_canh": {
+        "type": "blur",
+        "strength": 0.75,
+        "duration": 0.69
+      },
+      "hoat_anh_phu_de": "word",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "dùng điện thoại",
+          "cam_xuc": "bất ngờ",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "dùng điện thoại",
+          "gesture": "use-phone",
+          "emotion": "excited"
+        }
+      ],
+      "type": "explanation",
+      "duration": 6.27,
+      "narration": "Sai lầm năm: chủ ôm mọi việc. Không ai đủ quyền xử lý khi chủ vắng mặt.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "blur",
+        "strength": 0.75,
+        "duration": 0.39
+      },
+      "emotion": "excited",
+      "gesture": "use-phone",
+      "zoom": 0.08,
+      "subtitleAnimation": "word",
+      "keywords": [
+        "khiến",
+        "hàng",
+        "phát"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "dùng điện thoại",
+          "cam_xuc": "bất ngờ",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "dùng điện thoại",
+          "gesture": "use-phone",
+          "emotion": "excited"
+        }
+      ],
+      "seed": 599565,
+      "layout": "một nhân vật ở giữa"
+    },
+    {
+      "id": 7,
+      "loai_canh": "kết",
+      "vai_tro": "Lời kêu gọi",
+      "thoi_luong": 7.01,
+      "loi_dan": "Sửa đúng điểm nghẽn nhỏ, cửa hàng mới có chỗ để lớn. Chọn một điểm nghẽn và kiểm tra ngay hôm nay.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Lời kêu gọi",
+      "tu_khoa": [
+        "khiến",
+        "hàng",
+        "phát"
+      ],
+      "boi_canh": "đường phố",
+      "bo_cuc": "nhân vật và số liệu lớn",
+      "camera": {
+        "type": "pan-right",
+        "speed": 1.01,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 7.01
+      },
+      "chuyen_canh": {
+        "type": "scale",
+        "strength": 0.75,
+        "duration": 0.33
+      },
+      "hoat_anh_phu_de": "fade",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "chỉ tay",
+          "cam_xuc": "bối rối",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "chỉ tay",
+          "gesture": "point-right",
+          "emotion": "confused"
+        }
+      ],
+      "type": "outro",
+      "duration": 7.01,
+      "narration": "Sửa đúng điểm nghẽn nhỏ, cửa hàng mới có chỗ để lớn. Chọn một điểm nghẽn và kiểm tra ngay hôm nay.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "scale",
+        "strength": 0.75,
+        "duration": 0.7
+      },
+      "emotion": "confused",
+      "gesture": "point-right",
+      "zoom": 0.13,
+      "subtitleAnimation": "fade",
+      "keywords": [
+        "khiến",
+        "hàng",
+        "phát"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "chỉ tay",
+          "cam_xuc": "bối rối",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "chỉ tay",
+          "gesture": "point-right",
+          "emotion": "confused"
+        }
+      ],
+      "seed": 145112,
+      "layout": "nhân vật và số liệu lớn"
+    }
+  ],
+  "chat_luong_kich_ban": {
+    "tong_diem": 92,
+    "diem_hook": 20,
+    "diem_cu_the": 15,
+    "diem_tu_nhien": 15,
+    "diem_cau_truc": 15,
+    "diem_cao_trao": 10,
+    "diem_da_dang_cau": 2,
+    "diem_ket_thuc": 5,
+    "diem_khong_van_mau": 10,
+    "canh_bao": []
+  }
+}

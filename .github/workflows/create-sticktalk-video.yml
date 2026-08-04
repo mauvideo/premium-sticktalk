@@ -31,6 +31,19 @@ on:
           - "Kể chuyện"
           - "Danh sách"
           - "Phân tích"
+      writing_style:
+        description: "Phong cách viết nội dung"
+        required: true
+        default: "Tự động theo chủ đề"
+        type: choice
+        options:
+          - "Tự động theo chủ đề"
+          - "Ngắn gọn TikTok"
+          - "Kể chuyện cảm xúc"
+          - "Thực tế kinh doanh"
+          - "Giải thích dễ hiểu"
+          - "Đối thoại tự nhiên"
+          - "Tin tức rõ ràng"
       tone:
         description: "Giọng điệu"
         required: true
@@ -105,6 +118,7 @@ jobs:
           echo "Giọng điệu: ${{ inputs.tone }}"
           echo "Định dạng: ${{ inputs.content_format }}"
           echo "Chế độ viết kịch bản: ${{ inputs.script_mode }}"
+          echo "Phong cách viết nội dung: ${{ inputs.writing_style }}"
           echo "Phong cách: ${{ inputs.style }}"
           echo "Mức chuyển động: ${{ inputs.motion_level }}"
           echo "Giọng đọc: ${{ inputs.voice }}"
@@ -116,6 +130,7 @@ jobs:
           VIDEO_TONE: ${{ inputs.tone }}
           VIDEO_CONTENT_FORMAT: ${{ inputs.content_format }}
           VIDEO_SCRIPT_MODE: ${{ inputs.script_mode }}
+          VIDEO_WRITING_STYLE: ${{ inputs.writing_style }}
           VIDEO_STYLE: ${{ inputs.style }}
           VIDEO_MOTION_LEVEL: ${{ inputs.motion_level }}
           VIDEO_VOICE: ${{ inputs.voice }}

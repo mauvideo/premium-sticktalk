@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""AI Story Director V3.5: phân loại, viết và đạo diễn video người que.
+"""AI Story Director V3.6: phân loại và đạo diễn video người que.
 
 Mặc định module chạy hoàn toàn cục bộ. Giao diện ``NhaCungCapAI`` là điểm
 mở rộng cho OpenAI/Gemini; khóa và lời gọi mạng luôn thuộc ứng dụng tích hợp,
@@ -16,6 +16,13 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
+
+try:
+    from .script_writer import NhaCungCapVietKichBan, tao_ban_thao, viet_lai_tu_nhien
+    from .cham_diem_kich_ban import cham_diem
+except ImportError:
+    from script_writer import NhaCungCapVietKichBan, tao_ban_thao, viet_lai_tu_nhien
+    from cham_diem_kich_ban import cham_diem
 
 
 LOAI_NOI_DUNG = (
@@ -51,69 +58,27 @@ CAU_TRUC = {
     "kể chuyện kết hợp giải thích": ["Mở nút thắt", "Nhân vật", "Hiện tượng", "Nguyên nhân", "Bước ngoặt", "Giải nghĩa", "Bài học"],
 }
 
-# Kho câu được đánh chỉ mục theo ngữ cảnh; hàm chọn dùng băm chủ đề, không bốc ngẫu nhiên mù quáng.
-MO_DAU = [
-    "Một chi tiết nhỏ có thể đổi hẳn cách ta nhìn về {chu_de}.", "Con số đầu tiên về {chu_de} đáng để dừng lại.",
-    "Hãy đặt {chu_de} lên bàn cân trong vài giây.", "Chuyện bắt đầu khi {chu_de} chưa hề rõ ràng.",
-    "Có một nghịch lý ẩn sau {chu_de}.", "Đi thẳng vào vấn đề: {chu_de} vận hành ra sao?",
-    "Một quyết định tưởng nhỏ đã mở ra câu chuyện {chu_de}.", "Nếu chỉ biết một điều về {chu_de}, hãy bắt đầu ở đây.",
-    "Hai góc nhìn về {chu_de} sắp đối đầu.", "Bức tranh {chu_de} không đơn giản như vẻ ngoài.",
-    "Khoảnh khắc khó xử nhất xuất hiện ngay khi nhắc tới {chu_de}.", "Tin mới về {chu_de} đang tạo ra câu hỏi lớn.",
-    "Muốn làm chủ {chu_de}, ta cần bỏ qua đường tắt.", "Hãy quay lại điểm khởi đầu của {chu_de}.",
-    "Một câu nói ngắn về {chu_de} chứa cả bài học dài.", "Đây là phép thử nhanh dành cho {chu_de}.",
-    "Không cần lý thuyết dài: {chu_de} có thể nhìn thấy ngay.", "Điều ít được nói tới trong {chu_de} nằm ở phía sau.",
-    "Mọi dữ kiện về {chu_de} đều dẫn về một nút thắt.", "Giả sử hôm nay ta phải chọn lại cách tiếp cận {chu_de}.",
-    "Ba mươi giây đầu tiên sẽ làm rõ điều lạ nhất về {chu_de}.", "Câu trả lời về {chu_de} bắt đầu từ một cảnh rất đời thường.",
-]
-CHUYEN_Y = [
-    "Từ đây, mảnh ghép tiếp theo xuất hiện.", "Nhưng dữ kiện kế tiếp đổi hướng câu chuyện.", "Đặt cạnh thực tế, điểm này rõ hơn.",
-    "Tiếp theo là phần có thể áp dụng ngay.", "Ở góc nhìn khác, kết quả lại đảo chiều.", "Mấu chốt thứ hai nằm ở cách phản ứng.",
-    "Chưa dừng ở đó, bối cảnh còn một lớp nữa.", "Đến bước này, ta cần kiểm tra giả định.", "Một ví dụ ngắn sẽ nối hai ý vừa rồi.",
-    "Khi đổi điểm nhìn, chi tiết bị bỏ quên lộ ra.", "Sau lựa chọn ấy, hệ quả bắt đầu lan rộng.", "Dữ liệu và trải nghiệm gặp nhau tại đây.",
-    "Bây giờ hãy chuyển từ lý do sang hành động.", "Câu hỏi mới là điều gì xảy ra tiếp theo.", "Nút thắt chỉ mở khi hai phía cùng lên tiếng.",
-    "Đó là lúc nhịp câu chuyện tăng lên.",
-]
-KET_LUAN = [
-    "Tóm lại, {chu_de} thay đổi khi ta đổi cách nhìn.", "Kết quả bền vững với {chu_de} đến từ lựa chọn nhỏ nhưng đều đặn.",
-    "Sau cùng, dữ kiện về {chu_de} quan trọng hơn định kiến.", "Câu chuyện {chu_de} khép lại, còn bài học vẫn tiếp tục.",
-    "Điểm cân bằng của {chu_de} nằm giữa lợi ích và giới hạn.", "Vậy nên, hiểu nguyên nhân là bước đầu để xử lý {chu_de}.",
-    "Nhìn toàn cảnh, {chu_de} là một quá trình chứ không phải khoảnh khắc.", "Lời giải cho {chu_de} bắt đầu bằng một bước có thể đo được.",
-    "Hai phía khác nhau, nhưng cùng chỉ ra bản chất của {chu_de}.", "Đến đây, lựa chọn hợp lý về {chu_de} đã rõ hơn.",
-    "Thông tin mới chỉ có giá trị khi được kiểm chứng theo thời gian.", "Cú bẻ cuối cùng cho thấy kỳ vọng thường khác thực tế.",
-    "Bài học còn lại: hành động đúng lúc mạnh hơn lời hứa.", "Kết luận ngắn gọn: quan sát, thử nghiệm rồi điều chỉnh.",
-    "Đó là cách biến hiểu biết về {chu_de} thành thay đổi thật.", "Một góc nhìn mới về {chu_de} có thể bắt đầu ngay hôm nay.",
-]
-KEU_GOI = [
-    "Chọn một bước và thử ngay hôm nay.", "Lưu lại để kiểm tra lần tiến bộ tiếp theo.", "Chia sẻ góc nhìn của bạn bằng một ví dụ cụ thể.",
-    "Gửi video này cho người đang cần cuộc trò chuyện ấy.", "Thử áp dụng trong bảy ngày rồi tự đo kết quả.",
-    "Bạn đứng về phía nào? Hãy nêu lý do.", "Theo dõi để cùng bóc tách chủ đề tiếp theo.", "Viết xuống hành động đầu tiên bạn sẽ làm.",
-    "Đối chiếu thông tin trước khi đưa ra quyết định.", "Kể lại một trải nghiệm khiến bạn đổi quan điểm.",
-]
-
-
 class NhaCungCapAI(Protocol):
-    """Hợp đồng tối thiểu cho bộ nối OpenAI hoặc Gemini trong tương lai."""
+    """Hợp đồng tương thích cho nhà cung cấp tạo toàn bộ story.json."""
     def tao_cau_chuyen(self, yeu_cau: dict) -> dict: ...
 
 
 def phan_loai_chu_de(y_tuong: str) -> str:
+    """Chọn loại nội dung; chỉ quyết định cấu trúc, không viết lời dẫn."""
     text = y_tuong.casefold().strip()
-    scores = {kind: sum(bool(re.search(k, text) if k.startswith(r"\b") else k in text) for k in keys)
-              for kind, keys in TU_KHOA_PHAN_LOAI.items()}
+    scores = {
+        kind: sum(bool(re.search(key, text) if key.startswith(r"\b") else key in text) for key in keys)
+        for kind, keys in TU_KHOA_PHAN_LOAI.items()
+    }
     best = max(scores, key=scores.get)
     return best if scores[best] else "kể chuyện kết hợp giải thích"
-
-
-def _chi_so(seed: int, pool: list[str], offset: int = 0) -> str:
-    return pool[(seed + offset * 7) % len(pool)]
-
 
 def _so_canh(kind: str, duration: int, idea: str) -> int:
     ranges = {30: (5, 7), 45: (7, 10), 60: (9, 13)}
     low, high = ranges[duration]
     if kind == "danh sách":
         match = re.search(r"\b(\d+)\b", idea)
-        return min(high, max(low, (int(match.group(1)) if match else low - 2) + 3))
+        return min(high, max(low, (int(match.group(1)) if match else low - 2) + 2))
     preferred = {"câu chuyện": low + 1, "đối thoại": low + 2, "phân tích": high,
                  "giải thích": low + 1, "hài tình huống": low + 2}.get(kind, low)
     return min(high, preferred)
@@ -126,30 +91,6 @@ def _thoi_luong_canh(total: int, count: int, seed: int) -> list[float]:
     return values
 
 
-def _noi_dung_canh(kind: str, idea: str, role: str, index: int, count: int, seed: int) -> str:
-    if index == 0:
-        return _chi_so(seed, MO_DAU).format(chu_de=idea)
-    if index == count - 1:
-        conclusion = _chi_so(seed, KET_LUAN, index).format(chu_de=idea)
-        return f"{conclusion} {_chi_so(seed, KEU_GOI, index)}"
-    transition = _chi_so(seed, CHUYEN_Y, index)
-    number = index if kind == "danh sách" else None
-    bodies = {
-        "danh sách": f"Mục {number}: biến {idea} thành một việc cụ thể, dễ đo và duy trì đều.",
-        "câu chuyện": f"Ở chặng {index}, {idea} chuyển hướng vì nhân vật phải chọn giữa an toàn và thay đổi.",
-        "đối thoại": f"Nhân vật {'A' if index % 2 else 'B'} đưa ra một góc nhìn trái chiều về {idea}.",
-        "so sánh": f"Tiêu chí {index} cho thấy hai phía của {idea} tạo kết quả khác nhau trong cùng hoàn cảnh.",
-        "hướng dẫn": f"Bước {index}: thực hiện một phần của {idea}, rồi dùng kết quả để điều chỉnh bước kế tiếp.",
-        "tin tức": f"Dữ kiện thứ {index} đặt {idea} vào bối cảnh, đồng thời chỉ ra ảnh hưởng cần theo dõi.",
-        "phân tích": f"Lớp phân tích {index} nối nguyên nhân, bằng chứng và hệ quả của {idea}.",
-        "giải thích": f"Nguyên nhân thứ {index} giải thích {idea} bằng một tình huống có thể quan sát.",
-        "trích dẫn hoặc quan điểm": f"Góc chiêm nghiệm {index} thử đặt quan điểm {idea} vào một lựa chọn đời thường.",
-        "hài tình huống": f"Tưởng rằng {idea} sẽ diễn ra suôn sẻ, nhân vật lại nhận phản hồi hoàn toàn ngược lại.",
-        "kể chuyện kết hợp giải thích": f"Chi tiết {index} trong {idea} vừa đẩy câu chuyện đi tiếp, vừa hé lộ nguyên nhân.",
-    }
-    return f"{transition} {bodies[kind]}"
-
-
 @dataclass
 class CauHinh:
     y_tuong: str
@@ -160,9 +101,11 @@ class CauHinh:
     giong_doc: str = "Nam miền Bắc Nội lực Plus"
     muc_chuyen_dong: str = "medium"
     che_do: str = "tu_dong"
+    phong_cach_viet: str = "tu_dong_theo_chu_de"
 
 
-def tao_cau_chuyen(c: CauHinh, nha_cung_cap: NhaCungCapAI | None = None) -> dict:
+def tao_cau_chuyen(c: CauHinh, nha_cung_cap: NhaCungCapAI | None = None,
+                   nha_viet: NhaCungCapVietKichBan | None = None) -> dict:
     if c.thoi_luong not in (30, 45, 60):
         raise ValueError("Thời lượng chỉ nhận 30, 45 hoặc 60 giây")
     override = {"mot_nguoi": None, "Một người dẫn chuyện": None,
@@ -178,6 +121,8 @@ def tao_cau_chuyen(c: CauHinh, nha_cung_cap: NhaCungCapAI | None = None) -> dict
     seed = int(hashlib.sha256(f"{c.y_tuong}|{kind}|{c.giong_dieu}".encode()).hexdigest()[:12], 16)
     rng = random.Random(seed)
     count = _so_canh(kind, c.thoi_luong, c.y_tuong)
+    ban_thao, linh_vuc, phong_cach_mac_dinh = tao_ban_thao(c.y_tuong, count, kind, nha_viet)
+    phong_cach_viet = PHONG_CACH_VI.get(c.phong_cach_viet) or phong_cach_mac_dinh
     roles = CAU_TRUC[kind]
     durations = _thoi_luong_canh(c.thoi_luong, count, seed)
     actions = ["suy nghĩ", "chỉ tay", "dùng laptop", "gật đầu", "khoanh tay", "đi bộ", "giơ tay", "lắc đầu", "dùng điện thoại", "vui mừng"]
@@ -205,7 +150,7 @@ def tao_cau_chuyen(c: CauHinh, nha_cung_cap: NhaCungCapAI | None = None) -> dict
             chars.append({"ten":"B", "vi_tri":"phải", "hanh_dong":second_action, "cam_xuc":emotions[(offset+3)%len(emotions)],
                           "huong_nhin":"nhân vật A", "name":"B", "position":"right", "action":second_action,
                           "gesture":gesture_map[second_action], "emotion":emotion_map[emotions[(offset+3)%len(emotions)]]})
-        narration = _noi_dung_canh(kind, c.y_tuong, roles[min(i, len(roles)-1)], i, count, seed)
+        narration = ban_thao.canh[min(i, len(ban_thao.canh)-1)]
         camera = cameras[offset % len(cameras)]
         transition = transitions[(offset + i) % len(transitions)]
         layout = layouts[(offset + 2*i) % len(layouts)]
@@ -214,14 +159,15 @@ def tao_cau_chuyen(c: CauHinh, nha_cung_cap: NhaCungCapAI | None = None) -> dict
         scene = {
             "id": i + 1, "loai_canh": "mở đầu" if i == 0 else "kết" if i == count-1 else kind,
             "vai_tro": role, "thoi_luong": durations[i], "loi_dan": narration,
-            "hoi_thoai": ([{"nhan_vat": chars[i % len(chars)]["ten"], "noi_dung": narration}] if two_people else []),
+            "hoi_thoai": ([ban_thao.hoi_thoai[i-1]] if kind == "đối thoại" and 0 < i <= len(ban_thao.hoi_thoai) else []),
             "tieu_de_canh": role, "tu_khoa": [w for w in re.findall(r"\w+", c.y_tuong.lower()) if len(w)>3][:3],
             "boi_canh": background, "bo_cuc": layout, "camera": {"type":camera, "speed":round(rng.uniform(.88,1.12),2), "easing":"ease-in-out", "strength":strength, "duration":durations[i]},
             "chuyen_canh": {"type":transition, "strength":strength, "duration":round(rng.uniform(.3,.7),2)},
             "hoat_anh_phu_de": ["pop","fade","slide","word","karaoke"][offset % 5], "nhan_vat": chars,
             # Trường kỹ thuật tương thích Remotion V3.
             "type":"intro" if i==0 else "outro" if i==count-1 else "dialogue" if two_people else "explanation",
-            "duration":durations[i], "narration":narration, "dialogue":[], "background":"dark",
+            "duration":durations[i], "narration":narration,
+            "dialogue":([{"character":ban_thao.hoi_thoai[i-1]["nhan_vat"],"text":ban_thao.hoi_thoai[i-1]["noi_dung"]}] if kind == "đối thoại" and 0 < i <= len(ban_thao.hoi_thoai) else []), "background":"dark",
             "transition":{"type":transition, "strength":strength, "duration":round(rng.uniform(.3,.7),2)},
             "emotion":chars[0]["emotion"], "gesture":chars[0]["gesture"], "zoom":round(rng.uniform(.06,.14),2),
             "subtitleAnimation":["pop","fade","slide","word","karaoke"][offset % 5],
@@ -231,22 +177,44 @@ def tao_cau_chuyen(c: CauHinh, nha_cung_cap: NhaCungCapAI | None = None) -> dict
         scenes.append(scene)
     summary = f"Video {kind} về {c.y_tuong}, được đạo diễn theo giọng {c.giong_dieu}."
     structure = " → ".join(CAU_TRUC[kind])
-    return {
-        "phien_ban":"3.5", "tieu_de":c.y_tuong, "loai_noi_dung":kind, "cau_truc_kich_ban":structure,
+    story = {
+        "phien_ban":"3.6", "tieu_de":c.y_tuong, "loai_noi_dung":kind, "cau_truc_kich_ban":structure,
+        "linh_vuc":linh_vuc, "phong_cach_viet":phong_cach_viet,
         "thoi_luong":c.thoi_luong, "phong_cach":c.phong_cach, "giong_doc":c.giong_doc,
         "tom_tat":summary, "thong_diep_chinh":f"Hiểu và hành động phù hợp với {c.y_tuong}.", "canh":scenes,
-        "version":3, "title":c.y_tuong, "hook":scenes[0]["narration"], "message":f"Hiểu rõ {c.y_tuong} trước khi hành động.",
+        "version":3, "title":c.y_tuong, "hook":ban_thao.hook, "cao_trao":ban_thao.cao_trao,
+        "ket_luan":ban_thao.ket_luan, "message":f"Hiểu rõ {c.y_tuong} trước khi hành động.",
         "cta":scenes[-1]["narration"], "duration":c.thoi_luong, "style":style_map.get(c.phong_cach,c.phong_cach),
         "motionLevel":c.muc_chuyen_dong, "voice":c.giong_doc, "audio":"assets/narration.mp3", "scenes":scenes,
     }
+    for _ in range(3):
+        score = cham_diem(story)
+        if score["tong_diem"] >= 75:
+            break
+        for scene in scenes:
+            scene["loi_dan"] = scene["narration"] = viet_lai_tu_nhien(scene["loi_dan"])
+    story["chat_luong_kich_ban"] = score
+    return story
+
+
+PHONG_CACH_VI = {
+    "tu_dong_theo_chu_de":"", "Tự động theo chủ đề":"",
+    "ngan_gon_tiktok":"ngắn gọn TikTok", "Ngắn gọn TikTok":"ngắn gọn TikTok",
+    "ke_chuyen_cam_xuc":"kể chuyện cảm xúc", "Kể chuyện cảm xúc":"kể chuyện cảm xúc",
+    "thuc_te_kinh_doanh":"thực tế kinh doanh", "Thực tế kinh doanh":"thực tế kinh doanh",
+    "giai_thich_de_hieu":"giải thích dễ hiểu", "Giải thích dễ hiểu":"giải thích dễ hiểu",
+    "doi_thoai_tu_nhien":"đối thoại tự nhiên", "Đối thoại tự nhiên":"đối thoại tự nhiên",
+    "tin_tuc_ro_rang":"tin tức rõ ràng", "Tin tức rõ ràng":"tin tức rõ ràng",
+}
 
 
 def _parser() -> argparse.ArgumentParser:
-    p=argparse.ArgumentParser(description="Tạo kịch bản bằng AI Story Director V3.5")
+    p=argparse.ArgumentParser(description="Tạo kịch bản bằng AI Story Director và AI Script Writer Pro V3.6")
     p.add_argument('--idea','--y-tuong','--ý-tưởng',required=True); p.add_argument('--duration','--thoi-luong','--thời-lượng',type=int,default=45)
     p.add_argument('--tone','--giong-dieu','--giọng-điệu',default='sâu sắc'); p.add_argument('--format','--content-format','--dinh-dang','--định-dạng',dest='content_format',default='hybrid')
     p.add_argument('--style','--phong-cach','--phong-cách',default='dark_neon'); p.add_argument('--voice','--giong-doc','--giọng-đọc',default='Nam miền Bắc Nội lực Plus')
     p.add_argument('--motion-level','--muc-do-chuyen-dong','--mức-độ-chuyển-động',default='medium'); p.add_argument('--script-mode','--che-do-viet-kich-ban',default='tu_dong')
+    p.add_argument('--writing-style','--phong-cach-viet',default='tu_dong_theo_chu_de',choices=PHONG_CACH_VI)
     p.add_argument('--output',default='assets/story.json',help='Đường dẫn story.json')
     return p
 
@@ -255,7 +223,7 @@ def main() -> None:
     p=_parser(); a=p.parse_args()
     motion={'nhẹ':'light','trung_bình':'medium','nhiều':'high','viral_tiktok':'viral'}.get(a.motion_level,a.motion_level)
     if motion not in {'light','medium','high','viral'}: p.error('Mức chuyển động không hợp lệ')
-    config=CauHinh(a.idea,a.duration,a.tone,a.content_format,a.style,a.voice,motion,a.script_mode)
+    config=CauHinh(a.idea,a.duration,a.tone,a.content_format,a.style,a.voice,motion,a.script_mode,a.writing_style)
     try: story=tao_cau_chuyen(config)
     except ValueError as exc: p.error(str(exc))
     output=Path(a.output); output.parent.mkdir(parents=True,exist_ok=True); Path('output').mkdir(exist_ok=True)
@@ -263,6 +231,8 @@ def main() -> None:
     Path('output/script.txt').write_text('\n'.join(s['loi_dan'] for s in story['canh']),encoding='utf-8')
     print(f"Đã phân loại: {story['loai_noi_dung']}")
     print(f"Đã tạo {len(story['canh'])} cảnh, tổng thời lượng {sum(s['thoi_luong'] for s in story['canh']):.1f} giây")
+    print(f"Điểm chất lượng kịch bản: {story['chat_luong_kich_ban']['tong_diem']}/100")
+    for warning in story['chat_luong_kich_ban']['canh_bao']: print(f"Cảnh báo: {warning}")
 
 
 if __name__=='__main__': main()

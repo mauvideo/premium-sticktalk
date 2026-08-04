@@ -13,6 +13,7 @@ STYLE="${VIDEO_STYLE:-người_que_triết_lý}"
 VOICE="${VIDEO_VOICE:-Nam miền Bắc Nội lực Plus}"
 MOTION_LEVEL="${VIDEO_MOTION_LEVEL:-trung_bình}"
 SCRIPT_MODE="${VIDEO_SCRIPT_MODE:-Tự động theo chủ đề}"
+WRITING_STYLE="${VIDEO_WRITING_STYLE:-Tự động theo chủ đề}"
 
 require_value() {
   [[ $# -ge 2 && -n "$2" && "$2" != --* ]] || {
@@ -40,6 +41,8 @@ while (($#)); do
       require_value "$@"; MOTION_LEVEL="$2"; shift 2;;
     --script-mode|--che-do-viet-kich-ban|--chế-độ-viết-kịch-bản)
       require_value "$@"; SCRIPT_MODE="$2"; shift 2;;
+    --writing-style|--phong-cach-viet|--phong-cách-viết)
+      require_value "$@"; WRITING_STYLE="$2"; shift 2;;
     *)
       echo "Tham số không hợp lệ: $1" >&2
       exit 2;;
@@ -58,6 +61,7 @@ printf '%s\n' \
   "Phong cách: $STYLE" \
   "Mức chuyển động: $MOTION_LEVEL" \
   "Chế độ viết kịch bản: $SCRIPT_MODE" \
+  "Phong cách viết nội dung: $WRITING_STYLE" \
   "Giọng đọc: $VOICE"
 
 mkdir -p assets output remotion/public/assets
@@ -70,7 +74,8 @@ python3 scripts/generate_story.py \
   --style "$STYLE" \
   --voice "$VOICE" \
   --motion-level "$MOTION_LEVEL" \
-  --script-mode "$SCRIPT_MODE"
+  --script-mode "$SCRIPT_MODE" \
+  --writing-style "$WRITING_STYLE"
 
 python3 scripts/generate_tts.py --preset "$VOICE"
 cp assets/narration.mp3 remotion/public/assets/narration.mp3

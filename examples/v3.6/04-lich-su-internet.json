@@ -1,0 +1,1481 @@
+{
+  "phien_ban": "3.6",
+  "tieu_de": "Lịch sử hình thành Internet.",
+  "loai_noi_dung": "câu chuyện",
+  "cau_truc_kich_ban": "Mở cảnh → Nhân vật → Vấn đề → Xung đột → Quyết định → Cao trào → Kết quả → Bài học",
+  "linh_vuc": "lịch sử",
+  "phong_cach_viet": "tuần tự, rõ nguyên nhân và kết quả",
+  "thoi_luong": 45,
+  "phong_cach": "dark_neon",
+  "giong_doc": "Nam miền Bắc Nội lực Plus",
+  "tom_tat": "Video câu chuyện về Lịch sử hình thành Internet., được đạo diễn theo giọng sâu sắc.",
+  "thong_diep_chinh": "Hiểu và hành động phù hợp với Lịch sử hình thành Internet..",
+  "canh": [
+    {
+      "id": 1,
+      "loai_canh": "mở đầu",
+      "vai_tro": "Mở cảnh",
+      "thoi_luong": 5.97,
+      "loi_dan": "Internet nối cả thế giới, nhưng khởi đầu chỉ nối vài máy tính.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Mở cảnh",
+      "tu_khoa": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "boi_canh": "quán cà phê",
+      "bo_cuc": "một nhân vật bên trái",
+      "camera": {
+        "type": "push",
+        "speed": 1.01,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 5.97
+      },
+      "chuyen_canh": {
+        "type": "blur",
+        "strength": 0.75,
+        "duration": 0.48
+      },
+      "hoat_anh_phu_de": "slide",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "dùng laptop",
+          "cam_xuc": "bình thường",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "dùng laptop",
+          "gesture": "use-laptop",
+          "emotion": "neutral"
+        }
+      ],
+      "type": "intro",
+      "duration": 5.97,
+      "narration": "Internet nối cả thế giới, nhưng khởi đầu chỉ nối vài máy tính.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "blur",
+        "strength": 0.75,
+        "duration": 0.61
+      },
+      "emotion": "neutral",
+      "gesture": "use-laptop",
+      "zoom": 0.1,
+      "subtitleAnimation": "slide",
+      "keywords": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "dùng laptop",
+          "cam_xuc": "bình thường",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "dùng laptop",
+          "gesture": "use-laptop",
+          "emotion": "neutral"
+        }
+      ],
+      "seed": 313621,
+      "layout": "một nhân vật bên trái"
+    },
+    {
+      "id": 2,
+      "loai_canh": "câu chuyện",
+      "vai_tro": "Nhân vật",
+      "thoi_luong": 5.36,
+      "loi_dan": "Cuối thập niên 1960, ARPANET thử kết nối các máy tính ở xa.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Nhân vật",
+      "tu_khoa": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "boi_canh": "lớp học",
+      "bo_cuc": "trước và sau",
+      "camera": {
+        "type": "pan-left",
+        "speed": 0.94,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 5.36
+      },
+      "chuyen_canh": {
+        "type": "camera-cut",
+        "strength": 0.75,
+        "duration": 0.3
+      },
+      "hoat_anh_phu_de": "karaoke",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "khoanh tay",
+          "cam_xuc": "nghiêm túc",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "khoanh tay",
+          "gesture": "cross-arms",
+          "emotion": "serious"
+        }
+      ],
+      "type": "explanation",
+      "duration": 5.36,
+      "narration": "Cuối thập niên 1960, ARPANET thử kết nối các máy tính ở xa.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "camera-cut",
+        "strength": 0.75,
+        "duration": 0.49
+      },
+      "emotion": "serious",
+      "gesture": "cross-arms",
+      "zoom": 0.13,
+      "subtitleAnimation": "karaoke",
+      "keywords": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "khoanh tay",
+          "cam_xuc": "nghiêm túc",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "khoanh tay",
+          "gesture": "cross-arms",
+          "emotion": "serious"
+        }
+      ],
+      "seed": 438580,
+      "layout": "trước và sau"
+    },
+    {
+      "id": 3,
+      "loai_canh": "câu chuyện",
+      "vai_tro": "Vấn đề",
+      "thoi_luong": 5.66,
+      "loi_dan": "Dữ liệu được chia thành các gói nhỏ, rồi đi qua mạng.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Vấn đề",
+      "tu_khoa": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "boi_canh": "phòng họp",
+      "bo_cuc": "câu hỏi lớn",
+      "camera": {
+        "type": "dolly",
+        "speed": 0.9,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 5.66
+      },
+      "chuyen_canh": {
+        "type": "slide",
+        "strength": 0.75,
+        "duration": 0.69
+      },
+      "hoat_anh_phu_de": "fade",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "giơ tay",
+          "cam_xuc": "vui",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "giơ tay",
+          "gesture": "hands-up",
+          "emotion": "happy"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "suy nghĩ",
+          "cam_xuc": "thất vọng",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "suy nghĩ",
+          "gesture": "think",
+          "emotion": "sad"
+        }
+      ],
+      "type": "dialogue",
+      "duration": 5.66,
+      "narration": "Dữ liệu được chia thành các gói nhỏ, rồi đi qua mạng.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "slide",
+        "strength": 0.75,
+        "duration": 0.55
+      },
+      "emotion": "happy",
+      "gesture": "hands-up",
+      "zoom": 0.07,
+      "subtitleAnimation": "fade",
+      "keywords": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "giơ tay",
+          "cam_xuc": "vui",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "giơ tay",
+          "gesture": "hands-up",
+          "emotion": "happy"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "suy nghĩ",
+          "cam_xuc": "thất vọng",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "suy nghĩ",
+          "gesture": "think",
+          "emotion": "sad"
+        }
+      ],
+      "seed": 816441,
+      "layout": "câu hỏi lớn"
+    },
+    {
+      "id": 4,
+      "loai_canh": "câu chuyện",
+      "vai_tro": "Xung đột",
+      "thoi_luong": 5.36,
+      "loi_dan": "Nhiều mạng riêng xuất hiện, nhưng chúng cần một cách nói chuyện chung.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Xung đột",
+      "tu_khoa": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "boi_canh": "sân khấu",
+      "bo_cuc": "màn hình chia đôi",
+      "camera": {
+        "type": "handheld",
+        "speed": 1.02,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 5.36
+      },
+      "chuyen_canh": {
+        "type": "flash",
+        "strength": 0.75,
+        "duration": 0.45
+      },
+      "hoat_anh_phu_de": "word",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "dùng điện thoại",
+          "cam_xuc": "tự tin",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "dùng điện thoại",
+          "gesture": "use-phone",
+          "emotion": "smile"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "dùng laptop",
+          "cam_xuc": "tự tin",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "dùng laptop",
+          "gesture": "use-laptop",
+          "emotion": "smile"
+        }
+      ],
+      "type": "dialogue",
+      "duration": 5.36,
+      "narration": "Nhiều mạng riêng xuất hiện, nhưng chúng cần một cách nói chuyện chung.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "flash",
+        "strength": 0.75,
+        "duration": 0.48
+      },
+      "emotion": "smile",
+      "gesture": "use-phone",
+      "zoom": 0.06,
+      "subtitleAnimation": "word",
+      "keywords": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "dùng điện thoại",
+          "cam_xuc": "tự tin",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "dùng điện thoại",
+          "gesture": "use-phone",
+          "emotion": "smile"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "dùng laptop",
+          "cam_xuc": "tự tin",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "dùng laptop",
+          "gesture": "use-laptop",
+          "emotion": "smile"
+        }
+      ],
+      "seed": 87955,
+      "layout": "màn hình chia đôi"
+    },
+    {
+      "id": 5,
+      "loai_canh": "câu chuyện",
+      "vai_tro": "Quyết định",
+      "thoi_luong": 5.06,
+      "loi_dan": "Bộ giao thức TCP/IP tạo nền tảng để các mạng trao đổi dữ liệu.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Quyết định",
+      "tu_khoa": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "boi_canh": "văn phòng",
+      "bo_cuc": "một nhân vật ở giữa",
+      "camera": {
+        "type": "zoom-in",
+        "speed": 1.01,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 5.06
+      },
+      "chuyen_canh": {
+        "type": "fade",
+        "strength": 0.75,
+        "duration": 0.61
+      },
+      "hoat_anh_phu_de": "pop",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "suy nghĩ",
+          "cam_xuc": "lo lắng",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "suy nghĩ",
+          "gesture": "think",
+          "emotion": "scared"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "khoanh tay",
+          "cam_xuc": "bất ngờ",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "khoanh tay",
+          "gesture": "cross-arms",
+          "emotion": "excited"
+        }
+      ],
+      "type": "dialogue",
+      "duration": 5.06,
+      "narration": "Bộ giao thức TCP/IP tạo nền tảng để các mạng trao đổi dữ liệu.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "fade",
+        "strength": 0.75,
+        "duration": 0.48
+      },
+      "emotion": "scared",
+      "gesture": "think",
+      "zoom": 0.13,
+      "subtitleAnimation": "pop",
+      "keywords": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "suy nghĩ",
+          "cam_xuc": "lo lắng",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "suy nghĩ",
+          "gesture": "think",
+          "emotion": "scared"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "khoanh tay",
+          "cam_xuc": "bất ngờ",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "khoanh tay",
+          "gesture": "cross-arms",
+          "emotion": "excited"
+        }
+      ],
+      "seed": 443563,
+      "layout": "một nhân vật ở giữa"
+    },
+    {
+      "id": 6,
+      "loai_canh": "câu chuyện",
+      "vai_tro": "Cao trào",
+      "thoi_luong": 5.66,
+      "loi_dan": "Năm 1983, ARPANET chuyển sang TCP/IP, một bước ngoặt quan trọng.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Cao trào",
+      "tu_khoa": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "boi_canh": "quán cà phê",
+      "bo_cuc": "một nhân vật bên trái",
+      "camera": {
+        "type": "push",
+        "speed": 0.96,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 5.66
+      },
+      "chuyen_canh": {
+        "type": "whip",
+        "strength": 0.75,
+        "duration": 0.35
+      },
+      "hoat_anh_phu_de": "slide",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "dùng laptop",
+          "cam_xuc": "bối rối",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "dùng laptop",
+          "gesture": "use-laptop",
+          "emotion": "confused"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "giơ tay",
+          "cam_xuc": "nghiêm túc",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "giơ tay",
+          "gesture": "hands-up",
+          "emotion": "serious"
+        }
+      ],
+      "type": "dialogue",
+      "duration": 5.66,
+      "narration": "Năm 1983, ARPANET chuyển sang TCP/IP, một bước ngoặt quan trọng.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "whip",
+        "strength": 0.75,
+        "duration": 0.45
+      },
+      "emotion": "confused",
+      "gesture": "use-laptop",
+      "zoom": 0.06,
+      "subtitleAnimation": "slide",
+      "keywords": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "dùng laptop",
+          "cam_xuc": "bối rối",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "dùng laptop",
+          "gesture": "use-laptop",
+          "emotion": "confused"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "giơ tay",
+          "cam_xuc": "nghiêm túc",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "giơ tay",
+          "gesture": "hands-up",
+          "emotion": "serious"
+        }
+      ],
+      "seed": 86869,
+      "layout": "một nhân vật bên trái"
+    },
+    {
+      "id": 7,
+      "loai_canh": "câu chuyện",
+      "vai_tro": "Kết quả",
+      "thoi_luong": 5.97,
+      "loi_dan": "Sau đó, hệ thống tên miền giúp địa chỉ dễ dùng hơn.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Kết quả",
+      "tu_khoa": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "boi_canh": "lớp học",
+      "bo_cuc": "trước và sau",
+      "camera": {
+        "type": "pan-left",
+        "speed": 1.01,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 5.97
+      },
+      "chuyen_canh": {
+        "type": "scale",
+        "strength": 0.75,
+        "duration": 0.48
+      },
+      "hoat_anh_phu_de": "karaoke",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "khoanh tay",
+          "cam_xuc": "suy nghĩ",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "khoanh tay",
+          "gesture": "cross-arms",
+          "emotion": "thinking"
+        }
+      ],
+      "type": "explanation",
+      "duration": 5.97,
+      "narration": "Sau đó, hệ thống tên miền giúp địa chỉ dễ dùng hơn.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "scale",
+        "strength": 0.75,
+        "duration": 0.51
+      },
+      "emotion": "thinking",
+      "gesture": "cross-arms",
+      "zoom": 0.1,
+      "subtitleAnimation": "karaoke",
+      "keywords": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "khoanh tay",
+          "cam_xuc": "suy nghĩ",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "khoanh tay",
+          "gesture": "cross-arms",
+          "emotion": "thinking"
+        }
+      ],
+      "seed": 370771,
+      "layout": "trước và sau"
+    },
+    {
+      "id": 8,
+      "loai_canh": "kết",
+      "vai_tro": "Bài học",
+      "thoi_luong": 5.96,
+      "loi_dan": "Internet hôm nay là kết quả của nhiều mạng và chuẩn dần kết nối. Lưu video để nhớ các bước ngoặt của Internet.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Bài học",
+      "tu_khoa": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "boi_canh": "phòng họp",
+      "bo_cuc": "câu hỏi lớn",
+      "camera": {
+        "type": "dolly",
+        "speed": 1.08,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 5.96
+      },
+      "chuyen_canh": {
+        "type": "blur",
+        "strength": 0.75,
+        "duration": 0.64
+      },
+      "hoat_anh_phu_de": "fade",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "giơ tay",
+          "cam_xuc": "bất ngờ",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "giơ tay",
+          "gesture": "hands-up",
+          "emotion": "excited"
+        }
+      ],
+      "type": "outro",
+      "duration": 5.96,
+      "narration": "Internet hôm nay là kết quả của nhiều mạng và chuẩn dần kết nối. Lưu video để nhớ các bước ngoặt của Internet.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "blur",
+        "strength": 0.75,
+        "duration": 0.55
+      },
+      "emotion": "excited",
+      "gesture": "hands-up",
+      "zoom": 0.11,
+      "subtitleAnimation": "fade",
+      "keywords": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "giơ tay",
+          "cam_xuc": "bất ngờ",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "giơ tay",
+          "gesture": "hands-up",
+          "emotion": "excited"
+        }
+      ],
+      "seed": 572875,
+      "layout": "câu hỏi lớn"
+    }
+  ],
+  "version": 3,
+  "title": "Lịch sử hình thành Internet.",
+  "hook": "Internet nối cả thế giới, nhưng khởi đầu chỉ nối vài máy tính.",
+  "cao_trao": "Sau đó, hệ thống tên miền giúp địa chỉ dễ dùng hơn.",
+  "ket_luan": "Internet hôm nay là kết quả của nhiều mạng và chuẩn dần kết nối.",
+  "message": "Hiểu rõ Lịch sử hình thành Internet. trước khi hành động.",
+  "cta": "Internet hôm nay là kết quả của nhiều mạng và chuẩn dần kết nối. Lưu video để nhớ các bước ngoặt của Internet.",
+  "duration": 45,
+  "style": "dark_neon",
+  "motionLevel": "medium",
+  "voice": "Nam miền Bắc Nội lực Plus",
+  "audio": "assets/narration.mp3",
+  "scenes": [
+    {
+      "id": 1,
+      "loai_canh": "mở đầu",
+      "vai_tro": "Mở cảnh",
+      "thoi_luong": 5.97,
+      "loi_dan": "Internet nối cả thế giới, nhưng khởi đầu chỉ nối vài máy tính.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Mở cảnh",
+      "tu_khoa": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "boi_canh": "quán cà phê",
+      "bo_cuc": "một nhân vật bên trái",
+      "camera": {
+        "type": "push",
+        "speed": 1.01,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 5.97
+      },
+      "chuyen_canh": {
+        "type": "blur",
+        "strength": 0.75,
+        "duration": 0.48
+      },
+      "hoat_anh_phu_de": "slide",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "dùng laptop",
+          "cam_xuc": "bình thường",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "dùng laptop",
+          "gesture": "use-laptop",
+          "emotion": "neutral"
+        }
+      ],
+      "type": "intro",
+      "duration": 5.97,
+      "narration": "Internet nối cả thế giới, nhưng khởi đầu chỉ nối vài máy tính.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "blur",
+        "strength": 0.75,
+        "duration": 0.61
+      },
+      "emotion": "neutral",
+      "gesture": "use-laptop",
+      "zoom": 0.1,
+      "subtitleAnimation": "slide",
+      "keywords": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "dùng laptop",
+          "cam_xuc": "bình thường",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "dùng laptop",
+          "gesture": "use-laptop",
+          "emotion": "neutral"
+        }
+      ],
+      "seed": 313621,
+      "layout": "một nhân vật bên trái"
+    },
+    {
+      "id": 2,
+      "loai_canh": "câu chuyện",
+      "vai_tro": "Nhân vật",
+      "thoi_luong": 5.36,
+      "loi_dan": "Cuối thập niên 1960, ARPANET thử kết nối các máy tính ở xa.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Nhân vật",
+      "tu_khoa": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "boi_canh": "lớp học",
+      "bo_cuc": "trước và sau",
+      "camera": {
+        "type": "pan-left",
+        "speed": 0.94,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 5.36
+      },
+      "chuyen_canh": {
+        "type": "camera-cut",
+        "strength": 0.75,
+        "duration": 0.3
+      },
+      "hoat_anh_phu_de": "karaoke",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "khoanh tay",
+          "cam_xuc": "nghiêm túc",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "khoanh tay",
+          "gesture": "cross-arms",
+          "emotion": "serious"
+        }
+      ],
+      "type": "explanation",
+      "duration": 5.36,
+      "narration": "Cuối thập niên 1960, ARPANET thử kết nối các máy tính ở xa.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "camera-cut",
+        "strength": 0.75,
+        "duration": 0.49
+      },
+      "emotion": "serious",
+      "gesture": "cross-arms",
+      "zoom": 0.13,
+      "subtitleAnimation": "karaoke",
+      "keywords": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "khoanh tay",
+          "cam_xuc": "nghiêm túc",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "khoanh tay",
+          "gesture": "cross-arms",
+          "emotion": "serious"
+        }
+      ],
+      "seed": 438580,
+      "layout": "trước và sau"
+    },
+    {
+      "id": 3,
+      "loai_canh": "câu chuyện",
+      "vai_tro": "Vấn đề",
+      "thoi_luong": 5.66,
+      "loi_dan": "Dữ liệu được chia thành các gói nhỏ, rồi đi qua mạng.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Vấn đề",
+      "tu_khoa": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "boi_canh": "phòng họp",
+      "bo_cuc": "câu hỏi lớn",
+      "camera": {
+        "type": "dolly",
+        "speed": 0.9,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 5.66
+      },
+      "chuyen_canh": {
+        "type": "slide",
+        "strength": 0.75,
+        "duration": 0.69
+      },
+      "hoat_anh_phu_de": "fade",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "giơ tay",
+          "cam_xuc": "vui",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "giơ tay",
+          "gesture": "hands-up",
+          "emotion": "happy"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "suy nghĩ",
+          "cam_xuc": "thất vọng",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "suy nghĩ",
+          "gesture": "think",
+          "emotion": "sad"
+        }
+      ],
+      "type": "dialogue",
+      "duration": 5.66,
+      "narration": "Dữ liệu được chia thành các gói nhỏ, rồi đi qua mạng.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "slide",
+        "strength": 0.75,
+        "duration": 0.55
+      },
+      "emotion": "happy",
+      "gesture": "hands-up",
+      "zoom": 0.07,
+      "subtitleAnimation": "fade",
+      "keywords": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "giơ tay",
+          "cam_xuc": "vui",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "giơ tay",
+          "gesture": "hands-up",
+          "emotion": "happy"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "suy nghĩ",
+          "cam_xuc": "thất vọng",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "suy nghĩ",
+          "gesture": "think",
+          "emotion": "sad"
+        }
+      ],
+      "seed": 816441,
+      "layout": "câu hỏi lớn"
+    },
+    {
+      "id": 4,
+      "loai_canh": "câu chuyện",
+      "vai_tro": "Xung đột",
+      "thoi_luong": 5.36,
+      "loi_dan": "Nhiều mạng riêng xuất hiện, nhưng chúng cần một cách nói chuyện chung.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Xung đột",
+      "tu_khoa": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "boi_canh": "sân khấu",
+      "bo_cuc": "màn hình chia đôi",
+      "camera": {
+        "type": "handheld",
+        "speed": 1.02,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 5.36
+      },
+      "chuyen_canh": {
+        "type": "flash",
+        "strength": 0.75,
+        "duration": 0.45
+      },
+      "hoat_anh_phu_de": "word",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "dùng điện thoại",
+          "cam_xuc": "tự tin",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "dùng điện thoại",
+          "gesture": "use-phone",
+          "emotion": "smile"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "dùng laptop",
+          "cam_xuc": "tự tin",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "dùng laptop",
+          "gesture": "use-laptop",
+          "emotion": "smile"
+        }
+      ],
+      "type": "dialogue",
+      "duration": 5.36,
+      "narration": "Nhiều mạng riêng xuất hiện, nhưng chúng cần một cách nói chuyện chung.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "flash",
+        "strength": 0.75,
+        "duration": 0.48
+      },
+      "emotion": "smile",
+      "gesture": "use-phone",
+      "zoom": 0.06,
+      "subtitleAnimation": "word",
+      "keywords": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "dùng điện thoại",
+          "cam_xuc": "tự tin",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "dùng điện thoại",
+          "gesture": "use-phone",
+          "emotion": "smile"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "dùng laptop",
+          "cam_xuc": "tự tin",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "dùng laptop",
+          "gesture": "use-laptop",
+          "emotion": "smile"
+        }
+      ],
+      "seed": 87955,
+      "layout": "màn hình chia đôi"
+    },
+    {
+      "id": 5,
+      "loai_canh": "câu chuyện",
+      "vai_tro": "Quyết định",
+      "thoi_luong": 5.06,
+      "loi_dan": "Bộ giao thức TCP/IP tạo nền tảng để các mạng trao đổi dữ liệu.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Quyết định",
+      "tu_khoa": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "boi_canh": "văn phòng",
+      "bo_cuc": "một nhân vật ở giữa",
+      "camera": {
+        "type": "zoom-in",
+        "speed": 1.01,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 5.06
+      },
+      "chuyen_canh": {
+        "type": "fade",
+        "strength": 0.75,
+        "duration": 0.61
+      },
+      "hoat_anh_phu_de": "pop",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "suy nghĩ",
+          "cam_xuc": "lo lắng",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "suy nghĩ",
+          "gesture": "think",
+          "emotion": "scared"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "khoanh tay",
+          "cam_xuc": "bất ngờ",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "khoanh tay",
+          "gesture": "cross-arms",
+          "emotion": "excited"
+        }
+      ],
+      "type": "dialogue",
+      "duration": 5.06,
+      "narration": "Bộ giao thức TCP/IP tạo nền tảng để các mạng trao đổi dữ liệu.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "fade",
+        "strength": 0.75,
+        "duration": 0.48
+      },
+      "emotion": "scared",
+      "gesture": "think",
+      "zoom": 0.13,
+      "subtitleAnimation": "pop",
+      "keywords": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "suy nghĩ",
+          "cam_xuc": "lo lắng",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "suy nghĩ",
+          "gesture": "think",
+          "emotion": "scared"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "khoanh tay",
+          "cam_xuc": "bất ngờ",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "khoanh tay",
+          "gesture": "cross-arms",
+          "emotion": "excited"
+        }
+      ],
+      "seed": 443563,
+      "layout": "một nhân vật ở giữa"
+    },
+    {
+      "id": 6,
+      "loai_canh": "câu chuyện",
+      "vai_tro": "Cao trào",
+      "thoi_luong": 5.66,
+      "loi_dan": "Năm 1983, ARPANET chuyển sang TCP/IP, một bước ngoặt quan trọng.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Cao trào",
+      "tu_khoa": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "boi_canh": "quán cà phê",
+      "bo_cuc": "một nhân vật bên trái",
+      "camera": {
+        "type": "push",
+        "speed": 0.96,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 5.66
+      },
+      "chuyen_canh": {
+        "type": "whip",
+        "strength": 0.75,
+        "duration": 0.35
+      },
+      "hoat_anh_phu_de": "slide",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "dùng laptop",
+          "cam_xuc": "bối rối",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "dùng laptop",
+          "gesture": "use-laptop",
+          "emotion": "confused"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "giơ tay",
+          "cam_xuc": "nghiêm túc",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "giơ tay",
+          "gesture": "hands-up",
+          "emotion": "serious"
+        }
+      ],
+      "type": "dialogue",
+      "duration": 5.66,
+      "narration": "Năm 1983, ARPANET chuyển sang TCP/IP, một bước ngoặt quan trọng.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "whip",
+        "strength": 0.75,
+        "duration": 0.45
+      },
+      "emotion": "confused",
+      "gesture": "use-laptop",
+      "zoom": 0.06,
+      "subtitleAnimation": "slide",
+      "keywords": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "dùng laptop",
+          "cam_xuc": "bối rối",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "dùng laptop",
+          "gesture": "use-laptop",
+          "emotion": "confused"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "giơ tay",
+          "cam_xuc": "nghiêm túc",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "giơ tay",
+          "gesture": "hands-up",
+          "emotion": "serious"
+        }
+      ],
+      "seed": 86869,
+      "layout": "một nhân vật bên trái"
+    },
+    {
+      "id": 7,
+      "loai_canh": "câu chuyện",
+      "vai_tro": "Kết quả",
+      "thoi_luong": 5.97,
+      "loi_dan": "Sau đó, hệ thống tên miền giúp địa chỉ dễ dùng hơn.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Kết quả",
+      "tu_khoa": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "boi_canh": "lớp học",
+      "bo_cuc": "trước và sau",
+      "camera": {
+        "type": "pan-left",
+        "speed": 1.01,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 5.97
+      },
+      "chuyen_canh": {
+        "type": "scale",
+        "strength": 0.75,
+        "duration": 0.48
+      },
+      "hoat_anh_phu_de": "karaoke",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "khoanh tay",
+          "cam_xuc": "suy nghĩ",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "khoanh tay",
+          "gesture": "cross-arms",
+          "emotion": "thinking"
+        }
+      ],
+      "type": "explanation",
+      "duration": 5.97,
+      "narration": "Sau đó, hệ thống tên miền giúp địa chỉ dễ dùng hơn.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "scale",
+        "strength": 0.75,
+        "duration": 0.51
+      },
+      "emotion": "thinking",
+      "gesture": "cross-arms",
+      "zoom": 0.1,
+      "subtitleAnimation": "karaoke",
+      "keywords": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "khoanh tay",
+          "cam_xuc": "suy nghĩ",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "khoanh tay",
+          "gesture": "cross-arms",
+          "emotion": "thinking"
+        }
+      ],
+      "seed": 370771,
+      "layout": "trước và sau"
+    },
+    {
+      "id": 8,
+      "loai_canh": "kết",
+      "vai_tro": "Bài học",
+      "thoi_luong": 5.96,
+      "loi_dan": "Internet hôm nay là kết quả của nhiều mạng và chuẩn dần kết nối. Lưu video để nhớ các bước ngoặt của Internet.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Bài học",
+      "tu_khoa": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "boi_canh": "phòng họp",
+      "bo_cuc": "câu hỏi lớn",
+      "camera": {
+        "type": "dolly",
+        "speed": 1.08,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 5.96
+      },
+      "chuyen_canh": {
+        "type": "blur",
+        "strength": 0.75,
+        "duration": 0.64
+      },
+      "hoat_anh_phu_de": "fade",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "giơ tay",
+          "cam_xuc": "bất ngờ",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "giơ tay",
+          "gesture": "hands-up",
+          "emotion": "excited"
+        }
+      ],
+      "type": "outro",
+      "duration": 5.96,
+      "narration": "Internet hôm nay là kết quả của nhiều mạng và chuẩn dần kết nối. Lưu video để nhớ các bước ngoặt của Internet.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "blur",
+        "strength": 0.75,
+        "duration": 0.55
+      },
+      "emotion": "excited",
+      "gesture": "hands-up",
+      "zoom": 0.11,
+      "subtitleAnimation": "fade",
+      "keywords": [
+        "lịch",
+        "hình",
+        "thành"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "giữa",
+          "hanh_dong": "giơ tay",
+          "cam_xuc": "bất ngờ",
+          "huong_nhin": "khán giả",
+          "name": "A",
+          "position": "center",
+          "action": "giơ tay",
+          "gesture": "hands-up",
+          "emotion": "excited"
+        }
+      ],
+      "seed": 572875,
+      "layout": "câu hỏi lớn"
+    }
+  ],
+  "chat_luong_kich_ban": {
+    "tong_diem": 96,
+    "diem_hook": 20,
+    "diem_cu_the": 11,
+    "diem_tu_nhien": 15,
+    "diem_cau_truc": 15,
+    "diem_cao_trao": 10,
+    "diem_da_dang_cau": 10,
+    "diem_ket_thuc": 5,
+    "diem_khong_van_mau": 10,
+    "canh_bao": []
+  }
+}
