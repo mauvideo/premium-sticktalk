@@ -1,0 +1,2017 @@
+{
+  "phien_ban": "3.6",
+  "tieu_de": "Một ông chủ và nhân viên tranh luận về tăng lương.",
+  "loai_noi_dung": "đối thoại",
+  "cau_truc_kich_ban": "Tình huống → Lượt nói A → Phản hồi B → Tranh luận → Hiểu lầm → Chuyển biến → Kết luận",
+  "linh_vuc": "kinh doanh",
+  "phong_cach_viet": "thực tế, ngắn gọn",
+  "thoi_luong": 45,
+  "phong_cach": "dark_neon",
+  "giong_doc": "Nam miền Bắc Nội lực Plus",
+  "tom_tat": "Video đối thoại về Một ông chủ và nhân viên tranh luận về tăng lương., được đạo diễn theo giọng sâu sắc.",
+  "thong_diep_chinh": "Hiểu và hành động phù hợp với Một ông chủ và nhân viên tranh luận về tăng lương..",
+  "canh": [
+    {
+      "id": 1,
+      "loai_canh": "mở đầu",
+      "vai_tro": "Tình huống",
+      "thoi_luong": 5.27,
+      "loi_dan": "“Tại sao tôi làm nhiều hơn, nhưng lương vẫn đứng yên?”",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Tình huống",
+      "tu_khoa": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "boi_canh": "bảng trình bày",
+      "bo_cuc": "nhân vật và bảng",
+      "camera": {
+        "type": "pan-right",
+        "speed": 0.92,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 5.27
+      },
+      "chuyen_canh": {
+        "type": "slide",
+        "strength": 0.75,
+        "duration": 0.33
+      },
+      "hoat_anh_phu_de": "fade",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "chỉ tay",
+          "cam_xuc": "tự tin",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "chỉ tay",
+          "gesture": "point-right",
+          "emotion": "smile"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "đi bộ",
+          "cam_xuc": "lo lắng",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "đi bộ",
+          "gesture": "walk",
+          "emotion": "scared"
+        }
+      ],
+      "type": "intro",
+      "duration": 5.27,
+      "narration": "“Tại sao tôi làm nhiều hơn, nhưng lương vẫn đứng yên?”",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "slide",
+        "strength": 0.75,
+        "duration": 0.66
+      },
+      "emotion": "smile",
+      "gesture": "point-right",
+      "zoom": 0.1,
+      "subtitleAnimation": "fade",
+      "keywords": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "chỉ tay",
+          "cam_xuc": "tự tin",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "chỉ tay",
+          "gesture": "point-right",
+          "emotion": "smile"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "đi bộ",
+          "cam_xuc": "lo lắng",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "đi bộ",
+          "gesture": "walk",
+          "emotion": "scared"
+        }
+      ],
+      "seed": 707049,
+      "layout": "nhân vật và bảng"
+    },
+    {
+      "id": 2,
+      "loai_canh": "đối thoại",
+      "vai_tro": "Lượt nói A",
+      "thoi_luong": 4.73,
+      "loi_dan": "Tôi làm thêm việc suốt ba tháng. Vì sao lương vẫn vậy?",
+      "hoi_thoai": [
+        {
+          "nhan_vat": "A",
+          "noi_dung": "Tôi làm thêm việc suốt ba tháng. Vì sao lương vẫn vậy?"
+        }
+      ],
+      "tieu_de_canh": "Lượt nói A",
+      "tu_khoa": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "boi_canh": "lớp học",
+      "bo_cuc": "trước và sau",
+      "camera": {
+        "type": "pan-left",
+        "speed": 0.93,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 4.73
+      },
+      "chuyen_canh": {
+        "type": "camera-cut",
+        "strength": 0.75,
+        "duration": 0.46
+      },
+      "hoat_anh_phu_de": "karaoke",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "khoanh tay",
+          "cam_xuc": "nghiêm túc",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "khoanh tay",
+          "gesture": "cross-arms",
+          "emotion": "serious"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "dùng điện thoại",
+          "cam_xuc": "bối rối",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "dùng điện thoại",
+          "gesture": "use-phone",
+          "emotion": "confused"
+        }
+      ],
+      "type": "dialogue",
+      "duration": 4.73,
+      "narration": "Tôi làm thêm việc suốt ba tháng. Vì sao lương vẫn vậy?",
+      "dialogue": [
+        {
+          "character": "A",
+          "text": "Tôi làm thêm việc suốt ba tháng. Vì sao lương vẫn vậy?"
+        }
+      ],
+      "background": "dark",
+      "transition": {
+        "type": "camera-cut",
+        "strength": 0.75,
+        "duration": 0.57
+      },
+      "emotion": "serious",
+      "gesture": "cross-arms",
+      "zoom": 0.11,
+      "subtitleAnimation": "karaoke",
+      "keywords": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "khoanh tay",
+          "cam_xuc": "nghiêm túc",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "khoanh tay",
+          "gesture": "cross-arms",
+          "emotion": "serious"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "dùng điện thoại",
+          "cam_xuc": "bối rối",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "dùng điện thoại",
+          "gesture": "use-phone",
+          "emotion": "confused"
+        }
+      ],
+      "seed": 726313,
+      "layout": "trước và sau"
+    },
+    {
+      "id": 3,
+      "loai_canh": "đối thoại",
+      "vai_tro": "Phản hồi B",
+      "thoi_luong": 5.0,
+      "loi_dan": "Tôi thấy nỗ lực đó. Nhưng anh đã tạo kết quả nào rõ nhất?",
+      "hoi_thoai": [
+        {
+          "nhan_vat": "B",
+          "noi_dung": "Tôi thấy nỗ lực đó. Nhưng anh đã tạo kết quả nào rõ nhất?"
+        }
+      ],
+      "tieu_de_canh": "Phản hồi B",
+      "tu_khoa": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "boi_canh": "công viên",
+      "bo_cuc": "nhân vật và bảng",
+      "camera": {
+        "type": "parallax",
+        "speed": 1.04,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 5.0
+      },
+      "chuyen_canh": {
+        "type": "blur",
+        "strength": 0.75,
+        "duration": 0.44
+      },
+      "hoat_anh_phu_de": "slide",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "lắc đầu",
+          "cam_xuc": "thất vọng",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "lắc đầu",
+          "gesture": "angry",
+          "emotion": "sad"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "chỉ tay",
+          "cam_xuc": "suy nghĩ",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "chỉ tay",
+          "gesture": "point-right",
+          "emotion": "thinking"
+        }
+      ],
+      "type": "dialogue",
+      "duration": 5.0,
+      "narration": "Tôi thấy nỗ lực đó. Nhưng anh đã tạo kết quả nào rõ nhất?",
+      "dialogue": [
+        {
+          "character": "B",
+          "text": "Tôi thấy nỗ lực đó. Nhưng anh đã tạo kết quả nào rõ nhất?"
+        }
+      ],
+      "background": "dark",
+      "transition": {
+        "type": "blur",
+        "strength": 0.75,
+        "duration": 0.35
+      },
+      "emotion": "sad",
+      "gesture": "angry",
+      "zoom": 0.07,
+      "subtitleAnimation": "slide",
+      "keywords": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "lắc đầu",
+          "cam_xuc": "thất vọng",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "lắc đầu",
+          "gesture": "angry",
+          "emotion": "sad"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "chỉ tay",
+          "cam_xuc": "suy nghĩ",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "chỉ tay",
+          "gesture": "point-right",
+          "emotion": "thinking"
+        }
+      ],
+      "seed": 938816,
+      "layout": "nhân vật và bảng"
+    },
+    {
+      "id": 4,
+      "loai_canh": "đối thoại",
+      "vai_tro": "Phản hồi B",
+      "thoi_luong": 4.73,
+      "loi_dan": "Tôi rút ngắn khâu bàn giao và xử lý khách khó mỗi tối.",
+      "hoi_thoai": [
+        {
+          "nhan_vat": "A",
+          "noi_dung": "Tôi rút ngắn khâu bàn giao và xử lý khách khó mỗi tối."
+        }
+      ],
+      "tieu_de_canh": "Phản hồi B",
+      "tu_khoa": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "boi_canh": "văn phòng",
+      "bo_cuc": "trước và sau",
+      "camera": {
+        "type": "zoom-in",
+        "speed": 1.05,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 4.73
+      },
+      "chuyen_canh": {
+        "type": "scale",
+        "strength": 0.75,
+        "duration": 0.4
+      },
+      "hoat_anh_phu_de": "pop",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "suy nghĩ",
+          "cam_xuc": "bất ngờ",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "suy nghĩ",
+          "gesture": "think",
+          "emotion": "excited"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "khoanh tay",
+          "cam_xuc": "bất ngờ",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "khoanh tay",
+          "gesture": "cross-arms",
+          "emotion": "excited"
+        }
+      ],
+      "type": "dialogue",
+      "duration": 4.73,
+      "narration": "Tôi rút ngắn khâu bàn giao và xử lý khách khó mỗi tối.",
+      "dialogue": [
+        {
+          "character": "A",
+          "text": "Tôi rút ngắn khâu bàn giao và xử lý khách khó mỗi tối."
+        }
+      ],
+      "background": "dark",
+      "transition": {
+        "type": "scale",
+        "strength": 0.75,
+        "duration": 0.59
+      },
+      "emotion": "excited",
+      "gesture": "think",
+      "zoom": 0.11,
+      "subtitleAnimation": "pop",
+      "keywords": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "suy nghĩ",
+          "cam_xuc": "bất ngờ",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "suy nghĩ",
+          "gesture": "think",
+          "emotion": "excited"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "khoanh tay",
+          "cam_xuc": "bất ngờ",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "khoanh tay",
+          "gesture": "cross-arms",
+          "emotion": "excited"
+        }
+      ],
+      "seed": 854247,
+      "layout": "trước và sau"
+    },
+    {
+      "id": 5,
+      "loai_canh": "đối thoại",
+      "vai_tro": "Tranh luận",
+      "thoi_luong": 5.0,
+      "loi_dan": "Đó là việc nhiều hơn. Ta cần thống nhất giá trị đo được.",
+      "hoi_thoai": [
+        {
+          "nhan_vat": "B",
+          "noi_dung": "Đó là việc nhiều hơn. Ta cần thống nhất giá trị đo được."
+        }
+      ],
+      "tieu_de_canh": "Tranh luận",
+      "tu_khoa": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "boi_canh": "đường phố",
+      "bo_cuc": "nhân vật và bảng",
+      "camera": {
+        "type": "zoom-out",
+        "speed": 1.08,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 5.0
+      },
+      "chuyen_canh": {
+        "type": "whip",
+        "strength": 0.75,
+        "duration": 0.57
+      },
+      "hoat_anh_phu_de": "word",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "gật đầu",
+          "cam_xuc": "bối rối",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "gật đầu",
+          "gesture": "idle",
+          "emotion": "confused"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "lắc đầu",
+          "cam_xuc": "phấn khích",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "lắc đầu",
+          "gesture": "angry",
+          "emotion": "excited"
+        }
+      ],
+      "type": "dialogue",
+      "duration": 5.0,
+      "narration": "Đó là việc nhiều hơn. Ta cần thống nhất giá trị đo được.",
+      "dialogue": [
+        {
+          "character": "B",
+          "text": "Đó là việc nhiều hơn. Ta cần thống nhất giá trị đo được."
+        }
+      ],
+      "background": "dark",
+      "transition": {
+        "type": "whip",
+        "strength": 0.75,
+        "duration": 0.44
+      },
+      "emotion": "confused",
+      "gesture": "idle",
+      "zoom": 0.13,
+      "subtitleAnimation": "word",
+      "keywords": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "gật đầu",
+          "cam_xuc": "bối rối",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "gật đầu",
+          "gesture": "idle",
+          "emotion": "confused"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "lắc đầu",
+          "cam_xuc": "phấn khích",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "lắc đầu",
+          "gesture": "angry",
+          "emotion": "excited"
+        }
+      ],
+      "seed": 977192,
+      "layout": "nhân vật và bảng"
+    },
+    {
+      "id": 6,
+      "loai_canh": "đối thoại",
+      "vai_tro": "Hiểu lầm",
+      "thoi_luong": 5.27,
+      "loi_dan": "Vậy hãy đặt mục tiêu và một ngày xem lại cụ thể.",
+      "hoi_thoai": [
+        {
+          "nhan_vat": "A",
+          "noi_dung": "Vậy hãy đặt mục tiêu và một ngày xem lại cụ thể."
+        }
+      ],
+      "tieu_de_canh": "Hiểu lầm",
+      "tu_khoa": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "boi_canh": "phòng họp",
+      "bo_cuc": "trước và sau",
+      "camera": {
+        "type": "dolly",
+        "speed": 0.97,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 5.27
+      },
+      "chuyen_canh": {
+        "type": "fade",
+        "strength": 0.75,
+        "duration": 0.66
+      },
+      "hoat_anh_phu_de": "fade",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "giơ tay",
+          "cam_xuc": "tự tin",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "giơ tay",
+          "gesture": "hands-up",
+          "emotion": "smile"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "suy nghĩ",
+          "cam_xuc": "thất vọng",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "suy nghĩ",
+          "gesture": "think",
+          "emotion": "sad"
+        }
+      ],
+      "type": "dialogue",
+      "duration": 5.27,
+      "narration": "Vậy hãy đặt mục tiêu và một ngày xem lại cụ thể.",
+      "dialogue": [
+        {
+          "character": "A",
+          "text": "Vậy hãy đặt mục tiêu và một ngày xem lại cụ thể."
+        }
+      ],
+      "background": "dark",
+      "transition": {
+        "type": "fade",
+        "strength": 0.75,
+        "duration": 0.68
+      },
+      "emotion": "smile",
+      "gesture": "hands-up",
+      "zoom": 0.08,
+      "subtitleAnimation": "fade",
+      "keywords": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "giơ tay",
+          "cam_xuc": "tự tin",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "giơ tay",
+          "gesture": "hands-up",
+          "emotion": "smile"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "suy nghĩ",
+          "cam_xuc": "thất vọng",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "suy nghĩ",
+          "gesture": "think",
+          "emotion": "sad"
+        }
+      ],
+      "seed": 959965,
+      "layout": "trước và sau"
+    },
+    {
+      "id": 7,
+      "loai_canh": "đối thoại",
+      "vai_tro": "Hiểu lầm",
+      "thoi_luong": 4.73,
+      "loi_dan": "Được. Đạt mục tiêu, mức lương mới sẽ được chốt bằng văn bản.",
+      "hoi_thoai": [
+        {
+          "nhan_vat": "B",
+          "noi_dung": "Được. Đạt mục tiêu, mức lương mới sẽ được chốt bằng văn bản."
+        }
+      ],
+      "tieu_de_canh": "Hiểu lầm",
+      "tu_khoa": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "boi_canh": "không gian tối giản",
+      "bo_cuc": "nhân vật và bảng",
+      "camera": {
+        "type": "orbit",
+        "speed": 1.06,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 4.73
+      },
+      "chuyen_canh": {
+        "type": "flash",
+        "strength": 0.75,
+        "duration": 0.57
+      },
+      "hoat_anh_phu_de": "karaoke",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "vui mừng",
+          "cam_xuc": "nghiêm túc",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "vui mừng",
+          "gesture": "wave",
+          "emotion": "serious"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "gật đầu",
+          "cam_xuc": "bình thường",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "gật đầu",
+          "gesture": "idle",
+          "emotion": "neutral"
+        }
+      ],
+      "type": "dialogue",
+      "duration": 4.73,
+      "narration": "Được. Đạt mục tiêu, mức lương mới sẽ được chốt bằng văn bản.",
+      "dialogue": [
+        {
+          "character": "B",
+          "text": "Được. Đạt mục tiêu, mức lương mới sẽ được chốt bằng văn bản."
+        }
+      ],
+      "background": "dark",
+      "transition": {
+        "type": "flash",
+        "strength": 0.75,
+        "duration": 0.51
+      },
+      "emotion": "serious",
+      "gesture": "wave",
+      "zoom": 0.12,
+      "subtitleAnimation": "karaoke",
+      "keywords": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "vui mừng",
+          "cam_xuc": "nghiêm túc",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "vui mừng",
+          "gesture": "wave",
+          "emotion": "serious"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "gật đầu",
+          "cam_xuc": "bình thường",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "gật đầu",
+          "gesture": "idle",
+          "emotion": "neutral"
+        }
+      ],
+      "seed": 418311,
+      "layout": "nhân vật và bảng"
+    },
+    {
+      "id": 8,
+      "loai_canh": "đối thoại",
+      "vai_tro": "Chuyển biến",
+      "thoi_luong": 5.0,
+      "loi_dan": "Tôi cần một cam kết rõ, không phải lời hẹn chung chung.",
+      "hoi_thoai": [
+        {
+          "nhan_vat": "A",
+          "noi_dung": "Tôi cần một cam kết rõ, không phải lời hẹn chung chung."
+        }
+      ],
+      "tieu_de_canh": "Chuyển biến",
+      "tu_khoa": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "boi_canh": "quán cà phê",
+      "bo_cuc": "trước và sau",
+      "camera": {
+        "type": "push",
+        "speed": 0.96,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 5.0
+      },
+      "chuyen_canh": {
+        "type": "slide",
+        "strength": 0.75,
+        "duration": 0.37
+      },
+      "hoat_anh_phu_de": "slide",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "dùng laptop",
+          "cam_xuc": "thất vọng",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "dùng laptop",
+          "gesture": "use-laptop",
+          "emotion": "sad"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "giơ tay",
+          "cam_xuc": "nghiêm túc",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "giơ tay",
+          "gesture": "hands-up",
+          "emotion": "serious"
+        }
+      ],
+      "type": "dialogue",
+      "duration": 5.0,
+      "narration": "Tôi cần một cam kết rõ, không phải lời hẹn chung chung.",
+      "dialogue": [
+        {
+          "character": "A",
+          "text": "Tôi cần một cam kết rõ, không phải lời hẹn chung chung."
+        }
+      ],
+      "background": "dark",
+      "transition": {
+        "type": "slide",
+        "strength": 0.75,
+        "duration": 0.48
+      },
+      "emotion": "sad",
+      "gesture": "use-laptop",
+      "zoom": 0.08,
+      "subtitleAnimation": "slide",
+      "keywords": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "dùng laptop",
+          "cam_xuc": "thất vọng",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "dùng laptop",
+          "gesture": "use-laptop",
+          "emotion": "sad"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "giơ tay",
+          "cam_xuc": "nghiêm túc",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "giơ tay",
+          "gesture": "hands-up",
+          "emotion": "serious"
+        }
+      ],
+      "seed": 351425,
+      "layout": "trước và sau"
+    },
+    {
+      "id": 9,
+      "loai_canh": "kết",
+      "vai_tro": "Kết luận",
+      "thoi_luong": 5.27,
+      "loi_dan": "Tăng lương không nên là cuộc đấu cảm tính. Nó cần kết quả và cam kết rõ. Chọn một điểm nghẽn và kiểm tra ngay hôm nay.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Kết luận",
+      "tu_khoa": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "boi_canh": "nền tối",
+      "bo_cuc": "nhân vật và bảng",
+      "camera": {
+        "type": "pull",
+        "speed": 0.91,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 5.27
+      },
+      "chuyen_canh": {
+        "type": "camera-cut",
+        "strength": 0.75,
+        "duration": 0.43
+      },
+      "hoat_anh_phu_de": "pop",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "đi bộ",
+          "cam_xuc": "bất ngờ",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "đi bộ",
+          "gesture": "walk",
+          "emotion": "excited"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "vui mừng",
+          "cam_xuc": "vui",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "vui mừng",
+          "gesture": "wave",
+          "emotion": "happy"
+        }
+      ],
+      "type": "outro",
+      "duration": 5.27,
+      "narration": "Tăng lương không nên là cuộc đấu cảm tính. Nó cần kết quả và cam kết rõ. Chọn một điểm nghẽn và kiểm tra ngay hôm nay.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "camera-cut",
+        "strength": 0.75,
+        "duration": 0.36
+      },
+      "emotion": "excited",
+      "gesture": "walk",
+      "zoom": 0.08,
+      "subtitleAnimation": "pop",
+      "keywords": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "đi bộ",
+          "cam_xuc": "bất ngờ",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "đi bộ",
+          "gesture": "walk",
+          "emotion": "excited"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "vui mừng",
+          "cam_xuc": "vui",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "vui mừng",
+          "gesture": "wave",
+          "emotion": "happy"
+        }
+      ],
+      "seed": 720581,
+      "layout": "nhân vật và bảng"
+    }
+  ],
+  "version": 3,
+  "title": "Một ông chủ và nhân viên tranh luận về tăng lương.",
+  "hook": "“Tại sao tôi làm nhiều hơn, nhưng lương vẫn đứng yên?”",
+  "cao_trao": "Tôi cần một cam kết rõ, không phải lời hẹn chung chung.",
+  "ket_luan": "Tăng lương không nên là cuộc đấu cảm tính. Nó cần kết quả và cam kết rõ.",
+  "message": "Hiểu rõ Một ông chủ và nhân viên tranh luận về tăng lương. trước khi hành động.",
+  "cta": "Tăng lương không nên là cuộc đấu cảm tính. Nó cần kết quả và cam kết rõ. Chọn một điểm nghẽn và kiểm tra ngay hôm nay.",
+  "duration": 45,
+  "style": "dark_neon",
+  "motionLevel": "medium",
+  "voice": "Nam miền Bắc Nội lực Plus",
+  "audio": "assets/narration.mp3",
+  "scenes": [
+    {
+      "id": 1,
+      "loai_canh": "mở đầu",
+      "vai_tro": "Tình huống",
+      "thoi_luong": 5.27,
+      "loi_dan": "“Tại sao tôi làm nhiều hơn, nhưng lương vẫn đứng yên?”",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Tình huống",
+      "tu_khoa": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "boi_canh": "bảng trình bày",
+      "bo_cuc": "nhân vật và bảng",
+      "camera": {
+        "type": "pan-right",
+        "speed": 0.92,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 5.27
+      },
+      "chuyen_canh": {
+        "type": "slide",
+        "strength": 0.75,
+        "duration": 0.33
+      },
+      "hoat_anh_phu_de": "fade",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "chỉ tay",
+          "cam_xuc": "tự tin",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "chỉ tay",
+          "gesture": "point-right",
+          "emotion": "smile"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "đi bộ",
+          "cam_xuc": "lo lắng",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "đi bộ",
+          "gesture": "walk",
+          "emotion": "scared"
+        }
+      ],
+      "type": "intro",
+      "duration": 5.27,
+      "narration": "“Tại sao tôi làm nhiều hơn, nhưng lương vẫn đứng yên?”",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "slide",
+        "strength": 0.75,
+        "duration": 0.66
+      },
+      "emotion": "smile",
+      "gesture": "point-right",
+      "zoom": 0.1,
+      "subtitleAnimation": "fade",
+      "keywords": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "chỉ tay",
+          "cam_xuc": "tự tin",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "chỉ tay",
+          "gesture": "point-right",
+          "emotion": "smile"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "đi bộ",
+          "cam_xuc": "lo lắng",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "đi bộ",
+          "gesture": "walk",
+          "emotion": "scared"
+        }
+      ],
+      "seed": 707049,
+      "layout": "nhân vật và bảng"
+    },
+    {
+      "id": 2,
+      "loai_canh": "đối thoại",
+      "vai_tro": "Lượt nói A",
+      "thoi_luong": 4.73,
+      "loi_dan": "Tôi làm thêm việc suốt ba tháng. Vì sao lương vẫn vậy?",
+      "hoi_thoai": [
+        {
+          "nhan_vat": "A",
+          "noi_dung": "Tôi làm thêm việc suốt ba tháng. Vì sao lương vẫn vậy?"
+        }
+      ],
+      "tieu_de_canh": "Lượt nói A",
+      "tu_khoa": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "boi_canh": "lớp học",
+      "bo_cuc": "trước và sau",
+      "camera": {
+        "type": "pan-left",
+        "speed": 0.93,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 4.73
+      },
+      "chuyen_canh": {
+        "type": "camera-cut",
+        "strength": 0.75,
+        "duration": 0.46
+      },
+      "hoat_anh_phu_de": "karaoke",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "khoanh tay",
+          "cam_xuc": "nghiêm túc",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "khoanh tay",
+          "gesture": "cross-arms",
+          "emotion": "serious"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "dùng điện thoại",
+          "cam_xuc": "bối rối",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "dùng điện thoại",
+          "gesture": "use-phone",
+          "emotion": "confused"
+        }
+      ],
+      "type": "dialogue",
+      "duration": 4.73,
+      "narration": "Tôi làm thêm việc suốt ba tháng. Vì sao lương vẫn vậy?",
+      "dialogue": [
+        {
+          "character": "A",
+          "text": "Tôi làm thêm việc suốt ba tháng. Vì sao lương vẫn vậy?"
+        }
+      ],
+      "background": "dark",
+      "transition": {
+        "type": "camera-cut",
+        "strength": 0.75,
+        "duration": 0.57
+      },
+      "emotion": "serious",
+      "gesture": "cross-arms",
+      "zoom": 0.11,
+      "subtitleAnimation": "karaoke",
+      "keywords": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "khoanh tay",
+          "cam_xuc": "nghiêm túc",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "khoanh tay",
+          "gesture": "cross-arms",
+          "emotion": "serious"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "dùng điện thoại",
+          "cam_xuc": "bối rối",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "dùng điện thoại",
+          "gesture": "use-phone",
+          "emotion": "confused"
+        }
+      ],
+      "seed": 726313,
+      "layout": "trước và sau"
+    },
+    {
+      "id": 3,
+      "loai_canh": "đối thoại",
+      "vai_tro": "Phản hồi B",
+      "thoi_luong": 5.0,
+      "loi_dan": "Tôi thấy nỗ lực đó. Nhưng anh đã tạo kết quả nào rõ nhất?",
+      "hoi_thoai": [
+        {
+          "nhan_vat": "B",
+          "noi_dung": "Tôi thấy nỗ lực đó. Nhưng anh đã tạo kết quả nào rõ nhất?"
+        }
+      ],
+      "tieu_de_canh": "Phản hồi B",
+      "tu_khoa": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "boi_canh": "công viên",
+      "bo_cuc": "nhân vật và bảng",
+      "camera": {
+        "type": "parallax",
+        "speed": 1.04,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 5.0
+      },
+      "chuyen_canh": {
+        "type": "blur",
+        "strength": 0.75,
+        "duration": 0.44
+      },
+      "hoat_anh_phu_de": "slide",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "lắc đầu",
+          "cam_xuc": "thất vọng",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "lắc đầu",
+          "gesture": "angry",
+          "emotion": "sad"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "chỉ tay",
+          "cam_xuc": "suy nghĩ",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "chỉ tay",
+          "gesture": "point-right",
+          "emotion": "thinking"
+        }
+      ],
+      "type": "dialogue",
+      "duration": 5.0,
+      "narration": "Tôi thấy nỗ lực đó. Nhưng anh đã tạo kết quả nào rõ nhất?",
+      "dialogue": [
+        {
+          "character": "B",
+          "text": "Tôi thấy nỗ lực đó. Nhưng anh đã tạo kết quả nào rõ nhất?"
+        }
+      ],
+      "background": "dark",
+      "transition": {
+        "type": "blur",
+        "strength": 0.75,
+        "duration": 0.35
+      },
+      "emotion": "sad",
+      "gesture": "angry",
+      "zoom": 0.07,
+      "subtitleAnimation": "slide",
+      "keywords": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "lắc đầu",
+          "cam_xuc": "thất vọng",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "lắc đầu",
+          "gesture": "angry",
+          "emotion": "sad"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "chỉ tay",
+          "cam_xuc": "suy nghĩ",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "chỉ tay",
+          "gesture": "point-right",
+          "emotion": "thinking"
+        }
+      ],
+      "seed": 938816,
+      "layout": "nhân vật và bảng"
+    },
+    {
+      "id": 4,
+      "loai_canh": "đối thoại",
+      "vai_tro": "Phản hồi B",
+      "thoi_luong": 4.73,
+      "loi_dan": "Tôi rút ngắn khâu bàn giao và xử lý khách khó mỗi tối.",
+      "hoi_thoai": [
+        {
+          "nhan_vat": "A",
+          "noi_dung": "Tôi rút ngắn khâu bàn giao và xử lý khách khó mỗi tối."
+        }
+      ],
+      "tieu_de_canh": "Phản hồi B",
+      "tu_khoa": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "boi_canh": "văn phòng",
+      "bo_cuc": "trước và sau",
+      "camera": {
+        "type": "zoom-in",
+        "speed": 1.05,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 4.73
+      },
+      "chuyen_canh": {
+        "type": "scale",
+        "strength": 0.75,
+        "duration": 0.4
+      },
+      "hoat_anh_phu_de": "pop",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "suy nghĩ",
+          "cam_xuc": "bất ngờ",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "suy nghĩ",
+          "gesture": "think",
+          "emotion": "excited"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "khoanh tay",
+          "cam_xuc": "bất ngờ",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "khoanh tay",
+          "gesture": "cross-arms",
+          "emotion": "excited"
+        }
+      ],
+      "type": "dialogue",
+      "duration": 4.73,
+      "narration": "Tôi rút ngắn khâu bàn giao và xử lý khách khó mỗi tối.",
+      "dialogue": [
+        {
+          "character": "A",
+          "text": "Tôi rút ngắn khâu bàn giao và xử lý khách khó mỗi tối."
+        }
+      ],
+      "background": "dark",
+      "transition": {
+        "type": "scale",
+        "strength": 0.75,
+        "duration": 0.59
+      },
+      "emotion": "excited",
+      "gesture": "think",
+      "zoom": 0.11,
+      "subtitleAnimation": "pop",
+      "keywords": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "suy nghĩ",
+          "cam_xuc": "bất ngờ",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "suy nghĩ",
+          "gesture": "think",
+          "emotion": "excited"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "khoanh tay",
+          "cam_xuc": "bất ngờ",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "khoanh tay",
+          "gesture": "cross-arms",
+          "emotion": "excited"
+        }
+      ],
+      "seed": 854247,
+      "layout": "trước và sau"
+    },
+    {
+      "id": 5,
+      "loai_canh": "đối thoại",
+      "vai_tro": "Tranh luận",
+      "thoi_luong": 5.0,
+      "loi_dan": "Đó là việc nhiều hơn. Ta cần thống nhất giá trị đo được.",
+      "hoi_thoai": [
+        {
+          "nhan_vat": "B",
+          "noi_dung": "Đó là việc nhiều hơn. Ta cần thống nhất giá trị đo được."
+        }
+      ],
+      "tieu_de_canh": "Tranh luận",
+      "tu_khoa": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "boi_canh": "đường phố",
+      "bo_cuc": "nhân vật và bảng",
+      "camera": {
+        "type": "zoom-out",
+        "speed": 1.08,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 5.0
+      },
+      "chuyen_canh": {
+        "type": "whip",
+        "strength": 0.75,
+        "duration": 0.57
+      },
+      "hoat_anh_phu_de": "word",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "gật đầu",
+          "cam_xuc": "bối rối",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "gật đầu",
+          "gesture": "idle",
+          "emotion": "confused"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "lắc đầu",
+          "cam_xuc": "phấn khích",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "lắc đầu",
+          "gesture": "angry",
+          "emotion": "excited"
+        }
+      ],
+      "type": "dialogue",
+      "duration": 5.0,
+      "narration": "Đó là việc nhiều hơn. Ta cần thống nhất giá trị đo được.",
+      "dialogue": [
+        {
+          "character": "B",
+          "text": "Đó là việc nhiều hơn. Ta cần thống nhất giá trị đo được."
+        }
+      ],
+      "background": "dark",
+      "transition": {
+        "type": "whip",
+        "strength": 0.75,
+        "duration": 0.44
+      },
+      "emotion": "confused",
+      "gesture": "idle",
+      "zoom": 0.13,
+      "subtitleAnimation": "word",
+      "keywords": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "gật đầu",
+          "cam_xuc": "bối rối",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "gật đầu",
+          "gesture": "idle",
+          "emotion": "confused"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "lắc đầu",
+          "cam_xuc": "phấn khích",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "lắc đầu",
+          "gesture": "angry",
+          "emotion": "excited"
+        }
+      ],
+      "seed": 977192,
+      "layout": "nhân vật và bảng"
+    },
+    {
+      "id": 6,
+      "loai_canh": "đối thoại",
+      "vai_tro": "Hiểu lầm",
+      "thoi_luong": 5.27,
+      "loi_dan": "Vậy hãy đặt mục tiêu và một ngày xem lại cụ thể.",
+      "hoi_thoai": [
+        {
+          "nhan_vat": "A",
+          "noi_dung": "Vậy hãy đặt mục tiêu và một ngày xem lại cụ thể."
+        }
+      ],
+      "tieu_de_canh": "Hiểu lầm",
+      "tu_khoa": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "boi_canh": "phòng họp",
+      "bo_cuc": "trước và sau",
+      "camera": {
+        "type": "dolly",
+        "speed": 0.97,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 5.27
+      },
+      "chuyen_canh": {
+        "type": "fade",
+        "strength": 0.75,
+        "duration": 0.66
+      },
+      "hoat_anh_phu_de": "fade",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "giơ tay",
+          "cam_xuc": "tự tin",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "giơ tay",
+          "gesture": "hands-up",
+          "emotion": "smile"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "suy nghĩ",
+          "cam_xuc": "thất vọng",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "suy nghĩ",
+          "gesture": "think",
+          "emotion": "sad"
+        }
+      ],
+      "type": "dialogue",
+      "duration": 5.27,
+      "narration": "Vậy hãy đặt mục tiêu và một ngày xem lại cụ thể.",
+      "dialogue": [
+        {
+          "character": "A",
+          "text": "Vậy hãy đặt mục tiêu và một ngày xem lại cụ thể."
+        }
+      ],
+      "background": "dark",
+      "transition": {
+        "type": "fade",
+        "strength": 0.75,
+        "duration": 0.68
+      },
+      "emotion": "smile",
+      "gesture": "hands-up",
+      "zoom": 0.08,
+      "subtitleAnimation": "fade",
+      "keywords": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "giơ tay",
+          "cam_xuc": "tự tin",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "giơ tay",
+          "gesture": "hands-up",
+          "emotion": "smile"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "suy nghĩ",
+          "cam_xuc": "thất vọng",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "suy nghĩ",
+          "gesture": "think",
+          "emotion": "sad"
+        }
+      ],
+      "seed": 959965,
+      "layout": "trước và sau"
+    },
+    {
+      "id": 7,
+      "loai_canh": "đối thoại",
+      "vai_tro": "Hiểu lầm",
+      "thoi_luong": 4.73,
+      "loi_dan": "Được. Đạt mục tiêu, mức lương mới sẽ được chốt bằng văn bản.",
+      "hoi_thoai": [
+        {
+          "nhan_vat": "B",
+          "noi_dung": "Được. Đạt mục tiêu, mức lương mới sẽ được chốt bằng văn bản."
+        }
+      ],
+      "tieu_de_canh": "Hiểu lầm",
+      "tu_khoa": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "boi_canh": "không gian tối giản",
+      "bo_cuc": "nhân vật và bảng",
+      "camera": {
+        "type": "orbit",
+        "speed": 1.06,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 4.73
+      },
+      "chuyen_canh": {
+        "type": "flash",
+        "strength": 0.75,
+        "duration": 0.57
+      },
+      "hoat_anh_phu_de": "karaoke",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "vui mừng",
+          "cam_xuc": "nghiêm túc",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "vui mừng",
+          "gesture": "wave",
+          "emotion": "serious"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "gật đầu",
+          "cam_xuc": "bình thường",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "gật đầu",
+          "gesture": "idle",
+          "emotion": "neutral"
+        }
+      ],
+      "type": "dialogue",
+      "duration": 4.73,
+      "narration": "Được. Đạt mục tiêu, mức lương mới sẽ được chốt bằng văn bản.",
+      "dialogue": [
+        {
+          "character": "B",
+          "text": "Được. Đạt mục tiêu, mức lương mới sẽ được chốt bằng văn bản."
+        }
+      ],
+      "background": "dark",
+      "transition": {
+        "type": "flash",
+        "strength": 0.75,
+        "duration": 0.51
+      },
+      "emotion": "serious",
+      "gesture": "wave",
+      "zoom": 0.12,
+      "subtitleAnimation": "karaoke",
+      "keywords": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "vui mừng",
+          "cam_xuc": "nghiêm túc",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "vui mừng",
+          "gesture": "wave",
+          "emotion": "serious"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "gật đầu",
+          "cam_xuc": "bình thường",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "gật đầu",
+          "gesture": "idle",
+          "emotion": "neutral"
+        }
+      ],
+      "seed": 418311,
+      "layout": "nhân vật và bảng"
+    },
+    {
+      "id": 8,
+      "loai_canh": "đối thoại",
+      "vai_tro": "Chuyển biến",
+      "thoi_luong": 5.0,
+      "loi_dan": "Tôi cần một cam kết rõ, không phải lời hẹn chung chung.",
+      "hoi_thoai": [
+        {
+          "nhan_vat": "A",
+          "noi_dung": "Tôi cần một cam kết rõ, không phải lời hẹn chung chung."
+        }
+      ],
+      "tieu_de_canh": "Chuyển biến",
+      "tu_khoa": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "boi_canh": "quán cà phê",
+      "bo_cuc": "trước và sau",
+      "camera": {
+        "type": "push",
+        "speed": 0.96,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 5.0
+      },
+      "chuyen_canh": {
+        "type": "slide",
+        "strength": 0.75,
+        "duration": 0.37
+      },
+      "hoat_anh_phu_de": "slide",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "dùng laptop",
+          "cam_xuc": "thất vọng",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "dùng laptop",
+          "gesture": "use-laptop",
+          "emotion": "sad"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "giơ tay",
+          "cam_xuc": "nghiêm túc",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "giơ tay",
+          "gesture": "hands-up",
+          "emotion": "serious"
+        }
+      ],
+      "type": "dialogue",
+      "duration": 5.0,
+      "narration": "Tôi cần một cam kết rõ, không phải lời hẹn chung chung.",
+      "dialogue": [
+        {
+          "character": "A",
+          "text": "Tôi cần một cam kết rõ, không phải lời hẹn chung chung."
+        }
+      ],
+      "background": "dark",
+      "transition": {
+        "type": "slide",
+        "strength": 0.75,
+        "duration": 0.48
+      },
+      "emotion": "sad",
+      "gesture": "use-laptop",
+      "zoom": 0.08,
+      "subtitleAnimation": "slide",
+      "keywords": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "dùng laptop",
+          "cam_xuc": "thất vọng",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "dùng laptop",
+          "gesture": "use-laptop",
+          "emotion": "sad"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "giơ tay",
+          "cam_xuc": "nghiêm túc",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "giơ tay",
+          "gesture": "hands-up",
+          "emotion": "serious"
+        }
+      ],
+      "seed": 351425,
+      "layout": "trước và sau"
+    },
+    {
+      "id": 9,
+      "loai_canh": "kết",
+      "vai_tro": "Kết luận",
+      "thoi_luong": 5.27,
+      "loi_dan": "Tăng lương không nên là cuộc đấu cảm tính. Nó cần kết quả và cam kết rõ. Chọn một điểm nghẽn và kiểm tra ngay hôm nay.",
+      "hoi_thoai": [],
+      "tieu_de_canh": "Kết luận",
+      "tu_khoa": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "boi_canh": "nền tối",
+      "bo_cuc": "nhân vật và bảng",
+      "camera": {
+        "type": "pull",
+        "speed": 0.91,
+        "easing": "ease-in-out",
+        "strength": 0.75,
+        "duration": 5.27
+      },
+      "chuyen_canh": {
+        "type": "camera-cut",
+        "strength": 0.75,
+        "duration": 0.43
+      },
+      "hoat_anh_phu_de": "pop",
+      "nhan_vat": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "đi bộ",
+          "cam_xuc": "bất ngờ",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "đi bộ",
+          "gesture": "walk",
+          "emotion": "excited"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "vui mừng",
+          "cam_xuc": "vui",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "vui mừng",
+          "gesture": "wave",
+          "emotion": "happy"
+        }
+      ],
+      "type": "outro",
+      "duration": 5.27,
+      "narration": "Tăng lương không nên là cuộc đấu cảm tính. Nó cần kết quả và cam kết rõ. Chọn một điểm nghẽn và kiểm tra ngay hôm nay.",
+      "dialogue": [],
+      "background": "dark",
+      "transition": {
+        "type": "camera-cut",
+        "strength": 0.75,
+        "duration": 0.36
+      },
+      "emotion": "excited",
+      "gesture": "walk",
+      "zoom": 0.08,
+      "subtitleAnimation": "pop",
+      "keywords": [
+        "nhân",
+        "viên",
+        "tranh"
+      ],
+      "characters": [
+        {
+          "ten": "A",
+          "vi_tri": "trai",
+          "hanh_dong": "đi bộ",
+          "cam_xuc": "bất ngờ",
+          "huong_nhin": "nhân vật B",
+          "name": "A",
+          "position": "left",
+          "action": "đi bộ",
+          "gesture": "walk",
+          "emotion": "excited"
+        },
+        {
+          "ten": "B",
+          "vi_tri": "phải",
+          "hanh_dong": "vui mừng",
+          "cam_xuc": "vui",
+          "huong_nhin": "nhân vật A",
+          "name": "B",
+          "position": "right",
+          "action": "vui mừng",
+          "gesture": "wave",
+          "emotion": "happy"
+        }
+      ],
+      "seed": 720581,
+      "layout": "nhân vật và bảng"
+    }
+  ],
+  "chat_luong_kich_ban": {
+    "tong_diem": 97,
+    "diem_hook": 20,
+    "diem_cu_the": 12,
+    "diem_tu_nhien": 15,
+    "diem_cau_truc": 15,
+    "diem_cao_trao": 10,
+    "diem_da_dang_cau": 10,
+    "diem_ket_thuc": 5,
+    "diem_khong_van_mau": 10,
+    "canh_bao": []
+  }
+}
