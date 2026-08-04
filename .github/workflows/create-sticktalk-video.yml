@@ -34,9 +34,11 @@ on:
       voice:
         description: "Giọng đọc"
         required: true
-        default: nam_bac_noi_luc
+        default: nam_bac_noi_luc_plus
         type: choice
         options:
+          - nam_bac_noi_luc_plus
+          - nam_bac_phat_thanh
           - nam_bac_noi_luc
           - nam_bac_truyen_cam
           - nam_bac_nang_luong
