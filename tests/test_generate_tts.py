@@ -1,3 +1,5 @@
+import json
+import tempfile
 import unittest
 from unittest.mock import patch
 from pathlib import Path
@@ -5,11 +7,27 @@ from pathlib import Path
 from scripts.generate_tts import (
     HOAI_MY, NAM_MINH, MASTERING_FILTERS, PRESETS, clean_text,
     number_to_vietnamese, resolve_preset, speech_parts, split_long_sentences,
+    validate_voice_region,
     _master_audio,
 )
 
 
 class GenerateTtsTest(unittest.TestCase):
+    def test_voice_region_requires_exact_manual_classification(self):
+        with tempfile.TemporaryDirectory() as directory:
+            config = Path(directory) / "vung_giong.json"
+            config.write_text(json.dumps({NAM_MINH: "mien_bac"}), encoding="utf-8")
+            self.assertEqual(validate_voice_region("Miền Bắc", NAM_MINH, config), "mien_bac")
+            with self.assertRaisesRegex(RuntimeError, "Không fallback"):
+                validate_voice_region("Miền Nam", NAM_MINH, config)
+
+    def test_unknown_voice_id_is_not_inferred_from_its_name(self):
+        with tempfile.TemporaryDirectory() as directory:
+            config = Path(directory) / "vung_giong.json"
+            config.write_text("{}", encoding="utf-8")
+            with self.assertRaisesRegex(RuntimeError, "Không có trong cấu hình"):
+                validate_voice_region("Miền Bắc", "voice-mien-bac", config)
+
     def test_all_northern_male_presets_are_nam_minh(self):
         male = [preset for name, preset in PRESETS.items() if name.startswith("Nam miền Bắc")]
         self.assertEqual(len(male), 6)

@@ -79,6 +79,15 @@ on:
           - "Nam miền Bắc Truyền cảm"
           - "Nam miền Bắc Doanh nhân"
           - "Nữ miền Bắc Dịu nhẹ"
+      voice_region:
+        description: "Vùng giọng"
+        required: true
+        default: "Chưa xác định"
+        type: choice
+        options:
+          - "Miền Bắc"
+          - "Miền Nam"
+          - "Chưa xác định"
 
 permissions:
   contents: read
@@ -122,6 +131,7 @@ jobs:
           echo "Phong cách: ${{ inputs.style }}"
           echo "Mức chuyển động: ${{ inputs.motion_level }}"
           echo "Giọng đọc: ${{ inputs.voice }}"
+          echo "Vùng giọng: ${{ inputs.voice_region }}"
 
       - name: Tạo video
         env:
@@ -134,6 +144,7 @@ jobs:
           VIDEO_STYLE: ${{ inputs.style }}
           VIDEO_MOTION_LEVEL: ${{ inputs.motion_level }}
           VIDEO_VOICE: ${{ inputs.voice }}
+          VIDEO_VOICE_REGION: ${{ inputs.voice_region }}
         run: |
           chmod +x make_video.sh
           ./make_video.sh

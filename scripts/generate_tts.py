@@ -25,6 +25,20 @@ class VoicePreset:
 
 NAM_MINH = "vi-VN-NamMinhNeural"
 HOAI_MY = "vi-VN-HoaiMyNeural"
+VOICE_REGION_CONFIG = Path(__file__).with_name("tts") / "vung_giong.json"
+VOICE_REGIONS = {
+    "Miền Bắc": "mien_bac",
+    "Miền Nam": "mien_nam",
+    "Chưa xác định": "chua_xac_dinh",
+    "mien_bac": "mien_bac",
+    "mien_nam": "mien_nam",
+    "chua_xac_dinh": "chua_xac_dinh",
+}
+REGION_LABELS = {
+    "mien_bac": "Miền Bắc",
+    "mien_nam": "Miền Nam",
+    "chua_xac_dinh": "Chưa xác định",
+}
 
 # Tên hiển thị cũng là giá trị truyền xuyên suốt workflow, tránh việc UI đúng nhưng
 # pipeline lại âm thầm chọn một preset/voice khác.
@@ -64,6 +78,36 @@ def resolve_preset(name: str) -> VoicePreset:
     if preset.name.startswith("Nam miền Bắc") and preset.voice != NAM_MINH:
         raise RuntimeError(f"Preset {preset.name} bắt buộc dùng {NAM_MINH}, không phải {preset.voice}")
     return preset
+
+
+def load_voice_regions(config_path: Path = VOICE_REGION_CONFIG) -> dict[str, str]:
+    """Đọc phân loại thủ công; tuyệt đối không suy luận vùng từ tên Voice ID."""
+    try:
+        regions = json.loads(config_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise ValueError(f"Không đọc được cấu hình vùng giọng {config_path}: {error}") from error
+    if not isinstance(regions, dict) or any(region not in REGION_LABELS for region in regions.values()):
+        raise ValueError(
+            "Cấu hình vùng giọng không hợp lệ; chỉ chấp nhận mien_bac, mien_nam hoặc chua_xac_dinh"
+        )
+    return regions
+
+
+def validate_voice_region(selected_region: str, voice_id: str, config_path: Path = VOICE_REGION_CONFIG) -> str:
+    region = VOICE_REGIONS.get(selected_region)
+    if region is None:
+        raise ValueError(f"Vùng giọng không hợp lệ: {selected_region}")
+    actual_region = load_voice_regions(config_path).get(voice_id)
+    actual_label = REGION_LABELS.get(actual_region, "Không có trong cấu hình")
+    print(f"Vùng giọng đã chọn: {REGION_LABELS[region]}")
+    print(f"Voice ID thực tế: {voice_id}")
+    print(f"Vùng giọng của Voice ID: {actual_label}")
+    if actual_region != region:
+        raise RuntimeError(
+            f"Không có giọng phù hợp: Voice ID {voice_id} thuộc vùng '{actual_label}', "
+            f"không khớp vùng đã chọn '{REGION_LABELS[region]}'. Không fallback sang vùng khác."
+        )
+    return actual_region
 
 
 def _under_thousand(number: int, full: bool = False) -> str:
@@ -231,8 +275,9 @@ async def synthesize(text: str, destination: Path, preset_name: str) -> str:
     return preset.voice
 
 
-async def run(preset_name: str) -> None:
+async def run(preset_name: str, selected_region: str) -> None:
     preset = resolve_preset(preset_name)
+    validate_voice_region(selected_region, preset.voice)
     story = json.loads(Path("assets/story.json").read_text(encoding="utf-8"))
     text = " ".join(scene["narration"] for scene in story["scenes"])
     actual_voice = await synthesize(text, Path("assets/narration.mp3"), preset.name)
@@ -244,9 +289,13 @@ async def run(preset_name: str) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--preset", default=DEFAULT_PRESET, help="Tên preset tiếng Việt (hoặc alias cũ)")
+    parser.add_argument(
+        "--vung-giong", "--voice-region", default="Chưa xác định",
+        choices=("Miền Bắc", "Miền Nam", "Chưa xác định"), help="Phân loại vùng giọng đã xác nhận thủ công",
+    )
     args = parser.parse_args()
     try:
-        asyncio.run(run(args.preset))
+        asyncio.run(run(args.preset, args.vung_giong))
     except (ValueError, RuntimeError) as error:
         parser.error(str(error))
 

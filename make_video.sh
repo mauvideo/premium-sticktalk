@@ -11,6 +11,7 @@ TONE="${VIDEO_TONE:-sâu_sắc}"
 CONTENT_FORMAT="${VIDEO_CONTENT_FORMAT:-hybrid}"
 STYLE="${VIDEO_STYLE:-người_que_triết_lý}"
 VOICE="${VIDEO_VOICE:-Nam miền Bắc Nội lực Plus}"
+VOICE_REGION="${VIDEO_VOICE_REGION:-Chưa xác định}"
 MOTION_LEVEL="${VIDEO_MOTION_LEVEL:-trung_bình}"
 SCRIPT_MODE="${VIDEO_SCRIPT_MODE:-Tự động theo chủ đề}"
 WRITING_STYLE="${VIDEO_WRITING_STYLE:-Tự động theo chủ đề}"
@@ -37,6 +38,8 @@ while (($#)); do
       require_value "$@"; STYLE="$2"; shift 2;;
     --voice|--giong-doc|--giọng-đọc)
       require_value "$@"; VOICE="$2"; shift 2;;
+    --voice-region|--vung-giong|--vùng-giọng)
+      require_value "$@"; VOICE_REGION="$2"; shift 2;;
     --motion-level|--muc-do-chuyen-dong|--mức-độ-chuyển-động)
       require_value "$@"; MOTION_LEVEL="$2"; shift 2;;
     --script-mode|--che-do-viet-kich-ban|--chế-độ-viết-kịch-bản)
@@ -62,7 +65,8 @@ printf '%s\n' \
   "Mức chuyển động: $MOTION_LEVEL" \
   "Chế độ viết kịch bản: $SCRIPT_MODE" \
   "Phong cách viết nội dung: $WRITING_STYLE" \
-  "Giọng đọc: $VOICE"
+  "Giọng đọc: $VOICE" \
+  "Vùng giọng: $VOICE_REGION"
 
 mkdir -p assets output remotion/public/assets
 
@@ -77,7 +81,7 @@ python3 scripts/generate_story.py \
   --script-mode "$SCRIPT_MODE" \
   --writing-style "$WRITING_STYLE"
 
-python3 scripts/generate_tts.py --preset "$VOICE"
+python3 scripts/generate_tts.py --preset "$VOICE" --vung-giong "$VOICE_REGION"
 cp assets/narration.mp3 remotion/public/assets/narration.mp3
 
 python3 - <<'PY'
