@@ -11,7 +11,6 @@ TONE="${VIDEO_TONE:-sâu_sắc}"
 CONTENT_FORMAT="${VIDEO_CONTENT_FORMAT:-hybrid}"
 STYLE="${VIDEO_STYLE:-người_que_triết_lý}"
 VOICE="${VIDEO_VOICE:-Nam tiếng Việt — Tự nhiên}"
-TTS_PROVIDER="${TTS_PROVIDER:-edge}"
 MOTION_LEVEL="${VIDEO_MOTION_LEVEL:-trung_bình}"
 SCRIPT_MODE="${VIDEO_SCRIPT_MODE:-Tự động theo chủ đề}"
 WRITING_STYLE="${VIDEO_WRITING_STYLE:-Tự động theo chủ đề}"
@@ -85,7 +84,7 @@ python3 scripts/generate_story.py \
   --script-mode "$SCRIPT_MODE" \
   --writing-style "$WRITING_STYLE"
 
-python3 scripts/generate_tts.py --provider "$TTS_PROVIDER" --preset "$VOICE"
+python3 scripts/generate_tts.py --preset "$VOICE"
 cp assets/narration.mp3 remotion/public/assets/narration.mp3
 
 python3 - <<'PY'
