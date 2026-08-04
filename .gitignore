@@ -1,0 +1,8 @@
+remotion/node_modules/
+output/*
+!output/.gitkeep
+assets/narration.mp3
+assets/story.json
+remotion/public/assets/
+*.pyc
+__pycache__/
