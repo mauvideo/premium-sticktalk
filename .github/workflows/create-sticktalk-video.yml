@@ -75,7 +75,7 @@ on:
           - nhiều
           - viral_tiktok
       voice:
-        description: "Giọng đọc"
+        description: "Giọng đọc Edge TTS miễn phí"
         required: true
         default: "Nam tiếng Việt — Tự nhiên"
         type: choice
@@ -85,22 +85,6 @@ on:
           - "Nam tiếng Việt — Phát thanh"
           - "Nam tiếng Việt — Kể chuyện"
           - "Nữ tiếng Việt — Tự nhiên"
-          - "Google Nam tiếng Việt — Trầm"
-          - "Google Nam tiếng Việt — Phát thanh"
-          - "Google Nam tiếng Việt — Nội lực"
-          - "Google Nam Neural 2"
-          - "Google Nam WaveNet"
-          - "Google Nam Standard"
-          - "Google Nữ Neural 2"
-          - "Google Nữ WaveNet"
-      tts_provider:
-        description: "Nhà cung cấp giọng đọc"
-        required: true
-        default: "Microsoft Edge miễn phí"
-        type: choice
-        options:
-          - "Microsoft Edge miễn phí"
-          - "Google Cloud (nâng cao)"
 
 permissions:
   contents: read
@@ -144,20 +128,7 @@ jobs:
           echo "Phong cách: ${{ inputs.style }}"
           echo "Mức chuyển động: ${{ inputs.motion_level }}"
           echo "Giọng đọc: ${{ inputs.voice }}"
-          echo "Nhà cung cấp giọng đọc: ${{ inputs.tts_provider }}"
-
-      - name: Cấu hình Google Cloud Text-to-Speech
-        if: inputs.tts_provider == 'Google Cloud (nâng cao)'
-        env:
-          GOOGLE_CLOUD_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CLOUD_CREDENTIALS_JSON }}
-        run: |
-          if [ -z "$GOOGLE_CLOUD_CREDENTIALS_JSON" ]; then
-            echo "Chưa cấu hình Google Cloud Text-to-Speech. Hãy thêm GitHub Secret GOOGLE_CLOUD_CREDENTIALS_JSON." >&2
-            exit 1
-          fi
-          printf '%s' "$GOOGLE_CLOUD_CREDENTIALS_JSON" > "$RUNNER_TEMP/google-cloud-credentials.json"
-          chmod 600 "$RUNNER_TEMP/google-cloud-credentials.json"
-          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/google-cloud-credentials.json" >> "$GITHUB_ENV"
+          echo "Nhà cung cấp giọng đọc: Microsoft Edge TTS miễn phí"
 
       - name: Tạo video
         env:
@@ -170,8 +141,8 @@ jobs:
           VIDEO_STYLE: ${{ inputs.style }}
           VIDEO_MOTION_LEVEL: ${{ inputs.motion_level }}
           VIDEO_VOICE: ${{ inputs.voice }}
-          TTS_PROVIDER: ${{ inputs.tts_provider == 'Google Cloud (nâng cao)' && 'google' || 'edge' }}
-          GOOGLE_TTS_VOICE: ${{ inputs.voice }}
+          TTS_PROVIDER: edge
+          TTS_VOICE: ${{ inputs.voice }}
         run: |
           chmod +x make_video.sh
           ./make_video.sh
@@ -192,7 +163,3 @@ jobs:
           if-no-files-found: error
           retention-days: 7
           compression-level: 0
-
-      - name: Xóa file thông tin xác thực tạm
-        if: always()
-        run: rm -f "$RUNNER_TEMP/google-cloud-credentials.json"
