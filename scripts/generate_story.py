@@ -13,7 +13,15 @@ TEMPLATES=[
 ("Lần tới, hãy tự hỏi: chuyện này có thật sự đáng để mình đánh đổi bình yên không?",["bình","yên"],"zoom_out",[{"name":"A","position":"center","action":"think","emotion":"serious"}])]
 
 def main():
- p=argparse.ArgumentParser(); p.add_argument('--idea',required=True); p.add_argument('--duration',type=int,default=45); p.add_argument('--tone',default='sâu sắc'); p.add_argument('--format',default='hybrid'); p.add_argument('--style',default='dark_neon'); p.add_argument('--voice',default='nam_bac_news'); p.add_argument('--motion-level',default='medium'); a=p.parse_args()
+ p=argparse.ArgumentParser()
+ p.add_argument('--idea','--y-tuong','--ý-tưởng',dest='idea',required=True)
+ p.add_argument('--duration','--thoi-luong','--thời-lượng',dest='duration',type=int,default=45)
+ p.add_argument('--tone','--giong-dieu','--giọng-điệu',dest='tone',default='sâu sắc')
+ p.add_argument('--format','--content-format','--dinh-dang','--định-dạng',dest='content_format',default='hybrid')
+ p.add_argument('--style','--phong-cach','--phong-cách',dest='style',default='dark_neon')
+ p.add_argument('--voice','--giong-doc','--giọng-đọc',dest='voice',default='nam_bac_news')
+ p.add_argument('--motion-level','--muc-chuyen-dong','--mức-chuyển-động',dest='motion_level',default='medium')
+ a=p.parse_args()
  a.motion_level={'nhẹ':'light','trung_bình':'medium','nhiều':'high','viral_tiktok':'viral'}.get(a.motion_level,a.motion_level)
  if a.motion_level not in {'light','medium','high','viral'}: p.error('--motion-level không hợp lệ')
  rng=random.Random(int(hashlib.sha256(f'{a.idea}|{a.style}|{a.motion_level}'.encode()).hexdigest()[:12],16))

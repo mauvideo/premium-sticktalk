@@ -1,22 +1,28 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"; cd "$ROOT"
-IDEA=""; DURATION=45; TONE="sâu sắc"; FORMAT="hybrid"; STYLE="dark_neon"; VOICE="nam_bac_news"; MOTION_LEVEL="medium"
+IDEA=""; DURATION=45; TONE="sâu sắc"; CONTENT_FORMAT="hybrid"; STYLE="dark_neon"; VOICE="nam_bac_news"; MOTION_LEVEL="medium"
+require_value() {
+  if (($# < 2)) || [[ -z "$2" || "$2" == --* ]]; then
+    echo "Thiếu giá trị cho $1" >&2
+    exit 2
+  fi
+}
 while (($#)); do
   case "$1" in
-    --idea) IDEA="${2:-}"; shift 2;;
-    --duration) DURATION="${2:-45}"; shift 2;;
-    --tone) TONE="${2:-sâu sắc}"; shift 2;;
-    --format) FORMAT="${2:-hybrid}"; shift 2;;
-    --style) STYLE="${2:-dark_neon}"; shift 2;;
-    --voice) VOICE="${2:-nam_bac_news}"; shift 2;;
-    --motion-level) MOTION_LEVEL="${2:-medium}"; shift 2;;
+    --idea|--y-tuong|--ý-tưởng) require_value "$@"; IDEA="$2"; shift 2;;
+    --duration|--thoi-luong|--thời-lượng) require_value "$@"; DURATION="$2"; shift 2;;
+    --tone|--giong-dieu|--giọng-điệu) require_value "$@"; TONE="$2"; shift 2;;
+    --format|--content-format|--dinh-dang|--định-dạng) require_value "$@"; CONTENT_FORMAT="$2"; shift 2;;
+    --style|--phong-cach|--phong-cách) require_value "$@"; STYLE="$2"; shift 2;;
+    --voice|--giong-doc|--giọng-đọc) require_value "$@"; VOICE="$2"; shift 2;;
+    --motion-level|--muc-chuyen-dong|--mức-chuyển-động) require_value "$@"; MOTION_LEVEL="$2"; shift 2;;
     *) echo "Tham số không hợp lệ: $1" >&2; exit 2;;
   esac
 done
 [[ -n "$IDEA" ]] || { echo 'Thiếu --idea' >&2; exit 2; }
 mkdir -p assets output remotion/public/assets
-python3 scripts/generate_story.py --idea "$IDEA" --duration "$DURATION" --tone "$TONE" --format "$FORMAT" --style "$STYLE" --voice "$VOICE" --motion-level "$MOTION_LEVEL"
+python3 scripts/generate_story.py --idea "$IDEA" --duration "$DURATION" --tone "$TONE" --format "$CONTENT_FORMAT" --style "$STYLE" --voice "$VOICE" --motion-level "$MOTION_LEVEL"
 python3 scripts/generate_tts.py --preset "$VOICE"
 cp assets/narration.mp3 remotion/public/assets/narration.mp3
 python3 - <<'PY'
