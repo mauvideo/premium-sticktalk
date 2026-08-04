@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate Vietnamese narration, preferring Edge TTS with a gTTS fallback."""
+"""Tạo và hậu kỳ giọng đọc tiếng Việt cho Premium StickTalk."""
 
 import argparse
 import asyncio
@@ -11,28 +11,59 @@ import wave
 from dataclasses import dataclass
 from pathlib import Path
 
+
 @dataclass(frozen=True)
 class VoicePreset:
+    name: str
     voice: str
-    rate: str = "+0%"
-    pitch: str = "+0Hz"
-    volume: str = "+0%"
+    rate: str
+    pitch: str
+    volume: str
+    mastering: str
+    max_words: int = 24
 
 
+NAM_MINH = "vi-VN-NamMinhNeural"
+HOAI_MY = "vi-VN-HoaiMyNeural"
+
+# Tên hiển thị cũng là giá trị truyền xuyên suốt workflow, tránh việc UI đúng nhưng
+# pipeline lại âm thầm chọn một preset/voice khác.
 PRESETS = {
-    "nam_bac_noi_luc_plus": VoicePreset("vi-VN-NamMinhNeural", "-6%", "-4Hz", "+10%"),
-    "nam_bac_phat_thanh": VoicePreset("vi-VN-NamMinhNeural", "-4%", "-2Hz", "+8%"),
-    "nam_bac_news": VoicePreset("vi-VN-NamMinhNeural", "-6%", "-3Hz", "+8%"),
-    "nam_bac_noi_luc": VoicePreset("vi-VN-NamMinhNeural", "-8%", "-5Hz", "+10%"),
-    "nam_bac_truyen_cam": VoicePreset("vi-VN-NamMinhNeural", "-12%", "-3Hz", "+6%"),
-    "nam_bac_nang_luong": VoicePreset("vi-VN-NamMinhNeural", "+6%", "+1Hz", "+8%"),
-    "nam_bac_tu_nhien": VoicePreset("vi-VN-NamMinhNeural", "-2%", "+0Hz", "+2%"),
-    "nu_viet_nam_ro_rang": VoicePreset("vi-VN-HoaiMyNeural", "-1%", "+0Hz", "+3%"),
+    "Nam miền Bắc MC": VoicePreset("Nam miền Bắc MC", NAM_MINH, "-3%", "-2Hz", "+6%", "mc"),
+    "Nam miền Bắc Nội lực": VoicePreset("Nam miền Bắc Nội lực", NAM_MINH, "-8%", "-5Hz", "+9%", "power"),
+    "Nam miền Bắc Nội lực Plus": VoicePreset(
+        "Nam miền Bắc Nội lực Plus", NAM_MINH, "-14%", "-7Hz", "+14%", "power_plus", 20
+    ),
+    "Nam miền Bắc Podcast": VoicePreset("Nam miền Bắc Podcast", NAM_MINH, "-10%", "-3Hz", "+5%", "podcast", 22),
+    "Nam miền Bắc Truyền cảm": VoicePreset("Nam miền Bắc Truyền cảm", NAM_MINH, "-12%", "-4Hz", "+7%", "emotional", 20),
+    "Nam miền Bắc Doanh nhân": VoicePreset("Nam miền Bắc Doanh nhân", NAM_MINH, "-6%", "-4Hz", "+8%", "business"),
+    "Nữ miền Bắc Dịu nhẹ": VoicePreset("Nữ miền Bắc Dịu nhẹ", HOAI_MY, "-8%", "+1Hz", "+4%", "gentle", 22),
 }
-DEFAULT_PRESET = "nam_bac_noi_luc"
-PAUSES_MS = {".": 500, ",": 180, ":": 250, ";": 220}
+DEFAULT_PRESET = "Nam miền Bắc Nội lực Plus"
+PAUSES_MS = {".": 560, ",": 210, ":": 300, ";": 330, "?": 620, "!": 600}
+
+# Giữ tương thích với các job cũ, nhưng mọi alias đều được chuẩn hóa trước khi render/log.
+PRESET_ALIASES = {
+    "nam_bac_mc": "Nam miền Bắc MC",
+    "nam_bac_noi_luc": "Nam miền Bắc Nội lực",
+    "nam_bac_noi_luc_plus": "Nam miền Bắc Nội lực Plus",
+    "nam_bac_podcast": "Nam miền Bắc Podcast",
+    "nam_bac_truyen_cam": "Nam miền Bắc Truyền cảm",
+    "nam_bac_doanh_nhan": "Nam miền Bắc Doanh nhân",
+    "nu_mien_bac_diu_nhe": "Nữ miền Bắc Dịu nhẹ",
+}
 
 ONES = ["không", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"]
+
+
+def resolve_preset(name: str) -> VoicePreset:
+    canonical = PRESET_ALIASES.get(name, name)
+    if canonical not in PRESETS:
+        raise ValueError(f"Preset không hợp lệ: {name}")
+    preset = PRESETS[canonical]
+    if preset.name.startswith("Nam miền Bắc") and preset.voice != NAM_MINH:
+        raise RuntimeError(f"Preset {preset.name} bắt buộc dùng {NAM_MINH}, không phải {preset.voice}")
+    return preset
 
 
 def _under_thousand(number: int, full: bool = False) -> str:
@@ -67,17 +98,19 @@ def number_to_vietnamese(number: int) -> str:
     if number < 0:
         return "âm " + number_to_vietnamese(-number)
     scales = ["", "nghìn", "triệu", "tỷ", "nghìn tỷ", "triệu tỷ"]
+    original = number
     groups = []
     while number:
         groups.append(number % 1000)
         number //= 1000
+    if len(groups) > len(scales):
+        return " ".join(ONES[int(digit)] for digit in str(original))
     parts = []
     for index in range(len(groups) - 1, -1, -1):
         group = groups[index]
-        if not group:
-            continue
-        spoken = _under_thousand(group, full=bool(parts) and group < 100)
-        parts.append(f"{spoken} {scales[index]}".strip())
+        if group:
+            spoken = _under_thousand(group, full=bool(parts) and group < 100)
+            parts.append(f"{spoken} {scales[index]}".strip())
     return " ".join(parts)
 
 
@@ -90,16 +123,19 @@ def _speak_number(match: re.Match[str]) -> str:
 
 
 def clean_text(text: str) -> str:
+    """Chuẩn hóa ký hiệu trước khi gửi TTS để cách đọc luôn tự nhiên, nhất quán."""
     text = re.sub(r"\s+", " ", text).strip()
+    text = re.sub(r"\$\s*(\d+(?:[,.]\d+)?)", r"\1 đô la Mỹ", text)
+    text = re.sub(r"(\d+(?:[,.]\d+)?)\s*\$", r"\1 đô la Mỹ", text)
     text = re.sub(r"(?<=\d)\s*%", " phần trăm", text)
     text = re.sub(r"(?<=\d)\s*km\b", " ki lô mét", text, flags=re.IGNORECASE)
-    text = re.sub(r"\b\d+(?:[,.]\d+)?\b", _speak_number, text)
-    text = re.sub(r"\b(tỉ|ty)\b", "tỷ", text, flags=re.IGNORECASE)
     text = re.sub(r"\b(tr|trieu)\b", "triệu", text, flags=re.IGNORECASE)
-    return re.sub(r"\s+([.,:;])", r"\1", text).strip()
+    text = re.sub(r"\b(tỉ|ty)\b", "tỷ", text, flags=re.IGNORECASE)
+    text = re.sub(r"\b\d+(?:[,.]\d+)?\b", _speak_number, text)
+    return re.sub(r"\s+([.!?,:;])", r"\1", text).strip()
 
 
-def split_long_sentences(text: str, max_words: int = 25) -> str:
+def split_long_sentences(text: str, max_words: int = 24) -> str:
     sentences = re.split(r"(?<=[.!?])\s+", text)
     result = []
     for sentence in sentences:
@@ -110,8 +146,7 @@ def split_long_sentences(text: str, max_words: int = 25) -> str:
                 if words[index - 1].endswith((",", ":", ";")):
                     cut = index
                     break
-            part = " ".join(words[:cut]).rstrip(".,:;") + "."
-            result.append(part)
+            result.append(" ".join(words[:cut]).rstrip(".,:;") + ".")
             words = words[cut:]
         if words:
             result.append(" ".join(words))
@@ -119,9 +154,8 @@ def split_long_sentences(text: str, max_words: int = 25) -> str:
 
 
 def speech_parts(text: str) -> list[tuple[str, int]]:
-    parts = []
-    start = 0
-    for match in re.finditer(r"[.,:;]", text):
+    parts, start = [], 0
+    for match in re.finditer(r"[.!?,:;]", text):
         chunk = text[start:match.start()].strip()
         if chunk:
             parts.append((chunk, PAUSES_MS[match.group()]))
@@ -134,14 +168,9 @@ def speech_parts(text: str) -> list[tuple[str, int]]:
 
 async def _edge_part(text: str, destination: Path, preset: VoicePreset) -> None:
     import edge_tts
-    communicate = edge_tts.Communicate(
-        text=text,
-        voice=preset.voice,
-        rate=preset.rate,
-        pitch=preset.pitch,
-        volume=preset.volume,
-    )
-    await communicate.save(str(destination))
+    await edge_tts.Communicate(
+        text=text, voice=preset.voice, rate=preset.rate, pitch=preset.pitch, volume=preset.volume
+    ).save(str(destination))
 
 
 def _silence(destination: Path, milliseconds: int) -> None:
@@ -159,36 +188,35 @@ def _join_audio(inputs: list[Path], destination: Path) -> None:
     subprocess.run(command, check=True)
 
 
-def _master_audio(source: Path, destination: Path) -> None:
-    """Make narration clearer, steadier and more present without clipping."""
-    command = [
-        "ffmpeg", "-y", "-loglevel", "error", "-i", str(source),
-        "-af",
-        "highpass=f=70,lowpass=f=14500,acompressor=threshold=-18dB:ratio=2.5:attack=15:release=180:makeup=2,loudnorm=I=-16:TP=-1.5:LRA=8",
-        "-c:a", "libmp3lame", "-b:a", "192k", str(destination),
-    ]
-    subprocess.run(command, check=True)
+MASTERING_FILTERS = {
+    "power_plus": "highpass=f=55,equalizer=f=90:t=q:w=1.0:g=5,equalizer=f=180:t=q:w=1.1:g=3,equalizer=f=3200:t=q:w=1.2:g=1.5,acompressor=threshold=-20dB:ratio=4:attack=8:release=160:makeup=4,alimiter=limit=0.89:attack=5:release=60,loudnorm=I=-14:TP=-1.0:LRA=5",
+    "power": "highpass=f=65,equalizer=f=110:t=q:w=1:g=3,acompressor=threshold=-19dB:ratio=3:attack=10:release=170:makeup=3,alimiter=limit=0.91,loudnorm=I=-15:TP=-1.2:LRA=6",
+    "mc": "highpass=f=75,equalizer=f=2500:t=q:w=1:g=2,acompressor=threshold=-18dB:ratio=2.8:attack=10:release=150,loudnorm=I=-16:TP=-1.5:LRA=7",
+    "podcast": "highpass=f=65,equalizer=f=130:t=q:w=1:g=2,acompressor=threshold=-21dB:ratio=2.5:attack=18:release=220,loudnorm=I=-17:TP=-1.5:LRA=7",
+    "emotional": "highpass=f=65,equalizer=f=150:t=q:w=1:g=2,acompressor=threshold=-20dB:ratio=2.2:attack=20:release=240,loudnorm=I=-16:TP=-1.5:LRA=8",
+    "business": "highpass=f=70,equalizer=f=120:t=q:w=1:g=2.5,acompressor=threshold=-18dB:ratio=3:attack=10:release=160,loudnorm=I=-15:TP=-1.3:LRA=6",
+    "gentle": "highpass=f=85,equalizer=f=3500:t=q:w=1:g=1.5,acompressor=threshold=-20dB:ratio=2:attack=20:release=240,loudnorm=I=-17:TP=-1.5:LRA=8",
+}
+
+
+def _master_audio(source: Path, destination: Path, preset: VoicePreset) -> None:
+    subprocess.run([
+        "ffmpeg", "-y", "-loglevel", "error", "-i", str(source), "-af",
+        MASTERING_FILTERS[preset.mastering], "-c:a", "libmp3lame", "-b:a", "192k", str(destination),
+    ], check=True)
 
 
 async def synthesize(text: str, destination: Path, preset_name: str) -> str:
-    preset = PRESETS[preset_name]
-    parts = speech_parts(split_long_sentences(clean_text(text)))
+    preset = resolve_preset(preset_name)
+    parts = speech_parts(split_long_sentences(clean_text(text), preset.max_words))
     if not parts:
         raise ValueError("Nội dung TTS trống")
     with tempfile.TemporaryDirectory(prefix="sticktalk-tts-") as directory:
         temporary = Path(directory)
         speech_files = [temporary / f"speech-{index}.mp3" for index in range(len(parts))]
-        provider = "Edge TTS"
-        try:
-            for (chunk, _), output in zip(parts, speech_files):
-                await _edge_part(chunk, output, preset)
-        except Exception as error:
-            from gtts import gTTS
-            provider = "gTTS"
-            print(f"Edge TTS lỗi ({error}); chuyển sang gTTS.")
-            for (chunk, _), output in zip(parts, speech_files):
-                gTTS(text=chunk, lang="vi").save(str(output))
-
+        # Không fallback sang gTTS/HoàiMy: sai provider phải dừng render thay vì xuất sai giọng.
+        for (chunk, _), output in zip(parts, speech_files):
+            await _edge_part(chunk, output, preset)
         timeline = []
         for index, ((_, pause), speech_file) in enumerate(zip(parts, speech_files)):
             timeline.append(speech_file)
@@ -196,30 +224,31 @@ async def synthesize(text: str, destination: Path, preset_name: str) -> str:
                 pause_file = temporary / f"pause-{index}.wav"
                 _silence(pause_file, pause)
                 timeline.append(pause_file)
-
         joined = temporary / "joined.mp3"
         _join_audio(timeline, joined)
         destination.parent.mkdir(parents=True, exist_ok=True)
-        _master_audio(joined, destination)
-        return provider
+        _master_audio(joined, destination, preset)
+    return preset.voice
 
 
 async def run(preset_name: str) -> None:
+    preset = resolve_preset(preset_name)
     story = json.loads(Path("assets/story.json").read_text(encoding="utf-8"))
     text = " ".join(scene["narration"] for scene in story["scenes"])
-    provider = await synthesize(text, Path("assets/narration.mp3"), preset_name)
-    preset = PRESETS[preset_name]
-    print(
-        f"Đã tạo assets/narration.mp3 bằng {provider} | preset={preset_name} | "
-        f"voice={preset.voice} | rate={preset.rate} | pitch={preset.pitch} | volume={preset.volume}"
-    )
+    actual_voice = await synthesize(text, Path("assets/narration.mp3"), preset.name)
+    if actual_voice != preset.voice:
+        raise RuntimeError(f"Sai voice: yêu cầu {preset.voice}, thực tế {actual_voice}")
+    print(f"Voice thực tế sử dụng:\n{actual_voice}\n\nPreset:\n{preset.name}")
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--preset", choices=PRESETS, default=DEFAULT_PRESET)
+    parser.add_argument("--preset", default=DEFAULT_PRESET, help="Tên preset tiếng Việt (hoặc alias cũ)")
     args = parser.parse_args()
-    asyncio.run(run(args.preset))
+    try:
+        asyncio.run(run(args.preset))
+    except (ValueError, RuntimeError) as error:
+        parser.error(str(error))
 
 
 if __name__ == "__main__":

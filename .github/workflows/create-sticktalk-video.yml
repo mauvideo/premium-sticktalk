@@ -1,4 +1,4 @@
-name: Create StickTalk Video
+name: Tạo video Premium StickTalk
 
 on:
   workflow_dispatch:
@@ -44,16 +44,16 @@ on:
       voice:
         description: "Giọng đọc"
         required: true
-        default: nam_bac_noi_luc_plus
+        default: "Nam miền Bắc Nội lực Plus"
         type: choice
         options:
-          - nam_bac_noi_luc_plus
-          - nam_bac_phat_thanh
-          - nam_bac_noi_luc
-          - nam_bac_truyen_cam
-          - nam_bac_nang_luong
-          - nam_bac_tu_nhien
-          - nu_viet_nam_ro_rang
+          - "Nam miền Bắc MC"
+          - "Nam miền Bắc Nội lực"
+          - "Nam miền Bắc Nội lực Plus"
+          - "Nam miền Bắc Podcast"
+          - "Nam miền Bắc Truyền cảm"
+          - "Nam miền Bắc Doanh nhân"
+          - "Nữ miền Bắc Dịu nhẹ"
 
 permissions:
   contents: read
