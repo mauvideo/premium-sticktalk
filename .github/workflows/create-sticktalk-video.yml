@@ -89,7 +89,7 @@ on:
         default: ""
         type: string
       voice_emotion:
-        description: "Cảm xúc giọng"
+        description: "Phong cách đọc VieNeu"
         required: true
         default: "Tự nhiên"
         type: choice
@@ -116,16 +116,16 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Cache model VieNeu và Hugging Face
+      - name: Cache model VieNeu v3 Turbo
         uses: actions/cache@v4
         with:
           path: |
             ~/.cache/huggingface
             ~/.cache/vieneu
-            ~/.cache/torch
-          key: vieneu-${{ runner.os }}-py311-${{ hashFiles('requirements.txt') }}
+            ~/.cache/onnxruntime
+          key: vieneu-v3-onnx-${{ runner.os }}-py311-${{ hashFiles('requirements.txt') }}
           restore-keys: |
-            vieneu-${{ runner.os }}-py311-
+            vieneu-v3-onnx-${{ runner.os }}-py311-
 
       - name: Cài FFmpeg, Chromium và eSpeak NG
         run: |
@@ -133,7 +133,10 @@ jobs:
           sudo apt-get install -y ffmpeg espeak-ng chromium-browser || sudo apt-get install -y ffmpeg espeak-ng chromium
 
       - name: Cài Python dependencies
-        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          python -c "from vieneu import Vieneu; import onnxruntime; print('VieNeu v3 Turbo ONNX đã sẵn sàng')"
 
       - name: Cài Remotion
         working-directory: remotion
@@ -146,8 +149,8 @@ jobs:
           echo "Phong cách: ${{ inputs.style }}"
           echo "Giọng VieNeu: ${{ inputs.vieneu_voice }}"
           echo "Mã giọng tùy chỉnh: ${{ inputs.custom_voice_id }}"
-          echo "Cảm xúc giọng: ${{ inputs.voice_emotion }}"
-          echo "Hệ thống giọng đọc: VieNeu-TTS Premium"
+          echo "Phong cách đọc: ${{ inputs.voice_emotion }}"
+          echo "Hệ thống giọng đọc: VieNeu-TTS v3 Turbo ONNX"
 
       - name: Tạo video
         env:
