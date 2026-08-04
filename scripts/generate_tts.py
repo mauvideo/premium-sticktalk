@@ -1,17 +1,208 @@
 #!/usr/bin/env python3
-import argparse,asyncio,json
+"""Generate Vietnamese narration, preferring Edge TTS with a gTTS fallback."""
+
+import argparse
+import asyncio
+import json
+import re
+import subprocess
+import tempfile
+import wave
+from dataclasses import dataclass
 from pathlib import Path
-import edge_tts
 
-async def run(voice:str, rate:str):
- story=json.loads(Path('assets/story.json').read_text(encoding='utf-8'))
- text=' '.join(scene['narration'] for scene in story['scenes'])
- Path('assets').mkdir(exist_ok=True)
- communicate=edge_tts.Communicate(text=text,voice=voice,rate=rate)
- await communicate.save('assets/narration.mp3')
- print('Đã tạo assets/narration.mp3')
+@dataclass(frozen=True)
+class VoicePreset:
+    voice: str
+    rate: str = "+0%"
+    pitch: str = "+0Hz"
+    volume: str = "+0%"
 
-def main():
- p=argparse.ArgumentParser(); p.add_argument('--voice',default='vi-VN-NamMinhNeural'); p.add_argument('--rate',default='+4%'); a=p.parse_args()
- asyncio.run(run(a.voice,a.rate))
-if __name__=='__main__': main()
+
+PRESETS = {
+    "nam_bac_news": VoicePreset("vi-VN-NamMinhNeural", "-6%", "-3Hz", "+8%"),
+    "nu_viet_nam": VoicePreset("vi-VN-HoaiMyNeural"),
+}
+DEFAULT_PRESET = "nam_bac_news"
+PAUSES_MS = {".": 500, ",": 180, ":": 250, ";": 220}
+
+ONES = ["không", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"]
+
+
+def _under_thousand(number: int, full: bool = False) -> str:
+    hundreds, remainder = divmod(number, 100)
+    tens, unit = divmod(remainder, 10)
+    words = []
+    if hundreds:
+        words.extend((ONES[hundreds], "trăm"))
+    elif full and remainder:
+        words.extend(("không", "trăm"))
+    if tens > 1:
+        words.extend((ONES[tens], "mươi"))
+    elif tens == 1:
+        words.append("mười")
+    elif unit and (hundreds or full):
+        words.append("lẻ")
+    if unit:
+        if unit == 1 and tens > 1:
+            words.append("mốt")
+        elif unit == 5 and tens:
+            words.append("lăm")
+        elif unit == 4 and tens > 1:
+            words.append("tư")
+        else:
+            words.append(ONES[unit])
+    return " ".join(words)
+
+
+def number_to_vietnamese(number: int) -> str:
+    if number == 0:
+        return ONES[0]
+    if number < 0:
+        return "âm " + number_to_vietnamese(-number)
+    scales = ["", "nghìn", "triệu", "tỷ", "nghìn tỷ", "triệu tỷ"]
+    groups = []
+    while number:
+        groups.append(number % 1000)
+        number //= 1000
+    parts = []
+    for index in range(len(groups) - 1, -1, -1):
+        group = groups[index]
+        if not group:
+            continue
+        spoken = _under_thousand(group, full=bool(parts) and group < 100)
+        parts.append(f"{spoken} {scales[index]}".strip())
+    return " ".join(parts)
+
+
+def _speak_number(match: re.Match[str]) -> str:
+    raw = match.group(0)
+    # A comma/dot between digits is treated as a decimal separator, not a pause.
+    if re.fullmatch(r"\d+[,.]\d+", raw):
+        whole, fraction = re.split(r"[,.]", raw)
+        return f"{number_to_vietnamese(int(whole))} phẩy {' '.join(ONES[int(n)] for n in fraction)}"
+    return number_to_vietnamese(int(raw))
+
+
+def clean_text(text: str) -> str:
+    """Normalize narration into words that Vietnamese TTS reads naturally."""
+    text = re.sub(r"\s+", " ", text).strip()
+    text = re.sub(r"(?<=\d)\s*%", " phần trăm", text)
+    text = re.sub(r"(?<=\d)\s*km\b", " ki lô mét", text, flags=re.IGNORECASE)
+    text = re.sub(r"\b\d+(?:[,.]\d+)?\b", _speak_number, text)
+    # Canonical spelling avoids variants/abbreviations being pronounced literally.
+    text = re.sub(r"\b(tỉ|ty)\b", "tỷ", text, flags=re.IGNORECASE)
+    text = re.sub(r"\b(tr|trieu)\b", "triệu", text, flags=re.IGNORECASE)
+    return re.sub(r"\s+([.,:;])", r"\1", text).strip()
+
+
+def split_long_sentences(text: str, max_words: int = 25) -> str:
+    """Insert sentence boundaries so no spoken sentence exceeds max_words."""
+    sentences = re.split(r"(?<=[.!?])\s+", text)
+    result = []
+    for sentence in sentences:
+        words = sentence.split()
+        while len(words) > max_words:
+            cut = max_words
+            # Prefer a nearby clause boundary without making a very short sentence.
+            for index in range(max_words - 1, max_words // 2, -1):
+                if words[index - 1].endswith((",", ":", ";")):
+                    cut = index
+                    break
+            part = " ".join(words[:cut]).rstrip(".,:;") + "."
+            result.append(part)
+            words = words[cut:]
+        if words:
+            result.append(" ".join(words))
+    return " ".join(result)
+
+
+def speech_parts(text: str) -> list[tuple[str, int]]:
+    """Return speech chunks and the exact silence following each chunk."""
+    parts = []
+    start = 0
+    for match in re.finditer(r"[.,:;]", text):
+        chunk = text[start:match.start()].strip()
+        if chunk:
+            parts.append((chunk, PAUSES_MS[match.group()]))
+        start = match.end()
+    tail = text[start:].strip()
+    if tail:
+        parts.append((tail, 0))
+    return parts
+
+
+async def _edge_part(text: str, destination: Path, preset: VoicePreset) -> None:
+    import edge_tts
+
+    # edge-tts writes these prosody values into the SSML sent to Edge.
+    communicate = edge_tts.Communicate(
+        text=text, voice=preset.voice, rate=preset.rate,
+        pitch=preset.pitch, volume=preset.volume,
+    )
+    await communicate.save(str(destination))
+
+
+def _silence(destination: Path, milliseconds: int) -> None:
+    frames = int(24_000 * milliseconds / 1000)
+    with wave.open(str(destination), "wb") as output:
+        output.setparams((1, 2, 24_000, frames, "NONE", "not compressed"))
+        output.writeframes(b"\0\0" * frames)
+
+
+def _join_audio(inputs: list[Path], destination: Path) -> None:
+    command = ["ffmpeg", "-y", "-loglevel", "error"]
+    for source in inputs:
+        command.extend(("-i", str(source)))
+    command.extend(("-filter_complex", f"concat=n={len(inputs)}:v=0:a=1[out]", "-map", "[out]", str(destination)))
+    subprocess.run(command, check=True)
+
+
+async def synthesize(text: str, destination: Path, preset_name: str) -> str:
+    preset = PRESETS[preset_name]
+    parts = speech_parts(split_long_sentences(clean_text(text)))
+    if not parts:
+        raise ValueError("Nội dung TTS trống")
+    with tempfile.TemporaryDirectory(prefix="sticktalk-tts-") as directory:
+        temporary = Path(directory)
+        speech_files = [temporary / f"speech-{index}.mp3" for index in range(len(parts))]
+        provider = "Edge TTS"
+        try:
+            for (chunk, _), output in zip(parts, speech_files):
+                await _edge_part(chunk, output, preset)
+        except Exception as error:
+            from gtts import gTTS
+
+            provider = "gTTS"
+            print(f"Edge TTS lỗi ({error}); chuyển sang gTTS.")
+            for (chunk, _), output in zip(parts, speech_files):
+                gTTS(text=chunk, lang="vi").save(str(output))
+
+        timeline = []
+        for index, ((_, pause), speech_file) in enumerate(zip(parts, speech_files)):
+            timeline.append(speech_file)
+            if pause:
+                pause_file = temporary / f"pause-{index}.wav"
+                _silence(pause_file, pause)
+                timeline.append(pause_file)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        _join_audio(timeline, destination)
+        return provider
+
+
+async def run(preset_name: str) -> None:
+    story = json.loads(Path("assets/story.json").read_text(encoding="utf-8"))
+    text = " ".join(scene["narration"] for scene in story["scenes"])
+    provider = await synthesize(text, Path("assets/narration.mp3"), preset_name)
+    print(f"Đã tạo assets/narration.mp3 bằng {provider} ({preset_name})")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--preset", choices=PRESETS, default=DEFAULT_PRESET)
+    args = parser.parse_args()
+    asyncio.run(run(args.preset))
+
+
+if __name__ == "__main__":
+    main()

@@ -13,7 +13,7 @@ TEMPLATES=[
 ("Lần tới, hãy tự hỏi: chuyện này có thật sự đáng để mình đánh đổi bình yên không?",["bình","yên"],"zoom_out",[{"name":"A","position":"center","action":"think","emotion":"serious"}])]
 
 def main():
- p=argparse.ArgumentParser(); p.add_argument('--idea',required=True); p.add_argument('--duration',type=int,default=45); p.add_argument('--tone',default='sâu sắc'); p.add_argument('--format',default='hybrid'); p.add_argument('--style',default='dark_neon'); p.add_argument('--voice',default='vi-VN-NamMinhNeural'); a=p.parse_args()
+ p=argparse.ArgumentParser(); p.add_argument('--idea',required=True); p.add_argument('--duration',type=int,default=45); p.add_argument('--tone',default='sâu sắc'); p.add_argument('--format',default='hybrid'); p.add_argument('--style',default='dark_neon'); p.add_argument('--voice',default='nam_bac_news'); a=p.parse_args()
  weights=[4,5,6,6,6,6,6,6]; factor=a.duration/sum(weights)
  scenes=[]
  for i,(text,keys,camera,chars) in enumerate(TEMPLATES,1):

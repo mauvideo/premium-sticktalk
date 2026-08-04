@@ -27,8 +27,12 @@ Phong cách:
 - `motivational`
 
 Giọng đọc:
-- Nam miền Bắc: `vi-VN-NamMinhNeural`
-- Nữ Việt Nam: `vi-VN-HoaiMyNeural`
+- Nam miền Bắc, phong cách MC thời sự (mặc định): `nam_bac_news`
+- Nữ Việt Nam: `nu_viet_nam`
+
+Preset `nam_bac_news` dùng Edge TTS `vi-VN-NamMinhNeural` với tốc độ
+`-6%`, cao độ `-3Hz`, âm lượng `+8%` và khoảng nghỉ tự nhiên theo dấu câu.
+Nếu Edge TTS gặp lỗi, hệ thống tự động chuyển sang gTTS.
 
 ## Chạy bằng lệnh
 
@@ -39,7 +43,7 @@ Giọng đọc:
   --tone "sâu sắc" \
   --format hybrid \
   --style dark_neon \
-  --voice vi-VN-NamMinhNeural
+  --voice nam_bac_news
 ```
 
 Video được tạo tại `output/video.mp4`.
