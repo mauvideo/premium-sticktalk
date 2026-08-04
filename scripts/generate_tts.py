@@ -1,65 +1,17 @@
 #!/usr/bin/env python3
-"""Tạo giọng đọc tiếng Việt bằng Microsoft Edge TTS miễn phí."""
+"""Tạo giọng đọc tiếng Việt bằng VieNeu-TTS với các giọng đặt sẵn."""
 
 from __future__ import annotations
 
 import argparse
-import asyncio
 import json
 import os
 import re
-import sys
+import subprocess
 from pathlib import Path
 
 from mutagen.mp3 import MP3
-
-# Khi chạy trực tiếp `python scripts/generate_tts.py`, Python chỉ thêm thư mục
-# `scripts/` vào sys.path. Bổ sung thư mục gốc để import package `scripts` ổn định.
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
-from scripts.tts.edge_tts_provider import EdgeTtsProvider
-from scripts.tts.presets import DEFAULT_PRESET, HOAI_MY, NAM_MINH, PRESETS, resolve_preset
-from scripts.tts.audio_postprocess import EDGE_FILTERS as MASTERING_FILTERS, postprocess as _postprocess
-
-ONES = ["không", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"]
-
-
-def number_to_vietnamese(n: int) -> str:
-    if n == 0:
-        return ONES[0]
-    if n < 0:
-        return "âm " + number_to_vietnamese(-n)
-    scales, groups = ["", "nghìn", "triệu", "tỷ", "nghìn tỷ", "triệu tỷ"], []
-    while n:
-        groups.append(n % 1000)
-        n //= 1000
-
-    def under(x: int, full: bool = False) -> str:
-        h, r = divmod(x, 100)
-        t, u = divmod(r, 10)
-        words: list[str] = []
-        if h:
-            words += [ONES[h], "trăm"]
-        elif full and r:
-            words += ["không", "trăm"]
-        if t > 1:
-            words += [ONES[t], "mươi"]
-        elif t == 1:
-            words += ["mười"]
-        elif u and (h or full):
-            words += ["lẻ"]
-        if u:
-            words += ["mốt" if u == 1 and t > 1 else "lăm" if u == 5 and t else "tư" if u == 4 and t > 1 else ONES[u]]
-        return " ".join(words)
-
-    parts: list[str] = []
-    for i in range(len(groups) - 1, -1, -1):
-        group = groups[i]
-        if group:
-            parts.append(f"{under(group, bool(parts) and group < 100)} {scales[i]}".strip())
-    return " ".join(parts)
+from vieneu import Vieneu
 
 
 def clean_text(text: str) -> str:
@@ -68,7 +20,7 @@ def clean_text(text: str) -> str:
     return re.sub(r"\s+([.!?,:;])", r"\1", text)
 
 
-def split_long_sentences(text: str, max_words: int = 24) -> str:
+def split_long_sentences(text: str, max_words: int = 34) -> str:
     output: list[str] = []
     for sentence in re.split(r"(?<=[.!?])\s+", text):
         words = sentence.split()
@@ -80,89 +32,115 @@ def split_long_sentences(text: str, max_words: int = 24) -> str:
     return " ".join(output)
 
 
-PAUSES_MS = {".": 560, ",": 210, ":": 300, ";": 330, "?": 620, "!": 600}
+def load_story_text() -> str:
+    story_path = Path("assets/story.json")
+    if not story_path.is_file():
+        raise RuntimeError("Không tìm thấy assets/story.json.")
+    story = json.loads(story_path.read_text(encoding="utf-8"))
+    scenes = story.get("scenes") or story.get("canh") or []
+    texts = [scene.get("narration") or scene.get("loi_dan") or "" for scene in scenes]
+    text = clean_text(" ".join(item for item in texts if item))
+    if not text:
+        raise RuntimeError("Kịch bản không có lời dẫn để tạo giọng đọc.")
+    return split_long_sentences(text)
 
 
-def speech_parts(text: str):
-    parts = []
-    start = 0
-    for match in re.finditer(r"[.!?,:;]", text):
-        if text[start:match.start()].strip():
-            parts.append((text[start:match.start()].strip(), PAUSES_MS[match.group()]))
-        start = match.end()
-    if text[start:].strip():
-        parts.append((text[start:].strip(), 0))
-    return parts
+def normalize_voice_id(selected: str, custom_voice_id: str) -> str | None:
+    value = selected.strip()
+    if value in {"", "default", "Mặc định — Trúc Ly"}:
+        return None
+    if value in {"Bác sĩ Tuyên", "bac_si_tuyen"}:
+        return "bac_si_tuyen"
+    if value == "Nhập mã giọng khác":
+        custom = custom_voice_id.strip()
+        if not custom:
+            raise ValueError("Bạn đã chọn nhập mã giọng khác nhưng chưa điền mã giọng VieNeu.")
+        return custom
+    return value
 
 
-async def synthesize(text: str, destination: Path, preset_name: str, provider_name: str | None = None) -> str:
-    if provider_name not in (None, "edge"):
-        raise ValueError("Hệ thống hiện chỉ hỗ trợ Microsoft Edge TTS miễn phí.")
+def synthesize(voice_selection: str, custom_voice_id: str, emotion: str) -> None:
+    text = load_story_text()
+    wav_path = Path("assets/narration.wav")
+    mp3_path = Path("assets/narration.mp3")
+    output_dir = Path("output")
+    wav_path.parent.mkdir(parents=True, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-    preset = resolve_preset(preset_name)
-    if preset.provider != "edge":
-        raise RuntimeError(f"Preset '{preset.name}' không thuộc Edge TTS.")
-    if preset.gender == "Nam" and preset.voice != NAM_MINH:
-        raise RuntimeError("Preset nam bắt buộc dùng vi-VN-NamMinhNeural.")
-    if preset.gender == "Nữ" and preset.voice != HOAI_MY:
-        raise RuntimeError("Preset nữ bắt buộc dùng vi-VN-HoaiMyNeural.")
+    emotion_code = {"Tự nhiên": "natural", "Kể chuyện": "storytelling", "natural": "natural", "storytelling": "storytelling"}.get(emotion)
+    if emotion_code is None:
+        raise ValueError(f"Cảm xúc giọng không hợp lệ: {emotion}")
 
-    print("========================================")
-    print("Nhà cung cấp thực tế: Microsoft Edge TTS")
-    print(f"Preset đã chọn: {preset.name}")
-    print(f"Voice ID thực tế: {preset.voice}")
-    print("LANGUAGE CODE: vi-VN")
-    print(f"TỐC ĐỘ: {preset.speed}")
-    print(f"CAO ĐỘ: {preset.pitch}")
-    print("ĐỊNH DẠNG: MP3")
-    print("========================================")
+    requested_voice_id = normalize_voice_id(voice_selection, custom_voice_id)
 
-    provider = EdgeTtsProvider()
-    normalized = split_long_sentences(clean_text(text), preset.max_words)
-    actual = await provider.synthesize(normalized, destination, preset)
-    if actual != preset.voice:
-        raise RuntimeError("Voice ID thực tế không khớp yêu cầu; đã dừng.")
-    if not destination.is_file() or destination.stat().st_size <= 0:
-        raise RuntimeError("File giọng đọc không tồn tại hoặc rỗng.")
+    with Vieneu(mode="standard", emotion=emotion_code) as tts:
+        available = tts.list_preset_voices()
+        voice_map = {voice_id: description for description, voice_id in available}
 
-    duration = MP3(destination).info.length
+        if requested_voice_id is None:
+            voice_data = tts.get_preset_voice()
+            actual_voice_id = "default"
+            description = "Giọng mặc định VieNeu (Trúc Ly theo tài liệu chính thức)"
+        else:
+            if requested_voice_id not in voice_map:
+                ids = ", ".join(sorted(voice_map)) or "không có"
+                raise RuntimeError(
+                    f"Mã giọng VieNeu '{requested_voice_id}' không tồn tại. "
+                    f"Các mã hiện có: {ids}"
+                )
+            voice_data = tts.get_preset_voice(requested_voice_id)
+            actual_voice_id = requested_voice_id
+            description = voice_map[requested_voice_id]
+
+        print("========================================")
+        print("HỆ THỐNG GIỌNG ĐỌC: VieNeu-TTS")
+        print("CHẾ ĐỘ: Standard")
+        print(f"VOICE ID: {actual_voice_id}")
+        print(f"MÔ TẢ: {description}")
+        print(f"CẢM XÚC: {emotion_code}")
+        print("ĐẦU RA: WAV 24 kHz và MP3")
+        print("========================================")
+
+        audio = tts.infer(text=text, voice=voice_data)
+        tts.save(audio, str(wav_path))
+
+    if not wav_path.is_file() or wav_path.stat().st_size <= 0:
+        raise RuntimeError("VieNeu không tạo được file WAV hợp lệ.")
+
+    subprocess.run(
+        ["ffmpeg", "-y", "-i", str(wav_path), "-codec:a", "libmp3lame", "-b:a", "192k", str(mp3_path)],
+        check=True,
+    )
+    if not mp3_path.is_file() or mp3_path.stat().st_size <= 0:
+        raise RuntimeError("Không chuyển được âm thanh VieNeu sang MP3.")
+
+    duration = MP3(mp3_path).info.length
     info = {
-        "nha_cung_cap": "edge",
-        "ten_hien_thi": preset.name,
-        "ma_preset": preset.code,
-        "voice_id": actual,
-        "language_code": "vi-VN",
-        "toc_do": preset.speed,
-        "cao_do": preset.pitch,
-        "dinh_dang": "MP3",
+        "nha_cung_cap": "vieneu",
+        "che_do": "standard",
+        "voice_id": actual_voice_id,
+        "mo_ta_giong": description,
+        "cam_xuc": emotion_code,
+        "dinh_dang_goc": "WAV 24 kHz",
+        "dinh_dang_su_dung": "MP3 192 kbps",
         "thoi_luong_giay": round(duration, 3),
-        "dung_luong_byte": destination.stat().st_size,
+        "dung_luong_byte": mp3_path.stat().st_size,
     }
-    Path("output").mkdir(exist_ok=True)
     Path("output/tts-info.json").write_text(json.dumps(info, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"Đã tạo giọng đọc: {duration:.2f} giây, {destination.stat().st_size} byte")
-    return actual
-
-
-async def run(preset_name: str) -> None:
-    story = json.loads(Path("assets/story.json").read_text(encoding="utf-8"))
-    text = " ".join(scene["narration"] for scene in story["scenes"])
-    await synthesize(text, Path("assets/narration.mp3"), preset_name)
+    print(f"Đã tạo giọng VieNeu: {duration:.2f} giây")
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Tạo giọng đọc tiếng Việt bằng Edge TTS")
-    parser.add_argument("--preset", default=os.getenv("TTS_VOICE", DEFAULT_PRESET))
+    parser = argparse.ArgumentParser(description="Tạo giọng đọc bằng VieNeu-TTS")
+    parser.add_argument("--voice", default=os.getenv("VIENEU_VOICE", "default"))
+    parser.add_argument("--custom-voice-id", default=os.getenv("VIENEU_CUSTOM_VOICE_ID", ""))
+    parser.add_argument("--emotion", default=os.getenv("VIENEU_EMOTION", "Tự nhiên"))
     args = parser.parse_args()
     try:
-        asyncio.run(run(args.preset))
-    except (ValueError, RuntimeError) as error:
+        synthesize(args.voice, args.custom_voice_id, args.emotion)
+    except (ValueError, RuntimeError, subprocess.CalledProcessError) as error:
         parser.error(str(error))
 
 
 if __name__ == "__main__":
     main()
-
-
-def _master_audio(source, destination, preset):
-    _postprocess(source, destination, preset)

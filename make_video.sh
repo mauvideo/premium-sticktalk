@@ -4,18 +4,18 @@ set -Eeuo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT"
 
-# Ưu tiên biến môi trường từ GitHub Actions để tránh lỗi tách tham số Unicode.
 IDEA="${VIDEO_IDEA:-}"
 DURATION="${VIDEO_DURATION:-45}"
 TONE="${VIDEO_TONE:-sâu_sắc}"
 CONTENT_FORMAT="${VIDEO_CONTENT_FORMAT:-hybrid}"
 STYLE="${VIDEO_STYLE:-người_que_triết_lý}"
-VOICE="${VIDEO_VOICE:-Nam tiếng Việt — Tự nhiên}"
+VOICE="${VIENEU_VOICE:-default}"
+CUSTOM_VOICE_ID="${VIENEU_CUSTOM_VOICE_ID:-}"
+VOICE_EMOTION="${VIENEU_EMOTION:-Tự nhiên}"
 MOTION_LEVEL="${VIDEO_MOTION_LEVEL:-trung_bình}"
 SCRIPT_MODE="${VIDEO_SCRIPT_MODE:-Tự động theo chủ đề}"
 WRITING_STYLE="${VIDEO_WRITING_STYLE:-Tự động theo chủ đề}"
 
-# Ánh xạ tên hiển thị tiếng Việt sang mã theme; mã này chỉ đi vào dữ liệu kỹ thuật.
 case "$STYLE" in
   "Phác thảo điện ảnh — Trầm") STYLE=phac_thao_dien_anh_tram;;
   "Phác thảo điện ảnh — Sách kỹ năng") STYLE=phac_thao_sach_ky_nang;;
@@ -23,36 +23,23 @@ case "$STYLE" in
 esac
 
 require_value() {
-  [[ $# -ge 2 && -n "$2" && "$2" != --* ]] || {
-    echo "Thiếu giá trị cho $1" >&2
-    exit 2
-  }
+  [[ $# -ge 2 && -n "$2" && "$2" != --* ]] || { echo "Thiếu giá trị cho $1" >&2; exit 2; }
 }
 
-# Vẫn giữ tương thích với cách gọi dòng lệnh cũ.
 while (($#)); do
   case "$1" in
-    --idea|--y-tuong|--ý-tưởng)
-      require_value "$@"; IDEA="$2"; shift 2;;
-    --duration|--thoi-luong|--thời-lượng)
-      require_value "$@"; DURATION="$2"; shift 2;;
-    --tone|--giong-dieu|--giọng-điệu)
-      require_value "$@"; TONE="$2"; shift 2;;
-    --format|--content-format|--dinh-dang|--định-dạng)
-      require_value "$@"; CONTENT_FORMAT="$2"; shift 2;;
-    --style|--phong-cach|--phong-cách)
-      require_value "$@"; STYLE="$2"; shift 2;;
-    --voice|--giong-doc|--giọng-đọc)
-      require_value "$@"; VOICE="$2"; shift 2;;
-    --motion-level|--muc-do-chuyen-dong|--mức-độ-chuyển-động)
-      require_value "$@"; MOTION_LEVEL="$2"; shift 2;;
-    --script-mode|--che-do-viet-kich-ban|--chế-độ-viết-kịch-bản)
-      require_value "$@"; SCRIPT_MODE="$2"; shift 2;;
-    --writing-style|--phong-cach-viet|--phong-cách-viết)
-      require_value "$@"; WRITING_STYLE="$2"; shift 2;;
-    *)
-      echo "Tham số không hợp lệ: $1" >&2
-      exit 2;;
+    --idea|--y-tuong|--ý-tưởng) require_value "$@"; IDEA="$2"; shift 2;;
+    --duration|--thoi-luong|--thời-lượng) require_value "$@"; DURATION="$2"; shift 2;;
+    --tone|--giong-dieu|--giọng-điệu) require_value "$@"; TONE="$2"; shift 2;;
+    --format|--content-format|--dinh-dang|--định-dạng) require_value "$@"; CONTENT_FORMAT="$2"; shift 2;;
+    --style|--phong-cach|--phong-cách) require_value "$@"; STYLE="$2"; shift 2;;
+    --voice|--giong-doc|--giọng-đọc) require_value "$@"; VOICE="$2"; shift 2;;
+    --custom-voice-id|--ma-giong) require_value "$@"; CUSTOM_VOICE_ID="$2"; shift 2;;
+    --voice-emotion|--cam-xuc-giong) require_value "$@"; VOICE_EMOTION="$2"; shift 2;;
+    --motion-level|--muc-do-chuyen-dong|--mức-độ-chuyển-động) require_value "$@"; MOTION_LEVEL="$2"; shift 2;;
+    --script-mode|--che-do-viet-kich-ban|--chế-độ-viết-kịch-bản) require_value "$@"; SCRIPT_MODE="$2"; shift 2;;
+    --writing-style|--phong-cach-viet|--phong-cách-viết) require_value "$@"; WRITING_STYLE="$2"; shift 2;;
+    *) echo "Tham số không hợp lệ: $1" >&2; exit 2;;
   esac
 done
 
@@ -63,13 +50,10 @@ printf '%s\n' \
   "=== CẤU HÌNH TẠO VIDEO ===" \
   "Ý tưởng: $IDEA" \
   "Thời lượng: $DURATION giây" \
-  "Giọng điệu: $TONE" \
-  "Định dạng: $CONTENT_FORMAT" \
   "Phong cách: $STYLE" \
-  "Mức chuyển động: $MOTION_LEVEL" \
-  "Chế độ viết kịch bản: $SCRIPT_MODE" \
-  "Phong cách viết nội dung: $WRITING_STYLE" \
-  "Giọng đọc: $VOICE"
+  "Giọng VieNeu: $VOICE" \
+  "Mã giọng tùy chỉnh: ${CUSTOM_VOICE_ID:-không}" \
+  "Cảm xúc giọng: $VOICE_EMOTION"
 
 mkdir -p assets output remotion/public/assets
 
@@ -84,7 +68,11 @@ python3 scripts/generate_story.py \
   --script-mode "$SCRIPT_MODE" \
   --writing-style "$WRITING_STYLE"
 
-python3 scripts/generate_tts.py --preset "$VOICE"
+python3 scripts/generate_tts.py \
+  --voice "$VOICE" \
+  --custom-voice-id "$CUSTOM_VOICE_ID" \
+  --emotion "$VOICE_EMOTION"
+
 cp assets/narration.mp3 remotion/public/assets/narration.mp3
 
 python3 - <<'PY'
@@ -103,9 +91,7 @@ ARGS=()
 [[ -z "$BROWSER" ]] || ARGS+=(--browser-executable="$BROWSER")
 
 npx --prefix remotion remotion render \
-  remotion/src/index.ts \
-  StickTalk \
-  output/video.mp4 \
+  remotion/src/index.ts StickTalk output/video.mp4 \
   --props=assets/story.json \
   --public-dir=remotion/public \
   --codec=h264 \
@@ -113,10 +99,6 @@ npx --prefix remotion remotion render \
 
 ffmpeg -y -ss 00:00:03 -i output/video.mp4 -frames:v 1 output/preview.png
 cp assets/story.json output/story.json
-ffprobe -v error \
-  -show_entries stream=codec_name,width,height,r_frame_rate \
-  -show_entries format=duration,size \
-  -of default=noprint_wrappers=1 \
-  output/video.mp4
+ffprobe -v error -show_entries stream=codec_name,width,height,r_frame_rate -show_entries format=duration,size -of default=noprint_wrappers=1 output/video.mp4
 
 echo 'Hoàn tất: output/video.mp4'
