@@ -34,9 +34,9 @@ on:
       voice:
         description: "Giọng đọc"
         required: true
-        default: nam_mien_bac
+        default: nam_bac_news
         type: choice
-        options: [nam_mien_bac, nu_viet_nam]
+        options: [nam_bac_news, nu_viet_nam]
 
 permissions:
   contents: read
@@ -66,11 +66,7 @@ jobs:
       - name: Chọn giọng đọc
         id: voice
         run: |
-          if [ "${{ inputs.voice }}" = "nam_mien_bac" ]; then
-            echo "name=vi-VN-NamMinhNeural" >> "$GITHUB_OUTPUT"
-          else
-            echo "name=vi-VN-HoaiMyNeural" >> "$GITHUB_OUTPUT"
-          fi
+          echo "name=${{ inputs.voice }}" >> "$GITHUB_OUTPUT"
       - name: Tạo video
         run: |
           chmod +x make_video.sh
