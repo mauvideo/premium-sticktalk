@@ -29,12 +29,15 @@ Mức chuyển động: `nhẹ`, `trung_bình`, `nhiều`, hoặc `viral_tiktok`
 Các tên phong cách cũ (`dark_neon`, `whiteboard`, `motivational`) vẫn hoạt động.
 
 Giọng đọc:
-- Nam miền Bắc, phong cách MC thời sự (mặc định): `nam_bac_news`
-- Nữ Việt Nam: `nu_viet_nam`
+- `Nam miền Bắc MC`
+- `Nam miền Bắc Nội lực`
+- `Nam miền Bắc Nội lực Plus` (mặc định)
+- `Nam miền Bắc Podcast`
+- `Nam miền Bắc Truyền cảm`
+- `Nam miền Bắc Doanh nhân`
+- `Nữ miền Bắc Dịu nhẹ`
 
-Preset `nam_bac_news` dùng Edge TTS `vi-VN-NamMinhNeural` với tốc độ
-`-6%`, cao độ `-3Hz`, âm lượng `+8%` và khoảng nghỉ tự nhiên theo dấu câu.
-Nếu Edge TTS gặp lỗi, hệ thống tự động chuyển sang gTTS.
+Sáu preset nam miền Bắc đều dùng Edge TTS `vi-VN-NamMinhNeural`; preset nữ dùng `vi-VN-HoaiMyNeural`. Pipeline chủ động dừng nếu không tạo đúng voice, không fallback sang một giọng khác. Xem chi tiết hậu kỳ tại [`docs/VOICE_PRESETS.md`](docs/VOICE_PRESETS.md).
 
 ## Chạy bằng lệnh
 
@@ -46,7 +49,7 @@ Nếu Edge TTS gặp lỗi, hệ thống tự động chuyển sang gTTS.
   --format hybrid \
   --style dark_neon \
   --motion-level medium \
-  --voice nam_bac_news
+  --voice "Nam miền Bắc Nội lực Plus"
 ```
 
 Video được tạo tại `output/video.mp4`.

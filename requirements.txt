@@ -1,3 +1,2 @@
 edge-tts==7.2.8
-gTTS==2.5.4
 mutagen==1.47.0

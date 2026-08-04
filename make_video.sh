@@ -10,7 +10,7 @@ DURATION="${VIDEO_DURATION:-45}"
 TONE="${VIDEO_TONE:-sâu_sắc}"
 CONTENT_FORMAT="${VIDEO_CONTENT_FORMAT:-hybrid}"
 STYLE="${VIDEO_STYLE:-người_que_triết_lý}"
-VOICE="${VIDEO_VOICE:-nam_bac_noi_luc_plus}"
+VOICE="${VIDEO_VOICE:-Nam miền Bắc Nội lực Plus}"
 MOTION_LEVEL="${VIDEO_MOTION_LEVEL:-trung_bình}"
 
 require_value() {
