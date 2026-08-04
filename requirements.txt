@@ -1,2 +1,2 @@
-vieneu
+vieneu>=3.2.4,<4
 mutagen==1.47.0
