@@ -1,0 +1,98 @@
+name: Create StickTalk Video
+
+on:
+  workflow_dispatch:
+    inputs:
+      idea:
+        description: "Ý tưởng video"
+        required: true
+        type: string
+      duration:
+        description: "Thời lượng"
+        required: true
+        default: "45"
+        type: choice
+        options: ["30", "45", "60"]
+      content_format:
+        description: "Định dạng nội dung"
+        required: true
+        default: hybrid
+        type: choice
+        options: [narration, dialogue, hybrid]
+      tone:
+        description: "Giọng điệu"
+        required: true
+        default: "sâu_sắc"
+        type: choice
+        options: ["sâu_sắc", "hài_hước", "truyền_động_lực", "chữa_lành"]
+      style:
+        description: "Phong cách hình ảnh"
+        required: true
+        default: dark_neon
+        type: choice
+        options: [dark_neon, whiteboard, motivational]
+      voice:
+        description: "Giọng đọc"
+        required: true
+        default: nam_mien_bac
+        type: choice
+        options: [nam_mien_bac, nu_viet_nam]
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: remotion/package-lock.json
+      - name: Cài FFmpeg và Chromium
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg chromium-browser || sudo apt-get install -y ffmpeg chromium
+      - name: Cài Python dependencies
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+      - name: Cài Remotion
+        run: npm --prefix remotion install
+      - name: Chọn giọng đọc
+        id: voice
+        run: |
+          if [ "${{ inputs.voice }}" = "nam_mien_bac" ]; then
+            echo "name=vi-VN-NamMinhNeural" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=vi-VN-HoaiMyNeural" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Tạo video
+        run: |
+          chmod +x make_video.sh
+          ./make_video.sh \
+            --idea "${{ inputs.idea }}" \
+            --duration "${{ inputs.duration }}" \
+            --tone "${{ inputs.tone }}" \
+            --format "${{ inputs.content_format }}" \
+            --style "${{ inputs.style }}" \
+            --voice "${{ steps.voice.outputs.name }}"
+      - name: Kiểm tra video
+        run: test -s output/video.mp4 && test -s output/preview.png
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sticktalk-video
+          path: |
+            output/video.mp4
+            output/preview.png
+            output/script.txt
+            output/story.json
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
