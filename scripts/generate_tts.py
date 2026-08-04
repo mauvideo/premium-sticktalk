@@ -20,11 +20,14 @@ class VoicePreset:
 
 
 PRESETS = {
-    "nam_bac_news": VoicePreset("vi-VN-NamMinhNeural", "-6%", "-3Hz", "+8%"),
-    "nu_viet_nam": VoicePreset("vi-VN-HoaiMyNeural"),
+    "nam_bac_noi_luc": VoicePreset("vi-VN-NamMinhNeural", "-8%", "-5Hz", "+10%"),
+    "nam_bac_truyen_cam": VoicePreset("vi-VN-NamMinhNeural", "-12%", "-3Hz", "+6%"),
+    "nam_bac_nang_luong": VoicePreset("vi-VN-NamMinhNeural", "+6%", "+1Hz", "+8%"),
+    "nam_bac_tu_nhien": VoicePreset("vi-VN-NamMinhNeural", "-2%", "+0Hz", "+2%"),
+    "nu_viet_nam_ro_rang": VoicePreset("vi-VN-HoaiMyNeural", "-1%", "+0Hz", "+3%"),
 }
-DEFAULT_PRESET = "nam_bac_news"
-PAUSES_MS = {".": 500, ",": 180, ":": 250, ";": 220}
+DEFAULT_PRESET = "nam_bac_noi_luc"
+PAUSES_MS = {".": 520, ",": 190, ":": 280, ";": 240}
 
 ONES = ["không", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"]
 
@@ -77,7 +80,6 @@ def number_to_vietnamese(number: int) -> str:
 
 def _speak_number(match: re.Match[str]) -> str:
     raw = match.group(0)
-    # A comma/dot between digits is treated as a decimal separator, not a pause.
     if re.fullmatch(r"\d+[,.]\d+", raw):
         whole, fraction = re.split(r"[,.]", raw)
         return f"{number_to_vietnamese(int(whole))} phẩy {' '.join(ONES[int(n)] for n in fraction)}"
@@ -85,26 +87,22 @@ def _speak_number(match: re.Match[str]) -> str:
 
 
 def clean_text(text: str) -> str:
-    """Normalize narration into words that Vietnamese TTS reads naturally."""
     text = re.sub(r"\s+", " ", text).strip()
     text = re.sub(r"(?<=\d)\s*%", " phần trăm", text)
     text = re.sub(r"(?<=\d)\s*km\b", " ki lô mét", text, flags=re.IGNORECASE)
     text = re.sub(r"\b\d+(?:[,.]\d+)?\b", _speak_number, text)
-    # Canonical spelling avoids variants/abbreviations being pronounced literally.
     text = re.sub(r"\b(tỉ|ty)\b", "tỷ", text, flags=re.IGNORECASE)
     text = re.sub(r"\b(tr|trieu)\b", "triệu", text, flags=re.IGNORECASE)
     return re.sub(r"\s+([.,:;])", r"\1", text).strip()
 
 
-def split_long_sentences(text: str, max_words: int = 25) -> str:
-    """Insert sentence boundaries so no spoken sentence exceeds max_words."""
+def split_long_sentences(text: str, max_words: int = 22) -> str:
     sentences = re.split(r"(?<=[.!?])\s+", text)
     result = []
     for sentence in sentences:
         words = sentence.split()
         while len(words) > max_words:
             cut = max_words
-            # Prefer a nearby clause boundary without making a very short sentence.
             for index in range(max_words - 1, max_words // 2, -1):
                 if words[index - 1].endswith((",", ":", ";")):
                     cut = index
@@ -118,7 +116,6 @@ def split_long_sentences(text: str, max_words: int = 25) -> str:
 
 
 def speech_parts(text: str) -> list[tuple[str, int]]:
-    """Return speech chunks and the exact silence following each chunk."""
     parts = []
     start = 0
     for match in re.finditer(r"[.,:;]", text):
@@ -134,11 +131,12 @@ def speech_parts(text: str) -> list[tuple[str, int]]:
 
 async def _edge_part(text: str, destination: Path, preset: VoicePreset) -> None:
     import edge_tts
-
-    # edge-tts writes these prosody values into the SSML sent to Edge.
     communicate = edge_tts.Communicate(
-        text=text, voice=preset.voice, rate=preset.rate,
-        pitch=preset.pitch, volume=preset.volume,
+        text=text,
+        voice=preset.voice,
+        rate=preset.rate,
+        pitch=preset.pitch,
+        volume=preset.volume,
     )
     await communicate.save(str(destination))
 
@@ -158,6 +156,17 @@ def _join_audio(inputs: list[Path], destination: Path) -> None:
     subprocess.run(command, check=True)
 
 
+def _master_audio(source: Path, destination: Path) -> None:
+    """Make narration clearer, steadier and more present without clipping."""
+    command = [
+        "ffmpeg", "-y", "-loglevel", "error", "-i", str(source),
+        "-af",
+        "highpass=f=70,lowpass=f=14500,acompressor=threshold=-18dB:ratio=2.5:attack=15:release=180:makeup=2,loudnorm=I=-16:TP=-1.5:LRA=8",
+        "-c:a", "libmp3lame", "-b:a", "192k", str(destination),
+    ]
+    subprocess.run(command, check=True)
+
+
 async def synthesize(text: str, destination: Path, preset_name: str) -> str:
     preset = PRESETS[preset_name]
     parts = speech_parts(split_long_sentences(clean_text(text)))
@@ -172,7 +181,6 @@ async def synthesize(text: str, destination: Path, preset_name: str) -> str:
                 await _edge_part(chunk, output, preset)
         except Exception as error:
             from gtts import gTTS
-
             provider = "gTTS"
             print(f"Edge TTS lỗi ({error}); chuyển sang gTTS.")
             for (chunk, _), output in zip(parts, speech_files):
@@ -185,8 +193,11 @@ async def synthesize(text: str, destination: Path, preset_name: str) -> str:
                 pause_file = temporary / f"pause-{index}.wav"
                 _silence(pause_file, pause)
                 timeline.append(pause_file)
+
+        joined = temporary / "joined.mp3"
+        _join_audio(timeline, joined)
         destination.parent.mkdir(parents=True, exist_ok=True)
-        _join_audio(timeline, destination)
+        _master_audio(joined, destination)
         return provider
 
 
@@ -194,7 +205,11 @@ async def run(preset_name: str) -> None:
     story = json.loads(Path("assets/story.json").read_text(encoding="utf-8"))
     text = " ".join(scene["narration"] for scene in story["scenes"])
     provider = await synthesize(text, Path("assets/narration.mp3"), preset_name)
-    print(f"Đã tạo assets/narration.mp3 bằng {provider} ({preset_name})")
+    preset = PRESETS[preset_name]
+    print(
+        f"Đã tạo assets/narration.mp3 bằng {provider} | preset={preset_name} | "
+        f"voice={preset.voice} | rate={preset.rate} | pitch={preset.pitch} | volume={preset.volume}"
+    )
 
 
 def main() -> None:
