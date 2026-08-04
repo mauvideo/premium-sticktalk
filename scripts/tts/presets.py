@@ -29,9 +29,9 @@ def _e(code, name, voice, rate, pitch, volume, mastering, max_words=24):
 
 
 GOOGLE_PRESETS = {
-    "google_nam_bac_tram": _g("google_nam_bac_tram", "Google Nam Bắc — Trầm", "vi-VN-Neural2-D", speed=.94, mastering="noi_luc"),
-    "google_nam_bac_phat_thanh": _g("google_nam_bac_phat_thanh", "Google Nam Bắc — Phát thanh", "vi-VN-Wavenet-D", speed=.96, mastering="phat_thanh"),
-    "google_nam_bac_noi_luc": _g("google_nam_bac_noi_luc", "Google Nam Bắc — Nội lực", "vi-VN-Chirp3-HD-Fenrir", speed=.94, mastering="noi_luc", require=True),
+    "google_nam_bac_tram": _g("google_nam_bac_tram", "Google Nam tiếng Việt — Trầm", "vi-VN-Neural2-D", speed=.94, mastering="noi_luc"),
+    "google_nam_bac_phat_thanh": _g("google_nam_bac_phat_thanh", "Google Nam tiếng Việt — Phát thanh", "vi-VN-Wavenet-D", speed=.96, mastering="phat_thanh"),
+    "google_nam_bac_noi_luc": _g("google_nam_bac_noi_luc", "Google Nam tiếng Việt — Nội lực", "vi-VN-Chirp3-HD-Fenrir", speed=.94, mastering="noi_luc", require=True),
     "google_nam_neural2": _g("google_nam_neural2", "Google Nam Neural 2", "vi-VN-Neural2-D"),
     "google_nam_wavenet": _g("google_nam_wavenet", "Google Nam WaveNet", "vi-VN-Wavenet-D", speed=.98, mastering="phat_thanh"),
     "google_nam_standard": _g("google_nam_standard", "Google Nam Standard", "vi-VN-Standard-D"),
@@ -44,17 +44,15 @@ GOOGLE_PRESETS = {
 
 NAM_MINH, HOAI_MY = "vi-VN-NamMinhNeural", "vi-VN-HoaiMyNeural"
 EDGE_PRESETS = {
-    "Nam miền Bắc MC": _e("nam_bac_mc", "Nam miền Bắc MC", NAM_MINH, "-3%", "-2Hz", "+6%", "mc"),
-    "Nam miền Bắc Nội lực": _e("nam_bac_noi_luc", "Nam miền Bắc Nội lực", NAM_MINH, "-8%", "-5Hz", "+9%", "power"),
-    "Nam miền Bắc Nội lực Plus": _e("nam_bac_noi_luc_plus", "Nam miền Bắc Nội lực Plus", NAM_MINH, "-14%", "-7Hz", "+14%", "power_plus", 20),
-    "Nam miền Bắc Podcast": _e("nam_bac_podcast", "Nam miền Bắc Podcast", NAM_MINH, "-10%", "-3Hz", "+5%", "podcast", 22),
-    "Nam miền Bắc Truyền cảm": _e("nam_bac_truyen_cam", "Nam miền Bắc Truyền cảm", NAM_MINH, "-12%", "-4Hz", "+7%", "emotional", 20),
-    "Nam miền Bắc Doanh nhân": _e("nam_bac_doanh_nhan", "Nam miền Bắc Doanh nhân", NAM_MINH, "-6%", "-4Hz", "+8%", "business"),
-    "Nữ miền Bắc Dịu nhẹ": _e("nu_mien_bac_diu_nhe", "Nữ miền Bắc Dịu nhẹ", HOAI_MY, "-8%", "+1Hz", "+4%", "gentle", 22),
+    "Nam tiếng Việt — Tự nhiên": _e("nam_tieng_viet_tu_nhien", "Nam tiếng Việt — Tự nhiên", NAM_MINH, "-3%", "-2Hz", "+6%", "mc"),
+    "Nam tiếng Việt — Nội lực": _e("nam_tieng_viet_noi_luc", "Nam tiếng Việt — Nội lực", NAM_MINH, "-8%", "-5Hz", "+9%", "power"),
+    "Nam tiếng Việt — Phát thanh": _e("nam_tieng_viet_phat_thanh", "Nam tiếng Việt — Phát thanh", NAM_MINH, "-6%", "-4Hz", "+8%", "business"),
+    "Nam tiếng Việt — Kể chuyện": _e("nam_tieng_viet_ke_chuyen", "Nam tiếng Việt — Kể chuyện", NAM_MINH, "-12%", "-4Hz", "+7%", "emotional", 20),
+    "Nữ tiếng Việt — Tự nhiên": _e("nu_tieng_viet_tu_nhien", "Nữ tiếng Việt — Tự nhiên", HOAI_MY, "-8%", "+1Hz", "+4%", "gentle", 22),
 }
 PRESETS = {**{p.name: p for p in GOOGLE_PRESETS.values()}, **EDGE_PRESETS}
 ALIASES = {p.code: p.name for p in PRESETS.values()}
-DEFAULT_PRESET = "Google Nam Bắc — Trầm"
+DEFAULT_PRESET = "Nam tiếng Việt — Tự nhiên"
 
 
 def resolve_preset(name: str) -> VoicePreset:
