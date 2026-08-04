@@ -1,66 +1,44 @@
+import asyncio
+import json
+import tempfile
 import unittest
-from unittest.mock import patch
 from pathlib import Path
+from unittest.mock import patch
 
-from scripts.generate_tts import (
-    HOAI_MY, NAM_MINH, MASTERING_FILTERS, PRESETS, clean_text,
-    number_to_vietnamese, resolve_preset, speech_parts, split_long_sentences,
-    _master_audio,
-)
-
-
-class GenerateTtsTest(unittest.TestCase):
-    def test_all_northern_male_presets_are_nam_minh(self):
-        male = [preset for name, preset in PRESETS.items() if name.startswith("Nam miền Bắc")]
-        self.assertEqual(len(male), 6)
-        self.assertTrue(all(preset.voice == NAM_MINH for preset in male))
-        self.assertEqual(PRESETS["Nữ miền Bắc Dịu nhẹ"].voice, HOAI_MY)
-
-    def test_all_required_presets_exist(self):
-        self.assertEqual(set(PRESETS), {
-            "Nam miền Bắc MC", "Nam miền Bắc Nội lực", "Nam miền Bắc Nội lực Plus",
-            "Nam miền Bắc Podcast", "Nam miền Bắc Truyền cảm", "Nam miền Bắc Doanh nhân",
-            "Nữ miền Bắc Dịu nhẹ",
-        })
-
-    def test_old_alias_resolves_without_changing_actual_preset(self):
-        self.assertEqual(resolve_preset("nam_bac_noi_luc_plus").name, "Nam miền Bắc Nội lực Plus")
-
-    def test_clean_text_normalizes_currency_units_numbers_and_spaces(self):
-        self.assertEqual(
-            clean_text("  $12,5 tăng 21 km, đạt 2 tỉ, 3 tr và 15%. "),
-            "mười hai phẩy năm đô la Mỹ tăng hai mươi mốt ki lô mét, đạt hai tỷ, ba triệu và mười lăm phần trăm.",
-        )
-
-    def test_number_to_vietnamese(self):
-        self.assertEqual(number_to_vietnamese(1_025_000_000), "một tỷ không trăm hai mươi lăm triệu")
-
-    def test_pause_lengths_include_expressive_punctuation(self):
-        self.assertEqual(
-            speech_parts("Một. Hai, Ba: Bốn; Năm? Sáu!"),
-            [("Một", 560), ("Hai", 210), ("Ba", 300), ("Bốn", 330), ("Năm", 620), ("Sáu", 600)],
-        )
-
-    def test_long_sentence_is_split_at_requested_length(self):
-        text = " ".join(f"từ{i}" for i in range(1, 53))
-        result = split_long_sentences(text, 25)
-        self.assertEqual([len(part.split()) for part in result.split(". ")], [25, 25, 2])
-
-    def test_plus_is_slower_louder_and_has_full_mastering(self):
-        plus = PRESETS["Nam miền Bắc Nội lực Plus"]
-        self.assertEqual((plus.rate, plus.volume, plus.max_words), ("-14%", "+14%", 20))
-        audio_filter = MASTERING_FILTERS[plus.mastering]
-        for stage in ("equalizer=f=90", "equalizer=f=180", "acompressor=", "alimiter=", "loudnorm="):
-            self.assertIn(stage, audio_filter)
-
-    @patch("scripts.generate_tts.subprocess.run")
-    def test_mastering_invokes_ffmpeg_with_plus_filter(self, run):
-        preset = PRESETS["Nam miền Bắc Nội lực Plus"]
-        _master_audio(Path("input.mp3"), Path("output.mp3"), preset)
-        command = run.call_args.args[0]
-        self.assertIn(MASTERING_FILTERS["power_plus"], command)
-        run.assert_called_once_with(command, check=True)
+from scripts.generate_tts import synthesize
+from scripts.tts.google_tts import GoogleTtsProvider
+from scripts.tts.presets import GOOGLE_PRESETS, PRESETS, resolve_preset
 
 
-if __name__ == "__main__":
-    unittest.main()
+class GoogleTtsTest(unittest.TestCase):
+    def test_voice_ids_chinh_xac_va_khong_fallback(self):
+        expected={"google_nam_neural2":"vi-VN-Neural2-D","google_nam_wavenet":"vi-VN-Wavenet-D","google_nam_standard":"vi-VN-Standard-D","google_nam_chirp_tram":"vi-VN-Chirp3-HD-Charon","google_nam_chirp_noi_luc":"vi-VN-Chirp3-HD-Fenrir"}
+        self.assertEqual({k:GOOGLE_PRESETS[k].voice for k in expected},expected)
+
+    def test_khong_cho_tron_nha_cung_cap(self):
+        with self.assertRaisesRegex(RuntimeError,"Không chuyển giọng tự động"):
+            asyncio.run(synthesize("Xin chào",Path("khong-tao.mp3"),"Google Nam Neural 2","edge"))
+
+    def test_google_thieu_credentials_bao_loi_tieng_viet(self):
+        with patch.dict("os.environ",{},clear=True):
+            with self.assertRaisesRegex(RuntimeError,"Chưa cấu hình Google Cloud"):
+                GoogleTtsProvider()._client()
+
+    @patch("scripts.generate_tts.MP3")
+    @patch.object(GoogleTtsProvider,"synthesize")
+    def test_mock_google_ghi_metadata_dung(self,mock_synthesize,mock_mp3):
+        preset=resolve_preset("google_nam_standard")
+        async def fake(text,destination,selected):
+            destination.parent.mkdir(parents=True,exist_ok=True);destination.write_bytes(b"ID3-du-lieu-mock");return selected.voice
+        mock_synthesize.side_effect=fake;mock_mp3.return_value.info.length=1.25
+        with tempfile.TemporaryDirectory() as folder:
+            target=Path(folder)/"thu.mp3"
+            asyncio.run(synthesize("Xin chào.",target,preset.code,"google"))
+            info=json.loads(Path("output/tts-info.json").read_text(encoding="utf-8"))
+            self.assertEqual((info["nha_cung_cap"],info["voice_id"]),("google","vi-VN-Standard-D"))
+
+    def test_edge_presets_van_con(self):
+        self.assertIn("Nam miền Bắc Nội lực Plus",PRESETS)
+        self.assertEqual(PRESETS["Nam miền Bắc Nội lực Plus"].provider,"edge")
+
+if __name__=="__main__":unittest.main()

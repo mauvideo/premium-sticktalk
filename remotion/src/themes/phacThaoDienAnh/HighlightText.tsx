@@ -1,0 +1,1 @@
+import React from 'react';export const HighlightText:React.FC<{text:string;keywords:string[];accent:string}>=({text,keywords,accent})=><>{text.split(/(\s+)/).map((w,i)=><span key={i} style={{color:keywords.some(k=>w.toLowerCase().includes(k.toLowerCase()))?accent:undefined}}>{w}</span>)}</>;

@@ -1,0 +1,2 @@
+import React from 'react';import {interpolate,useCurrentFrame} from 'remotion';
+export const PencilStroke:React.FC<{accent:string}>=({accent})=>{const f=useCurrentFrame();return <svg width="620" height="35"><path d="M8 20 Q140 5 300 19 T612 14" fill="none" stroke={accent} strokeWidth="7" strokeLinecap="round" strokeDasharray="650" strokeDashoffset={interpolate(f,[3,28],[650,0],{extrapolateRight:'clamp'})}/></svg>};

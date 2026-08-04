@@ -1,0 +1,2 @@
+import React from 'react'; import {AbsoluteFill} from 'remotion';
+export const PaperCanvas:React.FC<{paper:string;children:React.ReactNode}>=({paper,children})=><AbsoluteFill style={{background:'#8b7a65',padding:42}}><AbsoluteFill style={{inset:42,borderRadius:18,overflow:'hidden',backgroundColor:paper,backgroundImage:'radial-gradient(#4b40351b .8px,transparent .8px),radial-gradient(ellipse at center,transparent 55%,#30271d24 100%)',backgroundSize:'7px 7px,100% 100%',boxShadow:'0 24px 60px #241c1599, inset 0 0 4px #4b382c66'}}>{children}</AbsoluteFill></AbsoluteFill>;

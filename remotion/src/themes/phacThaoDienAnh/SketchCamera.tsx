@@ -1,0 +1,2 @@
+import React from 'react';import {interpolate,useCurrentFrame,useVideoConfig} from 'remotion';
+export const SketchCamera:React.FC<{children:React.ReactNode;seed:number}>=({children,seed})=>{const f=useCurrentFrame(),{durationInFrames}=useVideoConfig(),p=f/durationInFrames,zoom=1+interpolate(p,[0,1],[0,.035]),x=Math.sin((f+seed)*.035)*3,y=Math.cos((f+seed)*.027)*3,rotate=Math.sin((f+seed)*.012)*.35;return <div style={{width:'100%',height:'100%',transform:`translate(${x}px,${y}px) scale(${zoom}) rotate(${rotate}deg)`}}>{children}</div>};

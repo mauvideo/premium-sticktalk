@@ -1,0 +1,2 @@
+import React from 'react';import {SketchCharacter} from './SketchCharacter';import {SketchLayout} from './types';
+export const PencilIllustration:React.FC<{layout:SketchLayout;ink:string;accent:string}>=({layout,ink,accent})=><div style={{display:'flex',gap:20,alignItems:'center',justifyContent:'center'}}><SketchCharacter kind={layout==='laptop'?'laptop':layout==='bang'?'bang':'think'} ink={ink} accent={accent}/>{layout==='doi_thoai'&&<SketchCharacter ink={ink} accent={accent}/>} {layout==='so_lieu'&&<div style={{fontSize:150,fontWeight:900,color:accent}}>18%</div>}</div>;

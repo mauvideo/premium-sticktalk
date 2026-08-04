@@ -1,0 +1,2 @@
+import React from 'react';import {spring,useCurrentFrame,useVideoConfig} from 'remotion';import {PencilStroke} from './PencilStroke';
+export const EditorialTitle:React.FC<{text:string;ink:string;accent:string}>=({text,ink,accent})=>{const f=useCurrentFrame(),{fps}=useVideoConfig(),p=spring({frame:f,fps,config:{damping:18}});return <div style={{opacity:p,transform:`translateY(${(1-p)*35}px)`,color:ink,fontFamily:'Georgia, serif',fontSize:72,lineHeight:1.12,fontWeight:700,letterSpacing:2,textAlign:'center',maxWidth:850}}>{text}<PencilStroke accent={accent}/></div>};

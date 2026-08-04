@@ -11,9 +11,17 @@ TONE="${VIDEO_TONE:-sâu_sắc}"
 CONTENT_FORMAT="${VIDEO_CONTENT_FORMAT:-hybrid}"
 STYLE="${VIDEO_STYLE:-người_que_triết_lý}"
 VOICE="${VIDEO_VOICE:-Nam miền Bắc Nội lực Plus}"
+TTS_PROVIDER="${TTS_PROVIDER:-google}"
 MOTION_LEVEL="${VIDEO_MOTION_LEVEL:-trung_bình}"
 SCRIPT_MODE="${VIDEO_SCRIPT_MODE:-Tự động theo chủ đề}"
 WRITING_STYLE="${VIDEO_WRITING_STYLE:-Tự động theo chủ đề}"
+
+# Ánh xạ tên hiển thị tiếng Việt sang mã theme; mã này chỉ đi vào dữ liệu kỹ thuật.
+case "$STYLE" in
+  "Phác thảo điện ảnh — Trầm") STYLE=phac_thao_dien_anh_tram;;
+  "Phác thảo điện ảnh — Sách kỹ năng") STYLE=phac_thao_sach_ky_nang;;
+  "Phác thảo điện ảnh — Doanh nhân") STYLE=phac_thao_doanh_nhan;;
+esac
 
 require_value() {
   [[ $# -ge 2 && -n "$2" && "$2" != --* ]] || {
@@ -77,7 +85,7 @@ python3 scripts/generate_story.py \
   --script-mode "$SCRIPT_MODE" \
   --writing-style "$WRITING_STYLE"
 
-python3 scripts/generate_tts.py --preset "$VOICE"
+python3 scripts/generate_tts.py --provider "$TTS_PROVIDER" --preset "$VOICE"
 cp assets/narration.mp3 remotion/public/assets/narration.mp3
 
 python3 - <<'PY'
