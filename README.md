@@ -1,8 +1,10 @@
-# Premium StickTalk — Google Cloud TTS và Phác thảo điện ảnh
+# Premium StickTalk — Edge TTS miễn phí và Phác thảo điện ảnh
 
-Premium StickTalk tạo video dọc 1080×1920, 30 khung hình/giây và giữ ba thời lượng 30, 45, 60 giây. Bản nâng cấp bổ sung **Google Cloud Text-to-Speech thật** (mặc định), vẫn giữ **Microsoft Edge TTS**, cùng phong cách **Phác thảo điện ảnh trên giấy**. Khi chọn Google, hệ thống không bao giờ tự chuyển sang Edge hoặc một Voice ID khác.
+Premium StickTalk tạo video dọc 1080×1920, 30 khung hình/giây và giữ ba thời lượng 30, 45, 60 giây. **Microsoft Edge TTS miễn phí là mặc định**, không cần API key hay GitHub Secret. Google Cloud Text-to-Speech là lựa chọn nâng cao; khi chủ động chọn Google, hệ thống không bao giờ tự chuyển sang Edge hoặc một Voice ID khác. Phong cách **Phác thảo điện ảnh trên giấy** được giữ nguyên.
 
-## Cấu hình Google Cloud Text-to-Speech
+Năm lựa chọn Edge trong giao diện là **Nam tiếng Việt — Tự nhiên**, **Nam tiếng Việt — Nội lực**, **Nam tiếng Việt — Phát thanh**, **Nam tiếng Việt — Kể chuyện** và **Nữ tiếng Việt — Tự nhiên**. Tất cả preset nam dùng `vi-VN-NamMinhNeural`; preset nữ dùng `vi-VN-HoaiMyNeural`. Tên giao diện không suy đoán vùng giọng khi nhà cung cấp không công bố.
+
+## Google Cloud Text-to-Speech (tùy chọn nâng cao)
 
 1. Trong Google Cloud Console, tạo hoặc chọn một dự án và bật thanh toán cho dự án đó.
 2. Mở **API và dịch vụ → Thư viện**, tìm **Cloud Text-to-Speech API** rồi chọn **Bật**.
@@ -28,7 +30,7 @@ Nếu chưa cấu hình, tiến trình dừng với hướng dẫn tiếng Việ
 
 Trong thẻ **Actions**, chạy workflow **Tạo bản nghe thử giọng Google**. Tải artifact `ban-nghe-thu-giong-google`, nghe bốn file MP3 và xem `thong_tin_giong.json`. Bộ thử gồm Neural2-D, WaveNet-D, Chirp3-HD-Charon và Chirp3-HD-Fenrir. Các giọng Chirp được đối chiếu với danh sách giọng Google ở thời điểm chạy; thiếu Voice ID sẽ làm workflow thất bại, không thay thế ngầm.
 
-Các tên “Google Nam Bắc” là preset phục vụ **nghe và tự chọn**, không phải khẳng định giọng thuộc vùng miền. Người dùng cần nghe bản thử trước khi quyết định.
+Các preset Google là lựa chọn để **nghe và tự chọn**, không khẳng định giọng thuộc vùng miền. Người dùng cần nghe bản thử trước khi quyết định.
 
 Voice ID được quản lý tập trung trong `scripts/tts/presets.py`: `vi-VN-Neural2-D`, `vi-VN-Wavenet-D`, `vi-VN-Standard-D`, `vi-VN-Chirp3-HD-Charon`, `vi-VN-Chirp3-HD-Fenrir`, `vi-VN-Chirp3-HD-Orus`, `vi-VN-Neural2-A` và `vi-VN-Wavenet-C`.
 
@@ -84,7 +86,7 @@ Tên kỹ thuật ổn định được ánh xạ bên trong và không xuất h
   --duration 45 \
   --writing-style "Thực tế kinh doanh" \
   --script-mode "Tự động theo chủ đề" \
-  --voice "Nam miền Bắc Nội lực Plus"
+  --voice "Nam tiếng Việt — Nội lực"
 ```
 
 Kết quả nằm trong `output/`. Để chỉ tạo kịch bản mà chưa gọi TTS hay render:
@@ -118,6 +120,6 @@ python scripts/kiem_tra_do_khac_nhau.py \
 
 Năm kịch bản kiểm thử theo đề bài nằm trong `examples/v3.6/`. Chúng minh họa triết lý, danh sách đúng năm mục, khoa học, lịch sử và hội thoại A/B thực sự.
 
-## Giọng Edge hiện hữu
+## Giọng Edge mặc định
 
-Chọn nhà cung cấp `edge` để dùng các preset Microsoft Edge hiện hữu, gồm **Nam miền Bắc Nội lực Plus**. Giọng Edge không dùng chuỗi hậu kỳ hoặc thông số tốc độ của Google. Chi tiết preset cũ nằm trong [`docs/VOICE_PRESETS.md`](docs/VOICE_PRESETS.md).
+Không cần cấu hình gì để dùng nhà cung cấp `edge`. Giọng Edge không dùng thông số tốc độ của Google. Chi tiết preset nằm trong [`docs/VOICE_PRESETS.md`](docs/VOICE_PRESETS.md).

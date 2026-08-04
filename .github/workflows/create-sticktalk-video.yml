@@ -77,32 +77,30 @@ on:
       voice:
         description: "Giọng đọc"
         required: true
-        default: "Google Nam Bắc — Trầm"
+        default: "Nam tiếng Việt — Tự nhiên"
         type: choice
         options:
-          - "Google Nam Bắc — Trầm"
-          - "Google Nam Bắc — Phát thanh"
-          - "Google Nam Bắc — Nội lực"
+          - "Nam tiếng Việt — Tự nhiên"
+          - "Nam tiếng Việt — Nội lực"
+          - "Nam tiếng Việt — Phát thanh"
+          - "Nam tiếng Việt — Kể chuyện"
+          - "Nữ tiếng Việt — Tự nhiên"
+          - "Google Nam tiếng Việt — Trầm"
+          - "Google Nam tiếng Việt — Phát thanh"
+          - "Google Nam tiếng Việt — Nội lực"
           - "Google Nam Neural 2"
           - "Google Nam WaveNet"
           - "Google Nam Standard"
           - "Google Nữ Neural 2"
           - "Google Nữ WaveNet"
-          - "Nam miền Bắc MC"
-          - "Nam miền Bắc Nội lực"
-          - "Nam miền Bắc Nội lực Plus"
-          - "Nam miền Bắc Podcast"
-          - "Nam miền Bắc Truyền cảm"
-          - "Nam miền Bắc Doanh nhân"
-          - "Nữ miền Bắc Dịu nhẹ"
       tts_provider:
         description: "Nhà cung cấp giọng đọc"
         required: true
-        default: google
+        default: "Microsoft Edge miễn phí"
         type: choice
         options:
-          - google
-          - edge
+          - "Microsoft Edge miễn phí"
+          - "Google Cloud (nâng cao)"
 
 permissions:
   contents: read
@@ -146,10 +144,10 @@ jobs:
           echo "Phong cách: ${{ inputs.style }}"
           echo "Mức chuyển động: ${{ inputs.motion_level }}"
           echo "Giọng đọc: ${{ inputs.voice }}"
-          echo "Nhà cung cấp giọng đọc: ${{ inputs.tts_provider == 'google' && 'Google Cloud' || 'Microsoft Edge' }}"
+          echo "Nhà cung cấp giọng đọc: ${{ inputs.tts_provider }}"
 
       - name: Cấu hình Google Cloud Text-to-Speech
-        if: inputs.tts_provider == 'google'
+        if: inputs.tts_provider == 'Google Cloud (nâng cao)'
         env:
           GOOGLE_CLOUD_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CLOUD_CREDENTIALS_JSON }}
         run: |
@@ -172,7 +170,7 @@ jobs:
           VIDEO_STYLE: ${{ inputs.style }}
           VIDEO_MOTION_LEVEL: ${{ inputs.motion_level }}
           VIDEO_VOICE: ${{ inputs.voice }}
-          TTS_PROVIDER: ${{ inputs.tts_provider }}
+          TTS_PROVIDER: ${{ inputs.tts_provider == 'Google Cloud (nâng cao)' && 'google' || 'edge' }}
           GOOGLE_TTS_VOICE: ${{ inputs.voice }}
         run: |
           chmod +x make_video.sh

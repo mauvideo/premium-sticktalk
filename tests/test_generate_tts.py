@@ -37,8 +37,12 @@ class GoogleTtsTest(unittest.TestCase):
             info=json.loads(Path("output/tts-info.json").read_text(encoding="utf-8"))
             self.assertEqual((info["nha_cung_cap"],info["voice_id"]),("google","vi-VN-Standard-D"))
 
-    def test_edge_presets_van_con(self):
-        self.assertIn("Nam miền Bắc Nội lực Plus",PRESETS)
-        self.assertEqual(PRESETS["Nam miền Bắc Nội lực Plus"].provider,"edge")
+    def test_edge_la_mac_dinh_va_dung_voice_theo_gioi_tinh(self):
+        from scripts.tts.presets import DEFAULT_PRESET
+        self.assertEqual(DEFAULT_PRESET,"Nam tiếng Việt — Tự nhiên")
+        edge_presets=[preset for preset in PRESETS.values() if preset.provider == "edge"]
+        self.assertEqual(len(edge_presets),5)
+        self.assertTrue(all(p.voice == "vi-VN-NamMinhNeural" for p in edge_presets if p.gender == "Nam"))
+        self.assertTrue(all(p.voice == "vi-VN-HoaiMyNeural" for p in edge_presets if p.gender == "Nữ"))
 
 if __name__=="__main__":unittest.main()

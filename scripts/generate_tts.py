@@ -57,10 +57,12 @@ def speech_parts(text: str):
     return parts
 
 async def synthesize(text: str, destination: Path, preset_name: str, provider_name: str|None=None) -> str:
-    preset=resolve_preset(preset_name); selected=(provider_name or os.getenv("TTS_PROVIDER") or "google").lower()
+    preset=resolve_preset(preset_name); selected=(provider_name or os.getenv("TTS_PROVIDER") or "edge").lower()
     if selected not in {"google","edge"}: raise ValueError(f"Nhà cung cấp không hợp lệ: {selected}")
     if preset.provider != selected: raise RuntimeError(f"Giọng '{preset.name}' thuộc nhà cung cấp {preset.provider}, không phải {selected}. Không chuyển giọng tự động.")
-    print("========================================\n"+f"NHÀ CUNG CẤP GIỌNG ĐỌC: {'GOOGLE CLOUD TTS' if selected=='google' else 'MICROSOFT EDGE TTS'}\nTÊN HIỂN THỊ: {preset.name}\nMÃ PRESET: {preset.code}\nVOICE ID THỰC TẾ: {preset.voice}\nLANGUAGE CODE: vi-VN\nTỐC ĐỘ: {preset.speed}\nCAO ĐỘ: {preset.pitch}\nĐỊNH DẠNG: MP3\n========================================")
+    print("========================================\n"+f"Nhà cung cấp thực tế: {'Google Cloud TTS' if selected=='google' else 'Microsoft Edge TTS'}\nPreset đã chọn: {preset.name}\nVoice ID thực tế: {preset.voice}\nLANGUAGE CODE: vi-VN\nTỐC ĐỘ: {preset.speed}\nCAO ĐỘ: {preset.pitch}\nĐỊNH DẠNG: MP3\n========================================")
+    if selected == "edge" and preset.gender == "Nam" and preset.voice != "vi-VN-NamMinhNeural":
+        raise RuntimeError("Preset nam bắt buộc dùng Voice ID vi-VN-NamMinhNeural; đã dừng.")
     provider=GoogleTtsProvider() if selected=="google" else EdgeTtsProvider()
     actual=await provider.synthesize(split_long_sentences(clean_text(text),preset.max_words),destination,preset)
     if actual != preset.voice: raise RuntimeError("Voice ID thực tế không khớp yêu cầu; đã dừng.")
@@ -76,7 +78,7 @@ async def run(preset_name,provider):
     await synthesize(text,Path("assets/narration.mp3"),preset_name,provider)
 
 def main():
-    p=argparse.ArgumentParser(description="Tạo giọng đọc tiếng Việt"); p.add_argument("--preset",default=os.getenv("GOOGLE_TTS_VOICE",DEFAULT_PRESET)); p.add_argument("--provider",choices=["google","edge"],default=os.getenv("TTS_PROVIDER","google")); a=p.parse_args()
+    p=argparse.ArgumentParser(description="Tạo giọng đọc tiếng Việt"); p.add_argument("--preset",default=os.getenv("TTS_VOICE",os.getenv("GOOGLE_TTS_VOICE",DEFAULT_PRESET))); p.add_argument("--provider",choices=["google","edge"],default=os.getenv("TTS_PROVIDER","edge")); a=p.parse_args()
     try: asyncio.run(run(a.preset,a.provider))
     except (ValueError,RuntimeError) as e: p.error(str(e))
 if __name__=="__main__": main()
