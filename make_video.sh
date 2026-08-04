@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"; cd "$ROOT"
-IDEA=""; DURATION=45; TONE="sâu sắc"; FORMAT="hybrid"; STYLE="dark_neon"; VOICE="nam_bac_news"
+IDEA=""; DURATION=45; TONE="sâu sắc"; FORMAT="hybrid"; STYLE="dark_neon"; VOICE="nam_bac_news"; MOTION_LEVEL="medium"
 while (($#)); do
   case "$1" in
     --idea) IDEA="${2:-}"; shift 2;;
@@ -10,12 +10,13 @@ while (($#)); do
     --format) FORMAT="${2:-hybrid}"; shift 2;;
     --style) STYLE="${2:-dark_neon}"; shift 2;;
     --voice) VOICE="${2:-nam_bac_news}"; shift 2;;
+    --motion-level) MOTION_LEVEL="${2:-medium}"; shift 2;;
     *) echo "Tham số không hợp lệ: $1" >&2; exit 2;;
   esac
 done
 [[ -n "$IDEA" ]] || { echo 'Thiếu --idea' >&2; exit 2; }
 mkdir -p assets output remotion/public/assets
-python3 scripts/generate_story.py --idea "$IDEA" --duration "$DURATION" --tone "$TONE" --format "$FORMAT" --style "$STYLE" --voice "$VOICE"
+python3 scripts/generate_story.py --idea "$IDEA" --duration "$DURATION" --tone "$TONE" --format "$FORMAT" --style "$STYLE" --voice "$VOICE" --motion-level "$MOTION_LEVEL"
 python3 scripts/generate_tts.py --preset "$VOICE"
 cp assets/narration.mp3 remotion/public/assets/narration.mp3
 python3 - <<'PY'

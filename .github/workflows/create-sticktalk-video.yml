@@ -28,9 +28,19 @@ on:
       style:
         description: "Phong cách hình ảnh"
         required: true
-        default: dark_neon
+        default: người_que_triết_lý
         type: choice
-        options: [dark_neon, whiteboard, motivational]
+        options: [người_que_triết_lý, người_que_tiktok, người_que_doanh_nhân, người_que_kể_chuyện, tin_tức_ai]
+      motion_level:
+        description: "Mức chuyển động"
+        required: true
+        default: trung_bình
+        type: choice
+        options:
+          - nhẹ
+          - trung_bình
+          - nhiều
+          - viral_tiktok
       voice:
         description: "Giọng đọc"
         required: true
@@ -84,6 +94,7 @@ jobs:
             --tone "${{ inputs.tone }}" \
             --format "${{ inputs.content_format }}" \
             --style "${{ inputs.style }}" \
+            --motion-level "${{ inputs.motion_level }}" \
             --voice "${{ steps.voice.outputs.name }}"
       - name: Kiểm tra video
         run: test -s output/video.mp4 && test -s output/preview.png
