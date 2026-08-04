@@ -64,40 +64,54 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: pip
+
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
+
       - name: Cài FFmpeg và Chromium
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg chromium-browser || sudo apt-get install -y ffmpeg chromium
+
       - name: Cài Python dependencies
         run: python -m pip install --upgrade pip && pip install -r requirements.txt
+
       - name: Cài Remotion
         working-directory: remotion
         run: npm install
-      - name: Chọn giọng đọc
-        id: voice
+
+      - name: Hiển thị cấu hình
         run: |
-          echo "name=${{ inputs.voice }}" >> "$GITHUB_OUTPUT"
-          echo "Đã chọn preset giọng: ${{ inputs.voice }}"
+          echo "Ý tưởng: ${{ inputs.idea }}"
+          echo "Thời lượng: ${{ inputs.duration }} giây"
+          echo "Giọng điệu: ${{ inputs.tone }}"
+          echo "Định dạng: ${{ inputs.content_format }}"
+          echo "Phong cách: ${{ inputs.style }}"
+          echo "Mức chuyển động: ${{ inputs.motion_level }}"
+          echo "Giọng đọc: ${{ inputs.voice }}"
+
       - name: Tạo video
+        env:
+          VIDEO_IDEA: ${{ inputs.idea }}
+          VIDEO_DURATION: ${{ inputs.duration }}
+          VIDEO_TONE: ${{ inputs.tone }}
+          VIDEO_CONTENT_FORMAT: ${{ inputs.content_format }}
+          VIDEO_STYLE: ${{ inputs.style }}
+          VIDEO_MOTION_LEVEL: ${{ inputs.motion_level }}
+          VIDEO_VOICE: ${{ inputs.voice }}
         run: |
           chmod +x make_video.sh
-          ./make_video.sh \
-            --idea "${{ inputs.idea }}" \
-            --duration "${{ inputs.duration }}" \
-            --tone "${{ inputs.tone }}" \
-            --format "${{ inputs.content_format }}" \
-            --style "${{ inputs.style }}" \
-            --motion-level "${{ inputs.motion_level }}" \
-            --voice "${{ steps.voice.outputs.name }}"
+          ./make_video.sh
+
       - name: Kiểm tra video
         run: test -s output/video.mp4 && test -s output/preview.png
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
