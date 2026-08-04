@@ -77,14 +77,26 @@ on:
       vieneu_voice:
         description: "Giọng VieNeu-TTS Premium"
         required: true
-        default: "Mặc định — Trúc Ly"
+        default: "Trúc Ly"
         type: choice
         options:
-          - "Mặc định — Trúc Ly"
-          - "Bác sĩ Tuyên"
+          - "Trúc Ly"
+          - "Minh Đức"
+          - "Phạm Tuyền"
+          - "Thái Sơn"
+          - "Xuân Vĩnh"
+          - "Thanh Bình"
+          - "Ngọc Linh"
+          - "Đoan Trang"
+          - "Mai Anh"
+          - "Hoàng Mỹ Đoan"
+          - "Minh Triết"
+          - "Thùy Dung"
+          - "Quang Sơn"
+          - "Ngọc Trần"
           - "Nhập mã giọng khác"
       custom_voice_id:
-        description: "Mã giọng VieNeu khác (chỉ điền khi chọn Nhập mã giọng khác)"
+        description: "Tên hoặc mã giọng VieNeu khác (chỉ điền khi chọn Nhập mã giọng khác)"
         required: false
         default: ""
         type: string
@@ -96,6 +108,7 @@ on:
         options:
           - "Tự nhiên"
           - "Kể chuyện"
+          - "Tin tức"
 
 permissions:
   contents: read
@@ -148,7 +161,7 @@ jobs:
           echo "Thời lượng: ${{ inputs.duration }} giây"
           echo "Phong cách: ${{ inputs.style }}"
           echo "Giọng VieNeu: ${{ inputs.vieneu_voice }}"
-          echo "Mã giọng tùy chỉnh: ${{ inputs.custom_voice_id }}"
+          echo "Tên/mã giọng tùy chỉnh: ${{ inputs.custom_voice_id }}"
           echo "Phong cách đọc: ${{ inputs.voice_emotion }}"
           echo "Hệ thống giọng đọc: VieNeu-TTS v3 Turbo ONNX"
 
