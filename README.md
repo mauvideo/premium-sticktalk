@@ -1,62 +1,72 @@
-# Premium StickTalk
+# Premium StickTalk V3.5 — AI Story Director
 
-Công cụ tạo video người que dọc 1080×1920 từ một ý tưởng ngắn. Hệ thống tự tạo kịch bản 8 cảnh, giọng đọc tiếng Việt, phụ đề động và video MP4 bằng Remotion.
+Premium StickTalk tạo video người que dọc 1080×1920 từ một ý tưởng tiếng Việt. Phiên bản 3.5 bổ sung **AI Story Director**: một đạo diễn kịch bản tự chọn cấu trúc, số cảnh, nhân vật, hành động, biểu cảm, bối cảnh, bố cục, camera và chuyển cảnh phù hợp với từng chủ đề. Hệ thống giọng đọc hiện có và quy trình xuất MP4 bằng Remotion được giữ nguyên.
 
-## Cách dùng dễ nhất
+## AI Story Director hoạt động ra sao?
 
-1. Mở tab **Actions**.
-2. Chọn **Create StickTalk Video**.
-3. Bấm **Run workflow**.
-4. Nhập ý tưởng.
-5. Chọn thời lượng, định dạng, tone, phong cách và giọng đọc.
-6. Chờ workflow có dấu tích xanh.
-7. Mở **Summary → Artifacts → sticktalk-video** để tải file ZIP.
+Khi chọn **Tự động theo chủ đề**, hệ thống phân tích từ khóa và ngữ nghĩa của ý tưởng rồi xếp vào một trong 10 loại:
 
-Trong ZIP có:
+1. danh sách;
+2. giải thích;
+3. câu chuyện;
+4. đối thoại;
+5. so sánh;
+6. hướng dẫn;
+7. tin tức;
+8. phân tích;
+9. trích dẫn hoặc quan điểm;
+10. hài tình huống.
 
-- `video.mp4`
-- `preview.png`
-- `script.txt`
-- `story.json`
+Ý tưởng chưa đủ dấu hiệu được xử lý bằng loại **kể chuyện kết hợp giải thích**. Mỗi loại có dàn ý riêng thay vì bị ép vào mẫu tám cảnh. Video 30 giây có 5–7 cảnh, 45 giây có 7–10 cảnh và 60 giây có 9–13 cảnh; tổng thời lượng được cân bằng đúng lựa chọn.
 
-## Tùy chọn
+Đạo diễn luật chạy được ngay cả khi không có khóa API. Việc chọn câu và chỉ dẫn dựa trên loại nội dung, giọng điệu cùng dấu vân tay ổn định của chủ đề, vì vậy có tính tái lập nhưng không bốc ngẫu nhiên thiếu ngữ cảnh. Kiến trúc đã có giao diện nhà cung cấp để sau này nối OpenAI hoặc Gemini mà không lưu khóa trong mã nguồn.
 
-Phong cách hình ảnh Version 3:
-- `người_que_triết_lý`, `người_que_tiktok`, `người_que_doanh_nhân`
-- `người_que_kể_chuyện`, `tin_tức_ai`
+## Tạo video bằng GitHub Actions
 
-Mức chuyển động: `nhẹ`, `trung_bình`, `nhiều`, hoặc `viral_tiktok`.
-Các tên phong cách cũ (`dark_neon`, `whiteboard`, `motivational`) vẫn hoạt động.
+1. Mở thẻ **Actions**, chọn quy trình **Tạo video Premium StickTalk** và bấm **Run workflow**.
+2. Nhập ý tưởng, chọn 30, 45 hoặc 60 giây.
+3. Ở **Chế độ viết kịch bản**, giữ **Tự động theo chủ đề** để AI Story Director tự quyết định. Bạn cũng có thể buộc chế độ một người dẫn chuyện, hai nhân vật đối thoại, kể chuyện, danh sách hoặc phân tích.
+4. Chọn giọng điệu, phong cách, mức chuyển động và giọng đọc rồi chạy quy trình.
+5. Khi có dấu tích xanh, mở phần **Artifacts**, tải `sticktalk-video` và giải nén.
 
-Giọng đọc:
-- `Nam miền Bắc MC`
-- `Nam miền Bắc Nội lực`
-- `Nam miền Bắc Nội lực Plus` (mặc định)
-- `Nam miền Bắc Podcast`
-- `Nam miền Bắc Truyền cảm`
-- `Nam miền Bắc Doanh nhân`
-- `Nữ miền Bắc Dịu nhẹ`
+Gói kết quả gồm `video.mp4`, `preview.png`, `script.txt` và `story.json`. File MP4 là video hoàn chỉnh để tải lên nền tảng, còn `story.json` chứa cả trường tiếng Việt V3.5 lẫn trường kỹ thuật tương thích Remotion V3.
 
-Sáu preset nam miền Bắc đều dùng Edge TTS `vi-VN-NamMinhNeural`; preset nữ dùng `vi-VN-HoaiMyNeural`. Pipeline chủ động dừng nếu không tạo đúng voice, không fallback sang một giọng khác. Xem chi tiết hậu kỳ tại [`docs/VOICE_PRESETS.md`](docs/VOICE_PRESETS.md).
-
-## Chạy bằng lệnh
+## Chạy trên máy cá nhân
 
 ```bash
 ./make_video.sh \
-  --idea "Người trưởng thành không cần thắng mọi cuộc tranh luận" \
+  --idea "7 cách tiết kiệm tiền hiệu quả" \
   --duration 45 \
-  --tone "sâu sắc" \
-  --format hybrid \
-  --style dark_neon \
+  --tone "gần gũi" \
+  --format narration \
+  --script-mode "Tự động theo chủ đề" \
+  --style người_que_doanh_nhân \
   --motion-level medium \
   --voice "Nam miền Bắc Nội lực Plus"
 ```
 
-Video được tạo tại `output/video.mp4`.
+Video được lưu tại `output/video.mp4`; ảnh xem trước ở `output/preview.png`.
 
-## Premium Motion Engine Version 3
+## Giọng đọc và phong cách
 
-Mỗi cảnh có thể điều khiển độc lập camera, transition, emotion, gesture,
-zoom và hiệu ứng phụ đề. Camera Engine có 12 chuyển động, Transition Engine
-có 10 hiệu ứng, còn Stickman được rig theo từng bộ phận cơ thể với 17 gesture
-và 10 emotion. Story JSON cũ vẫn được hỗ trợ để không làm gián đoạn workflow.
+Các phong cách gồm người que triết lý, TikTok, doanh nhân, kể chuyện và tin tức AI. Tên kỹ thuật cũ như `dark_neon`, `whiteboard` và `motivational` vẫn dùng được.
+
+Các giọng đọc hiện có:
+
+- Nam miền Bắc MC;
+- Nam miền Bắc Nội lực;
+- Nam miền Bắc Nội lực Plus (mặc định);
+- Nam miền Bắc Podcast;
+- Nam miền Bắc Truyền cảm;
+- Nam miền Bắc Doanh nhân;
+- Nữ miền Bắc Dịu nhẹ.
+
+Chi tiết hậu kỳ giọng đọc nằm trong [`docs/VOICE_PRESETS.md`](docs/VOICE_PRESETS.md). V3.5 không thay đổi mã tạo TTS.
+
+## Kiểm tra hai kịch bản
+
+```bash
+python scripts/kiem_tra_do_khac_nhau.py duong-dan/video-a.json duong-dan/video-b.json
+```
+
+Lệnh báo tỷ lệ trùng câu chữ, hành động, camera, bố cục và chuyển cảnh; mã thoát khác không nếu một chỉ số vượt ngưỡng chất lượng.
