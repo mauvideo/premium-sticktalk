@@ -20,6 +20,9 @@ class VoicePreset:
 
 
 PRESETS = {
+    "nam_bac_noi_luc_plus": VoicePreset("vi-VN-NamMinhNeural", "-6%", "-4Hz", "+10%"),
+    "nam_bac_phat_thanh": VoicePreset("vi-VN-NamMinhNeural", "-4%", "-2Hz", "+8%"),
+    "nam_bac_news": VoicePreset("vi-VN-NamMinhNeural", "-6%", "-3Hz", "+8%"),
     "nam_bac_noi_luc": VoicePreset("vi-VN-NamMinhNeural", "-8%", "-5Hz", "+10%"),
     "nam_bac_truyen_cam": VoicePreset("vi-VN-NamMinhNeural", "-12%", "-3Hz", "+6%"),
     "nam_bac_nang_luong": VoicePreset("vi-VN-NamMinhNeural", "+6%", "+1Hz", "+8%"),
@@ -27,7 +30,7 @@ PRESETS = {
     "nu_viet_nam_ro_rang": VoicePreset("vi-VN-HoaiMyNeural", "-1%", "+0Hz", "+3%"),
 }
 DEFAULT_PRESET = "nam_bac_noi_luc"
-PAUSES_MS = {".": 520, ",": 190, ":": 280, ";": 240}
+PAUSES_MS = {".": 500, ",": 180, ":": 250, ";": 220}
 
 ONES = ["không", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"]
 
@@ -96,7 +99,7 @@ def clean_text(text: str) -> str:
     return re.sub(r"\s+([.,:;])", r"\1", text).strip()
 
 
-def split_long_sentences(text: str, max_words: int = 22) -> str:
+def split_long_sentences(text: str, max_words: int = 25) -> str:
     sentences = re.split(r"(?<=[.!?])\s+", text)
     result = []
     for sentence in sentences:

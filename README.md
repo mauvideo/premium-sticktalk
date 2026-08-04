@@ -21,10 +21,12 @@ Trong ZIP có:
 
 ## Tùy chọn
 
-Phong cách:
-- `dark_neon`
-- `whiteboard`
-- `motivational`
+Phong cách hình ảnh Version 3:
+- `người_que_triết_lý`, `người_que_tiktok`, `người_que_doanh_nhân`
+- `người_que_kể_chuyện`, `tin_tức_ai`
+
+Mức chuyển động: `nhẹ`, `trung_bình`, `nhiều`, hoặc `viral_tiktok`.
+Các tên phong cách cũ (`dark_neon`, `whiteboard`, `motivational`) vẫn hoạt động.
 
 Giọng đọc:
 - Nam miền Bắc, phong cách MC thời sự (mặc định): `nam_bac_news`
@@ -43,11 +45,15 @@ Nếu Edge TTS gặp lỗi, hệ thống tự động chuyển sang gTTS.
   --tone "sâu sắc" \
   --format hybrid \
   --style dark_neon \
+  --motion-level medium \
   --voice nam_bac_news
 ```
 
 Video được tạo tại `output/video.mp4`.
 
-## Ghi chú Version 1
+## Premium Motion Engine Version 3
 
-Version 1 dùng bộ mẫu thông minh để tạo kịch bản mà không cần API trả phí. Kiến trúc đã sẵn sàng để nâng cấp sang OpenAI hoặc Gemini ở phiên bản tiếp theo.
+Mỗi cảnh có thể điều khiển độc lập camera, transition, emotion, gesture,
+zoom và hiệu ứng phụ đề. Camera Engine có 12 chuyển động, Transition Engine
+có 10 hiệu ứng, còn Stickman được rig theo từng bộ phận cơ thể với 17 gesture
+và 10 emotion. Story JSON cũ vẫn được hỗ trợ để không làm gián đoạn workflow.

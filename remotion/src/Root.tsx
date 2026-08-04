@@ -11,7 +11,7 @@ const sample: Story = {
 };
 
 export const Root: React.FC = () => (
-  <Composition
+  <Composition<any, Story>
     id="StickTalk"
     component={StickTalkVideo}
     durationInFrames={45 * 30}
