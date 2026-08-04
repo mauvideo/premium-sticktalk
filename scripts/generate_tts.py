@@ -47,14 +47,19 @@ def load_story_text() -> str:
 
 def normalize_requested_voice(selected: str, custom_voice_id: str) -> str:
     value = selected.strip()
-    if value in {"", "default", "Mặc định — Trúc Ly", "Trúc Ly"}:
-        return "Trúc Ly"
-    if value in {"Bác sĩ Tuyên", "bac_si_tuyen"}:
-        return "Bác sĩ Tuyên"
+    aliases = {
+        "": "Trúc Ly",
+        "default": "Trúc Ly",
+        "Mặc định — Trúc Ly": "Trúc Ly",
+        "Bác sĩ Tuyên": "Phạm Tuyền",
+        "bac_si_tuyen": "Phạm Tuyền",
+    }
+    if value in aliases:
+        return aliases[value]
     if value == "Nhập mã giọng khác":
         custom = custom_voice_id.strip()
         if not custom:
-            raise ValueError("Bạn đã chọn nhập mã giọng khác nhưng chưa điền mã giọng VieNeu.")
+            raise ValueError("Bạn đã chọn nhập mã giọng khác nhưng chưa điền tên hoặc mã giọng VieNeu.")
         return custom
     return value
 
@@ -83,16 +88,15 @@ def synthesize(voice_selection: str, custom_voice_id: str, emotion: str) -> None
     style_code = {
         "Tự nhiên": "tu_nhien",
         "Kể chuyện": "ke_chuyen",
+        "Tin tức": "tin_tuc",
         "tu_nhien": "tu_nhien",
         "ke_chuyen": "ke_chuyen",
+        "tin_tuc": "tin_tuc",
     }.get(emotion)
     if style_code is None:
-        raise ValueError(f"Cảm xúc giọng không hợp lệ: {emotion}")
+        raise ValueError(f"Phong cách đọc không hợp lệ: {emotion}")
 
     requested = normalize_requested_voice(voice_selection, custom_voice_id)
-
-    # VieNeu 3.x mặc định dùng v3 Turbo. Ép backend ONNX để chạy CPU nhẹ,
-    # không dùng Standard/GGUF và không cần llama-cpp-python.
     tts = Vieneu(backend="onnx")
     available = list(tts.list_preset_voices())
     label, voice_id = resolve_voice(available, requested)
