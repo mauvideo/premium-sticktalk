@@ -10,6 +10,7 @@ import re
 import subprocess
 import unicodedata
 from pathlib import Path
+from typing import Any
 
 from mutagen.mp3 import MP3
 from vieneu import Vieneu
@@ -70,17 +71,17 @@ def _key(value: object) -> str:
     return re.sub(r"\s+", " ", text).strip().casefold()
 
 
-def describe_voice(available: list[tuple[object, object]], requested: str) -> tuple[str, str]:
-    """Tìm mô tả để ghi log, nhưng không chặn API VieNeu nếu cấu trúc tuple thay đổi."""
+def resolve_preset_voice(available: list[tuple[Any, Any]], requested: str) -> tuple[Any, str, str]:
+    """Trả đúng voice_id nguyên bản do VieNeu cung cấp, không tự đổi sang giọng khác."""
     wanted = _key(requested)
-    for first, second in available:
-        first_text, second_text = str(first).strip(), str(second).strip()
-        if wanted in {_key(first_text), _key(second_text)}:
-            # API hiện trả mô tả ở phần tử đầu, tên giọng ở phần tử sau.
-            if requested.casefold() == second_text.casefold():
-                return second_text, first_text
-            return requested, first_text if len(first_text) >= len(second_text) else second_text
-    return requested, "Giọng dựng sẵn VieNeu"
+    for label, voice_id in available:
+        label_text = str(label).strip()
+        voice_id_text = str(voice_id).strip()
+        if wanted in {_key(label_text), _key(voice_id_text)}:
+            return voice_id, voice_id_text, label_text
+
+    choices = ", ".join(str(voice_id) for _, voice_id in available) or "không có"
+    raise ValueError(f"Không tìm thấy giọng VieNeu '{requested}'. Các giọng hiện có: {choices}")
 
 
 def synthesize(voice_selection: str, custom_voice_id: str, emotion: str) -> None:
@@ -104,26 +105,26 @@ def synthesize(voice_selection: str, custom_voice_id: str, emotion: str) -> None
     requested = normalize_requested_voice(voice_selection, custom_voice_id)
     tts = Vieneu(backend="onnx")
     available = list(tts.list_preset_voices())
-    voice_name, description = describe_voice(available, requested)
+    voice_value, voice_name, description = resolve_preset_voice(available, requested)
 
     print("========================================")
     print("HỆ THỐNG GIỌNG ĐỌC: VieNeu-TTS")
     print("ENGINE: v3 Turbo")
     print("BACKEND: ONNX/CPU")
     print(f"GIỌNG YÊU CẦU: {requested}")
+    print(f"MÃ GIỌNG THỰC TẾ: {voice_name}")
     print(f"MÔ TẢ: {description}")
     print(f"PHONG CÁCH ĐỌC: {style_code}")
     print("ĐẦU RA: WAV 48 kHz và MP3")
     print("========================================")
 
-    # VieNeu chính thức nhận trực tiếp tên giọng dựng sẵn, ví dụ voice="Trúc Ly".
-    # Không tự kiểm tra cứng cấu trúc list_preset_voices() để tránh báo sai giọng tồn tại.
     try:
-        audio = tts.infer(text, voice=requested, style=style_code)
+        # Truyền nguyên voice_id do chính list_preset_voices() trả về.
+        # Không đổi giọng, không fallback sang giọng khác.
+        audio = tts.infer(text, voice=voice_value, style=style_code)
     except Exception as error:
-        choices = ", ".join(str(item) for item in available) or "không có"
         raise RuntimeError(
-            f"VieNeu không tạo được giọng '{requested}': {error}. Giọng hiện có: {choices}"
+            f"VieNeu không tạo được giọng '{voice_name}': {error}"
         ) from error
 
     tts.save(audio, str(wav_path))
