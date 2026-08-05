@@ -147,7 +147,23 @@ jobs:
           echo "Giọng điệu: ${{ inputs.tone }}"
           echo "Giọng VieNeu: ${{ inputs.vieneu_voice }}"
           echo "Phong cách đọc: ${{ inputs.voice_emotion }}"
-          echo "Ảnh AI: tự tạo một ảnh riêng cho từng cảnh"
+          echo "Prompt ảnh: Gemini 2.5 Flash"
+          echo "Ảnh AI: FLUX.1 Schnell qua Hugging Face"
+
+      - name: Kiểm tra khóa tạo ảnh AI
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          if [ -z "$GEMINI_API_KEY" ]; then
+            echo "Thiếu GitHub Secret GEMINI_API_KEY." >&2
+            exit 1
+          fi
+          if [ -z "$HF_TOKEN" ]; then
+            echo "Thiếu GitHub Secret HF_TOKEN." >&2
+            exit 1
+          fi
+          echo "Đã nhận đủ khóa Gemini và Hugging Face."
 
       - name: Tạo video
         env:
@@ -160,7 +176,9 @@ jobs:
           VIENEU_VOICE: ${{ inputs.vieneu_voice }}
           VIENEU_CUSTOM_VOICE_ID: ${{ inputs.custom_voice_id }}
           VIENEU_EMOTION: ${{ inputs.voice_emotion }}
-          POLLINATIONS_API_KEY: ${{ secrets.POLLINATIONS_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: gemini-2.5-flash
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           chmod +x make_video.sh
           ./make_video.sh
