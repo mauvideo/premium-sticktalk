@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Tạo ảnh minh họa riêng cho từng cảnh và ghi đường dẫn vào story.json.
+"""Tạo prompt ảnh bằng Gemini và sinh ảnh từng cảnh bằng FLUX trên Hugging Face.
 
-Thứ tự ưu tiên:
-1. Hugging Face Inference nếu có HF_TOKEN.
-2. Pollinations cổng công khai, thử nhiều kích thước/cổng và nhiều lần.
-3. Nếu toàn bộ dịch vụ ảnh đang lỗi, tạo minh họa SVG cục bộ để workflow vẫn render.
+Luồng xử lý:
+1. Đọc toàn bộ cảnh trong assets/story.json.
+2. Gửi một yêu cầu duy nhất tới Gemini để tạo prompt ảnh cho từng cảnh.
+3. Dùng FLUX.1-schnell tạo ảnh dọc cho từng prompt.
+4. Ghi đường dẫn ảnh và prompt vào story.json + output/image-manifest.json.
 
-Không lưu khóa trong kho mã nguồn và không liên quan tới VieNeu-TTS.
+Tệp này không sửa và không phụ thuộc vào VieNeu-TTS.
 """
 from __future__ import annotations
 
@@ -15,154 +16,180 @@ import json
 import os
 import re
 import time
-from html import escape
 from pathlib import Path
 from urllib.error import HTTPError
-from urllib.parse import quote
 from urllib.request import Request, urlopen
 
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+HF_MODELS = (
+    "black-forest-labs/FLUX.1-schnell",
+    "stabilityai/stable-diffusion-xl-base-1.0",
+)
+
 STYLES = {
-    "prompt-to-video": "cinematic motivational photography, dramatic natural light, realistic, emotional, vertical composition",
-    "kinetic-captions": "bold editorial poster background, high contrast, clean negative space, modern motivational visual, vertical composition",
-    "smooth-transitions": "cinematic dreamy scene, layered depth, soft light, elegant gradients, realistic, vertical composition",
-    "paper-sketch": "hand-drawn pencil sketch on warm ivory textured paper, graphite shading, vintage book illustration, handmade, vertical composition",
-    "business-motivation": "premium business documentary photography, confident professional atmosphere, dark charcoal and warm gold lighting, realistic, vertical composition",
-    "paper-cut": "layered paper-cut illustration, handmade cut paper edges, soft paper shadows, tactile craft texture, vertical composition",
+    "prompt-to-video": "điện ảnh chân thực, ánh sáng tự nhiên kịch tính, giàu cảm xúc",
+    "kinetic-captions": "biên tập hiện đại, tương phản mạnh, khoảng trống sạch để đặt phụ đề",
+    "smooth-transitions": "điện ảnh nhẹ nhàng, nhiều lớp chiều sâu, ánh sáng mềm",
+    "paper-sketch": "phác thảo chì vẽ tay trên giấy ngà có vân, minh họa sách cổ",
+    "business-motivation": "phim tài liệu doanh nhân cao cấp, chuyên nghiệp, tông than và vàng ấm",
+    "paper-cut": "minh họa cắt giấy nhiều lớp, mép giấy thủ công, bóng giấy mềm",
 }
 
 
 def clean(value: str) -> str:
-    return re.sub(r"\s+", " ", value).strip()
+    return re.sub(r"\s+", " ", str(value or "")).strip()
 
 
-def prompt_for(scene: dict, title: str, template: str) -> str:
-    narration = clean(scene.get("narration") or scene.get("loi_dan") or title)
-    headline = clean(scene.get("headline") or title)
-    style = STYLES.get(template, STYLES["prompt-to-video"])
-    return (
-        f"Create a visual scene illustrating this Vietnamese motivational message: {narration}. "
-        f"Core idea: {headline}. {style}. No text, no letters, no logo, no watermark. "
-        "Strong subject, clear storytelling, suitable for a 9:16 short video."
+def request_json(url: str, payload: dict, headers: dict[str, str], timeout: int = 180) -> dict:
+    request = Request(
+        url,
+        data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+        headers=headers,
+        method="POST",
     )
-
-
-def _download(url: str, headers: dict[str, str], timeout: int = 240) -> tuple[bytes, str, str]:
-    request = Request(url, headers=headers)
     with urlopen(request, timeout=timeout) as response:
-        data = response.read()
-        content_type = response.headers.get("Content-Type", "")
-        final_url = response.geturl()
-    if len(data) < 8_000 or "image" not in content_type.casefold():
-        raise RuntimeError(f"Phản hồi không phải ảnh hợp lệ: {content_type}, {len(data)} byte")
-    return data, content_type, final_url
+        raw = response.read().decode("utf-8")
+    return json.loads(raw)
 
 
-def try_huggingface(prompt: str, target: Path, token: str) -> str | None:
+def gemini_prompts(story: dict, scenes: list[dict], template: str, api_key: str) -> list[str]:
+    if not api_key:
+        raise RuntimeError(
+            "Thiếu GEMINI_API_KEY. Hãy thêm Secret GEMINI_API_KEY trong Settings → Secrets and variables → Actions."
+        )
+
+    title = clean(story.get("title") or "Video truyền cảm hứng")
+    style = STYLES.get(template, STYLES["prompt-to-video"])
+    scene_data = []
+    for index, scene in enumerate(scenes, start=1):
+        scene_data.append(
+            {
+                "scene": index,
+                "headline": clean(scene.get("headline") or title),
+                "narration": clean(scene.get("narration") or scene.get("loi_dan") or title),
+            }
+        )
+
+    instruction = f"""
+Bạn là đạo diễn hình ảnh cho video dọc truyền cảm hứng.
+Hãy tạo đúng {len(scene_data)} prompt ảnh, mỗi cảnh một prompt khác nhau và bám sát lời dẫn.
+
+Chủ đề chung: {title}
+Phong cách hình ảnh bắt buộc: {style}
+Tỷ lệ: dọc 9:16.
+
+Yêu cầu cho từng prompt:
+- Viết bằng tiếng Anh để mô hình tạo ảnh hiểu tốt.
+- Mô tả rõ chủ thể, bối cảnh, hành động, ánh sáng, góc máy và cảm xúc.
+- Hình ảnh phải có câu chuyện và phù hợp cảnh tương ứng.
+- Không tạo chữ, ký tự, logo, watermark, giao diện ứng dụng hoặc khung video.
+- Không lặp lại cùng một bố cục giữa các cảnh.
+- Không nhắc tới tên thương hiệu hay người nổi tiếng.
+
+Dữ liệu cảnh:
+{json.dumps(scene_data, ensure_ascii=False)}
+
+Chỉ trả về JSON theo cấu trúc:
+{{"prompts":[{{"scene":1,"prompt":"..."}}]}}
+""".strip()
+
+    endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
+    payload = {
+        "contents": [{"parts": [{"text": instruction}]}],
+        "generationConfig": {
+            "temperature": 0.8,
+            "response_mime_type": "application/json",
+        },
+    }
+    headers = {
+        "x-goog-api-key": api_key,
+        "Content-Type": "application/json",
+        "User-Agent": "Premium-StickTalk/2.0",
+    }
+
+    last_error: Exception | None = None
+    for attempt in range(3):
+        try:
+            data = request_json(endpoint, payload, headers)
+            text = data["candidates"][0]["content"]["parts"][0]["text"]
+            parsed = json.loads(text)
+            items = parsed.get("prompts", [])
+            by_scene = {
+                int(item["scene"]): clean(item["prompt"])
+                for item in items
+                if item.get("scene") and clean(item.get("prompt"))
+            }
+            prompts = [by_scene.get(i, "") for i in range(1, len(scenes) + 1)]
+            if all(prompts):
+                return prompts
+            raise RuntimeError(f"Gemini trả thiếu prompt: nhận {len(by_scene)}/{len(scenes)} cảnh")
+        except Exception as error:  # noqa: BLE001
+            last_error = error
+            print(f"Gemini tạo prompt chưa thành công, lần {attempt + 1}: {error}")
+            time.sleep(5 * (attempt + 1))
+
+    raise RuntimeError(f"Gemini không tạo được prompt ảnh sau 3 lần: {last_error}")
+
+
+def create_image(prompt: str, target: Path, token: str, seed: int) -> tuple[str, str]:
     if not token:
-        return None
-    models = [
-        "black-forest-labs/FLUX.1-schnell",
-        "stabilityai/stable-diffusion-xl-base-1.0",
-    ]
-    payload = json.dumps({"inputs": prompt, "parameters": {"width": 768, "height": 1344}}).encode()
-    for model in models:
-        url = f"https://router.huggingface.co/hf-inference/models/{model}"
-        for attempt in range(3):
+        raise RuntimeError(
+            "Thiếu HF_TOKEN. Hãy thêm Secret HF_TOKEN để FLUX có thể tự sinh ảnh AI."
+        )
+
+    payload = json.dumps(
+        {
+            "inputs": prompt,
+            "parameters": {
+                "width": 768,
+                "height": 1344,
+                "seed": seed,
+                "num_inference_steps": 4,
+            },
+        }
+    ).encode("utf-8")
+
+    last_error: Exception | None = None
+    for model in HF_MODELS:
+        endpoint = f"https://router.huggingface.co/hf-inference/models/{model}"
+        for attempt in range(4):
             try:
                 request = Request(
-                    url,
+                    endpoint,
                     data=payload,
                     headers={
                         "Authorization": f"Bearer {token}",
                         "Content-Type": "application/json",
                         "Accept": "image/*",
-                        "User-Agent": "Premium-StickTalk/1.0",
+                        "User-Agent": "Premium-StickTalk/2.0",
                     },
                     method="POST",
                 )
-                with urlopen(request, timeout=300) as response:
+                with urlopen(request, timeout=360) as response:
                     data = response.read()
                     content_type = response.headers.get("Content-Type", "")
-                if len(data) >= 8_000 and "image" in content_type.casefold():
-                    target.write_bytes(data)
-                    return url
-                raise RuntimeError(f"HF trả về {content_type}, {len(data)} byte")
-            except Exception as error:  # noqa: BLE001
-                print(f"Hugging Face {model}, lần {attempt + 1} chưa thành công: {error}")
-                time.sleep(8 * (attempt + 1))
-    return None
 
+                if len(data) < 8_000 or "image" not in content_type.casefold():
+                    body = data[:300].decode("utf-8", errors="replace")
+                    raise RuntimeError(
+                        f"Phản hồi không phải ảnh: {content_type}, {len(data)} byte, {body}"
+                    )
 
-def pollinations_urls(prompt: str, seed: int, api_key: str) -> list[str]:
-    encoded = quote(prompt, safe="")
-    # 768x1344 nhẹ hơn đáng kể so với 1080x1920, giúp giảm lỗi 500.
-    queries = [
-        f"width=768&height=1344&seed={seed}&model=flux&nologo=true&enhance=true",
-        f"width=768&height=1344&seed={seed + 17}&model=flux&nologo=true",
-        f"width=640&height=1136&seed={seed + 31}&model=flux&nologo=true",
-    ]
-    urls: list[str] = []
-    if api_key:
-        for query in queries:
-            urls.append(
-                f"https://gen.pollinations.ai/image/{encoded}?{query}&key={quote(api_key, safe='')}"
-            )
-    for query in queries:
-        urls.extend(
-            [
-                f"https://image.pollinations.ai/prompt/{encoded}?{query}",
-                f"https://pollinations.ai/p/{encoded}?{query}",
-            ]
-        )
-    return urls
-
-
-def try_pollinations(prompt: str, target: Path, seed: int, api_key: str) -> str | None:
-    headers = {
-        "User-Agent": "Mozilla/5.0 Premium-StickTalk/1.0",
-        "Accept": "image/avif,image/webp,image/apng,image/jpeg,image/png,*/*",
-        "Referer": "https://pollinations.ai/",
-        "Cache-Control": "no-cache",
-    }
-    for url in pollinations_urls(prompt, seed, api_key):
-        for attempt in range(3):
-            try:
-                data, _, final_url = _download(url, headers)
                 target.write_bytes(data)
-                return final_url
+                return model, endpoint
             except HTTPError as error:
-                print(f"Cổng ảnh trả HTTP {error.code}, lần {attempt + 1}: {url.split('?')[0]}")
-                if error.code in {401, 403, 404}:
+                body = error.read().decode("utf-8", errors="replace")[:400]
+                last_error = RuntimeError(f"HTTP {error.code}: {body}")
+                print(f"{model}, lần {attempt + 1}: {last_error}")
+                if error.code in {401, 403}:
                     break
-                time.sleep(7 * (attempt + 1))
+                time.sleep(8 * (attempt + 1))
             except Exception as error:  # noqa: BLE001
-                print(f"Cổng ảnh chưa thành công, lần {attempt + 1}: {error}")
-                time.sleep(7 * (attempt + 1))
-    return None
+                last_error = error
+                print(f"{model}, lần {attempt + 1}: {error}")
+                time.sleep(8 * (attempt + 1))
 
-
-def create_local_svg(target: Path, scene: dict, title: str, template: str, seed: int) -> None:
-    """Phương án an toàn cuối cùng để video vẫn chạy khi dịch vụ AI bên ngoài ngừng hoạt động."""
-    narration = clean(scene.get("narration") or scene.get("loi_dan") or title)
-    digest = hashlib.sha256(f"{title}|{narration}|{seed}".encode()).hexdigest()
-    hue1 = int(digest[:2], 16) * 360 // 255
-    hue2 = (hue1 + 55 + int(digest[2:4], 16) % 90) % 360
-    paper = template in {"paper-sketch", "paper-cut"}
-    bg1 = "#f4eddf" if paper else f"hsl({hue1} 55% 18%)"
-    bg2 = "#d9cbb4" if paper else f"hsl({hue2} 65% 28%)"
-    stroke = "#50483d" if paper else "#ffffff"
-    fill = "#cab99c" if paper else "#ffffff33"
-    svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="768" height="1344" viewBox="0 0 768 1344">
-<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="{bg1}"/><stop offset="1" stop-color="{bg2}"/></linearGradient><filter id="s"><feDropShadow dx="0" dy="18" stdDeviation="22" flood-opacity=".35"/></filter></defs>
-<rect width="768" height="1344" fill="url(#g)"/>
-<circle cx="590" cy="230" r="115" fill="{fill}" opacity=".55"/>
-<path d="M0 980 C150 760 250 930 390 720 S610 560 768 760 V1344 H0Z" fill="{fill}" opacity=".62"/>
-<path d="M80 1010 C210 835 310 930 430 775 S625 665 710 805" fill="none" stroke="{stroke}" stroke-width="11" opacity=".8"/>
-<g transform="translate(380 650)" stroke="{stroke}" stroke-width="12" stroke-linecap="round" fill="none" filter="url(#s)"><circle cy="-145" r="58" fill="{fill}"/><path d="M0 -85 V155 M0 -10 L-105 85 M0 -10 L105 55 M0 155 L-80 300 M0 155 L95 290"/></g>
-<g opacity=".38" stroke="{stroke}" stroke-width="5"><path d="M75 220h250M90 270h180M485 1040h210M520 1090h145"/></g>
-<!-- Minh họa dự phòng cục bộ, không chèn chữ để tránh lỗi chữ trong ảnh -->
-</svg>'''
-    target.with_suffix(".svg").write_text(svg, encoding="utf-8")
+    raise RuntimeError(f"Không tạo được ảnh AI sau khi thử các mô hình FLUX/SDXL: {last_error}")
 
 
 def main() -> None:
@@ -175,41 +202,26 @@ def main() -> None:
     if not scenes:
         raise SystemExit("Kịch bản không có cảnh để tạo ảnh")
 
-    title = clean(story.get("title") or "Video truyền cảm hứng")
     template = os.getenv("VIDEO_TEMPLATE", story.get("template") or "prompt-to-video")
-    pollinations_key = os.getenv("POLLINATIONS_API_KEY", "").strip()
+    gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
     hf_token = os.getenv("HF_TOKEN", "").strip()
+    title = clean(story.get("title") or "Video truyền cảm hứng")
+
+    print(f"Đang yêu cầu Gemini tạo {len(scenes)} prompt ảnh theo mẫu {template}...")
+    prompts = gemini_prompts(story, scenes, template, gemini_key)
+
     out_dir = Path("assets/generated-images")
     out_dir.mkdir(parents=True, exist_ok=True)
-
     manifest = []
-    ai_count = 0
-    fallback_count = 0
-    for index, scene in enumerate(scenes, start=1):
-        prompt = prompt_for(scene, title, template)
+
+    for index, (scene, prompt) in enumerate(zip(scenes, prompts, strict=True), start=1):
         filename = f"scene-{index:02d}.jpg"
         target = out_dir / filename
         seed = int(hashlib.sha256(f"{title}|{index}|{template}".encode()).hexdigest()[:8], 16)
-        print(f"Đang tạo ảnh cho cảnh {index}/{len(scenes)}: {filename}")
+        print(f"Đang sinh ảnh AI cảnh {index}/{len(scenes)}: {filename}")
+        model, endpoint = create_image(prompt, target, hf_token, seed)
 
-        provider_url = try_huggingface(prompt, target, hf_token)
-        provider = "huggingface"
-        if not provider_url:
-            provider_url = try_pollinations(prompt, target, seed, pollinations_key)
-            provider = "pollinations"
-
-        if provider_url:
-            public_path = f"assets/generated-images/{filename}"
-            ai_count += 1
-        else:
-            svg_target = target.with_suffix(".svg")
-            create_local_svg(target, scene, title, template, seed)
-            public_path = f"assets/generated-images/{svg_target.name}"
-            provider = "minh-hoa-du-phong-cuc-bo"
-            provider_url = "local"
-            fallback_count += 1
-            print(f"Cảnh {index}: dịch vụ ảnh đang lỗi, dùng minh họa dự phòng để video vẫn chạy.")
-
+        public_path = f"assets/generated-images/{filename}"
         scene["image"] = public_path
         scene["imagePrompt"] = prompt
         manifest.append(
@@ -217,21 +229,25 @@ def main() -> None:
                 "scene": index,
                 "file": public_path,
                 "prompt": prompt,
-                "provider": provider,
-                "source": provider_url,
+                "promptProvider": GEMINI_MODEL,
+                "imageProvider": model,
+                "source": endpoint,
+                "seed": seed,
             }
         )
 
     story["scenes"] = scenes
-    story["imageProvider"] = "multi-provider"
-    story["aiImageCount"] = ai_count
-    story["fallbackImageCount"] = fallback_count
+    story["imagePromptProvider"] = GEMINI_MODEL
+    story["imageProvider"] = "huggingface-flux"
+    story["aiImageCount"] = len(scenes)
+    story["fallbackImageCount"] = 0
     story_path.write_text(json.dumps(story, ensure_ascii=False, indent=2), encoding="utf-8")
+
     Path("output").mkdir(exist_ok=True)
     Path("output/image-manifest.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8"
     )
-    print(f"Hoàn tất ảnh: {ai_count} ảnh AI, {fallback_count} ảnh dự phòng. Workflow tiếp tục render.")
+    print(f"Hoàn tất: Gemini tạo {len(prompts)} prompt, FLUX tạo {len(scenes)} ảnh AI.")
 
 
 if __name__ == "__main__":
