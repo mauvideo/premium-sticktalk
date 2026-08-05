@@ -30,7 +30,6 @@ except ImportError:
     from story_timing import fit_scene_narrations_to_duration
     from visual_planner import apply_visual_plans
 
-
 LOAI_NOI_DUNG = (
     "danh sách", "giải thích", "câu chuyện", "đối thoại", "so sánh",
     "hướng dẫn", "tin tức", "phân tích", "trích dẫn hoặc quan điểm",
