@@ -147,6 +147,7 @@ jobs:
           echo "Giọng điệu: ${{ inputs.tone }}"
           echo "Giọng VieNeu: ${{ inputs.vieneu_voice }}"
           echo "Phong cách đọc: ${{ inputs.voice_emotion }}"
+          echo "Ảnh AI: tự tạo một ảnh riêng cho từng cảnh"
 
       - name: Tạo video
         env:
@@ -159,12 +160,18 @@ jobs:
           VIENEU_VOICE: ${{ inputs.vieneu_voice }}
           VIENEU_CUSTOM_VOICE_ID: ${{ inputs.custom_voice_id }}
           VIENEU_EMOTION: ${{ inputs.voice_emotion }}
+          POLLINATIONS_API_KEY: ${{ secrets.POLLINATIONS_API_KEY }}
         run: |
           chmod +x make_video.sh
           ./make_video.sh
 
-      - name: Kiểm tra video
-        run: test -s output/video.mp4 && test -s output/preview.png && test -s output/tts-info.json
+      - name: Kiểm tra video và ảnh AI
+        run: |
+          test -s output/video.mp4
+          test -s output/preview.png
+          test -s output/tts-info.json
+          test -s output/image-manifest.json
+          test "$(find assets/generated-images -type f | wc -l)" -gt 0
 
       - name: Tải video thành phẩm lên
         uses: actions/upload-artifact@v4
@@ -176,6 +183,8 @@ jobs:
             output/script.txt
             output/story.json
             output/tts-info.json
+            output/image-manifest.json
+            assets/generated-images/
             assets/narration.wav
           if-no-files-found: error
           retention-days: 7
