@@ -148,23 +148,8 @@ jobs:
           echo "Giọng điệu: ${{ inputs.tone }}"
           echo "Giọng VieNeu: ${{ inputs.vieneu_voice }}"
           echo "Phong cách đọc: ${{ inputs.voice_emotion }}"
-          echo "Prompt ảnh: Gemini 2.5 Flash"
-          echo "Ảnh AI: FLUX.1 Schnell qua Hugging Face"
-
-      - name: Kiểm tra khóa tạo ảnh AI
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: |
-          if [ -z "$GEMINI_API_KEY" ]; then
-            echo "Thiếu GitHub Secret GEMINI_API_KEY." >&2
-            exit 1
-          fi
-          if [ -z "$HF_TOKEN" ]; then
-            echo "Thiếu GitHub Secret HF_TOKEN." >&2
-            exit 1
-          fi
-          echo "Đã nhận đủ khóa Gemini và Hugging Face."
+          echo "Asset: nguồn miễn phí có giấy phép rõ ràng"
+          echo "Fallback: tài nguyên SVG cục bộ"
 
       - name: Tạo video
         env:
@@ -177,20 +162,21 @@ jobs:
           VIENEU_VOICE: ${{ inputs.vieneu_voice }}
           VIENEU_CUSTOM_VOICE_ID: ${{ inputs.custom_voice_id }}
           VIENEU_EMOTION: ${{ inputs.voice_emotion }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_MODEL: gemini-2.5-flash
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+          UNSPLASH_ACCESS_KEY: ${{ secrets.UNSPLASH_ACCESS_KEY }}
         run: |
           chmod +x make_video.sh
           ./make_video.sh
 
-      - name: Kiểm tra video và ảnh AI
+      - name: Kiểm tra video và asset
         run: |
           test -s output/video.mp4
           test -s output/preview.png
           test -s output/tts-info.json
-          test -s output/image-manifest.json
-          test "$(find assets/generated-images -type f | wc -l)" -gt 0
+          test -s output/asset-manifest.json
+          test -s output/credits.txt
+          test "$(find assets/generated-assets -type f | wc -l)" -gt 0
 
       - name: Tải video thành phẩm lên
         uses: actions/upload-artifact@v4
@@ -202,8 +188,9 @@ jobs:
             output/script.txt
             output/story.json
             output/tts-info.json
-            output/image-manifest.json
-            assets/generated-images/
+            output/asset-manifest.json
+            output/credits.txt
+            assets/generated-assets/
             assets/narration.wav
           if-no-files-found: error
           retention-days: 7
