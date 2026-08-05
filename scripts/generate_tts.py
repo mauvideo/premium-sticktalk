@@ -67,8 +67,11 @@ def normalize_requested_voice(selected: str, custom_voice_id: str) -> str:
 
 
 def _key(value: object) -> str:
-    text = unicodedata.normalize("NFKC", str(value))
-    return re.sub(r"\s+", " ", text).strip().casefold()
+    """Chuẩn hóa mạnh để bỏ ký tự ẩn, khác biệt dấu ghép và khoảng trắng Unicode."""
+    text = unicodedata.normalize("NFKD", str(value))
+    text = "".join(ch for ch in text if unicodedata.category(ch) not in {"Mn", "Cf"})
+    text = text.replace("đ", "d").replace("Đ", "D")
+    return re.sub(r"[^0-9a-zA-Z]+", "", text).casefold()
 
 
 def resolve_preset_voice(available: list[tuple[Any, Any]], requested: str) -> tuple[Any, str, str]:
@@ -77,7 +80,7 @@ def resolve_preset_voice(available: list[tuple[Any, Any]], requested: str) -> tu
     for label, voice_id in available:
         label_text = str(label).strip()
         voice_id_text = str(voice_id).strip()
-        if wanted in {_key(label_text), _key(voice_id_text)}:
+        if wanted and wanted in {_key(label_text), _key(voice_id_text)}:
             return voice_id, voice_id_text, label_text
 
     choices = ", ".join(str(voice_id) for _, voice_id in available) or "không có"
@@ -119,8 +122,6 @@ def synthesize(voice_selection: str, custom_voice_id: str, emotion: str) -> None
     print("========================================")
 
     try:
-        # Truyền nguyên voice_id do chính list_preset_voices() trả về.
-        # Không đổi giọng, không fallback sang giọng khác.
         audio = tts.infer(text, voice=voice_value, style=style_code)
     except Exception as error:
         raise RuntimeError(
