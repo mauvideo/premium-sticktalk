@@ -8,13 +8,23 @@ IDEA="${VIDEO_IDEA:-}"
 DURATION="${VIDEO_DURATION:-45}"
 TONE="${VIDEO_TONE:-sâu_sắc}"
 CONTENT_FORMAT="${VIDEO_CONTENT_FORMAT:-hybrid}"
-STYLE="${VIDEO_STYLE:-người_que_triết_lý}"
+PROJECT="${VIDEO_PROJECT:-motivation}"
+TEMPLATE="${VIDEO_TEMPLATE:-prompt-to-video}"
+STYLE="${VIDEO_STYLE:-}"
 VOICE="${VIENEU_VOICE:-default}"
 CUSTOM_VOICE_ID="${VIENEU_CUSTOM_VOICE_ID:-}"
 VOICE_EMOTION="${VIENEU_EMOTION:-Tự nhiên}"
-MOTION_LEVEL="${VIDEO_MOTION_LEVEL:-trung_bình}"
-SCRIPT_MODE="${VIDEO_SCRIPT_MODE:-Tự động theo chủ đề}"
-WRITING_STYLE="${VIDEO_WRITING_STYLE:-Tự động theo chủ đề}"
+MOTION_LEVEL="${VIDEO_MOTION_LEVEL:-}"
+SCRIPT_MODE="${VIDEO_SCRIPT_MODE:-}"
+WRITING_STYLE="${VIDEO_WRITING_STYLE:-}"
+
+# Project/Template là nguồn cấu hình mặc định. Biến môi trường cụ thể vẫn có thể ghi đè.
+RESOLVED="$(python3 scripts/resolve_project_template.py --project "$PROJECT" --template "$TEMPLATE" --format shell)"
+eval "$RESOLVED"
+STYLE="${STYLE:-$VIDEO_STYLE}"
+MOTION_LEVEL="${MOTION_LEVEL:-$VIDEO_MOTION_LEVEL}"
+SCRIPT_MODE="${SCRIPT_MODE:-$VIDEO_SCRIPT_MODE}"
+WRITING_STYLE="${WRITING_STYLE:-$VIDEO_WRITING_STYLE}"
 
 case "$STYLE" in
   "Phác thảo điện ảnh — Trầm") STYLE=phac_thao_dien_anh_tram;;
@@ -32,6 +42,8 @@ while (($#)); do
     --duration|--thoi-luong|--thời-lượng) require_value "$@"; DURATION="$2"; shift 2;;
     --tone|--giong-dieu|--giọng-điệu) require_value "$@"; TONE="$2"; shift 2;;
     --format|--content-format|--dinh-dang|--định-dạng) require_value "$@"; CONTENT_FORMAT="$2"; shift 2;;
+    --project) require_value "$@"; PROJECT="$2"; shift 2;;
+    --template) require_value "$@"; TEMPLATE="$2"; shift 2;;
     --style|--phong-cach|--phong-cách) require_value "$@"; STYLE="$2"; shift 2;;
     --voice|--giong-doc|--giọng-đọc) require_value "$@"; VOICE="$2"; shift 2;;
     --custom-voice-id|--ma-giong) require_value "$@"; CUSTOM_VOICE_ID="$2"; shift 2;;
@@ -48,6 +60,10 @@ done
 
 printf '%s\n' \
   "=== CẤU HÌNH TẠO VIDEO ===" \
+  "Project: $PROJECT" \
+  "Mẫu video: $TEMPLATE" \
+  "Nguồn mở: ${VIDEO_TEMPLATE_SOURCE:-không rõ}" \
+  "Giấy phép: ${VIDEO_TEMPLATE_LICENSE:-không rõ}" \
   "Ý tưởng: $IDEA" \
   "Thời lượng: $DURATION giây" \
   "Phong cách: $STYLE" \
@@ -76,11 +92,15 @@ python3 scripts/generate_tts.py \
 cp assets/narration.mp3 remotion/public/assets/narration.mp3
 
 python3 - <<'PY'
-import json
+import json, os
 p = 'assets/story.json'
 with open(p, encoding='utf-8') as f:
     d = json.load(f)
 d['audio'] = 'assets/narration.mp3'
+d['project'] = os.getenv('VIDEO_PROJECT', 'motivation')
+d['template'] = os.getenv('VIDEO_TEMPLATE', 'prompt-to-video')
+d['templateSource'] = os.getenv('VIDEO_TEMPLATE_SOURCE', '')
+d['templateLicense'] = os.getenv('VIDEO_TEMPLATE_LICENSE', '')
 with open(p, 'w', encoding='utf-8') as f:
     json.dump(d, f, ensure_ascii=False, indent=2)
 PY
