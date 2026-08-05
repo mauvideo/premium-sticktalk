@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       project:
-        description: "Project video"
+        description: "Dự án video"
         required: true
         default: "Động lực"
         type: choice
@@ -13,38 +13,51 @@ on:
       template:
         description: "Mẫu video Động lực (nguồn Remotion mã nguồn mở)"
         required: true
-        default: "Prompt to Video"
+        default: "Điện ảnh AI"
         type: choice
         options:
-          - "Prompt to Video"
-          - "Kinetic Captions"
-          - "Smooth Transitions"
-          - "Paper Sketch"
-          - "Business Motivation"
+          - "Điện ảnh AI"
+          - "Phụ đề động"
+          - "Chuyển cảnh mượt"
+          - "Phác thảo trên giấy"
+          - "Động lực doanh nhân"
       idea:
-        description: "Ý tưởng video"
+        description: "Chủ đề video"
         required: true
         type: string
       duration:
-        description: "Thời lượng"
+        description: "Thời lượng video"
         required: true
-        default: "45"
+        default: "45 giây"
         type: choice
-        options: ["30", "45", "60"]
+        options:
+          - "30 giây"
+          - "45 giây"
+          - "60 giây"
       content_format:
         description: "Định dạng nội dung"
         required: true
-        default: hybrid
+        default: "Tự động"
         type: choice
-        options: [narration, dialogue, hybrid]
+        options:
+          - "Tự động"
+          - "Phim tài liệu"
+          - "Kể chuyện"
+          - "Truyền cảm hứng"
+          - "Kinh doanh"
+          - "Đối thoại"
       tone:
-        description: "Giọng điệu"
+        description: "Giọng điệu nội dung"
         required: true
-        default: "truyền_động_lực"
+        default: "Truyền động lực"
         type: choice
-        options: ["sâu_sắc", "hài_hước", "truyền_động_lực", "chữa_lành"]
+        options:
+          - "Sâu sắc"
+          - "Hài hước"
+          - "Truyền động lực"
+          - "Chữa lành"
       vieneu_voice:
-        description: "Giọng VieNeu-TTS Premium"
+        description: "Giọng đọc VieNeu-TTS Premium"
         required: true
         default: "Trúc Ly"
         type: choice
@@ -98,7 +111,7 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Cache model VieNeu v3 Turbo
+      - name: Lưu bộ nhớ đệm mô hình VieNeu v3 Turbo
         uses: actions/cache@v4
         with:
           path: |
@@ -114,7 +127,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ffmpeg espeak-ng chromium-browser || sudo apt-get install -y ffmpeg espeak-ng chromium
 
-      - name: Cài Python dependencies
+      - name: Cài thư viện Python
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
@@ -126,21 +139,23 @@ jobs:
 
       - name: Hiển thị cấu hình
         run: |
-          echo "Project: ${{ inputs.project }}"
+          echo "Dự án: ${{ inputs.project }}"
           echo "Mẫu video: ${{ inputs.template }}"
-          echo "Ý tưởng: ${{ inputs.idea }}"
-          echo "Thời lượng: ${{ inputs.duration }} giây"
+          echo "Chủ đề: ${{ inputs.idea }}"
+          echo "Thời lượng: ${{ inputs.duration }}"
+          echo "Định dạng nội dung: ${{ inputs.content_format }}"
+          echo "Giọng điệu: ${{ inputs.tone }}"
           echo "Giọng VieNeu: ${{ inputs.vieneu_voice }}"
           echo "Phong cách đọc: ${{ inputs.voice_emotion }}"
 
       - name: Tạo video
         env:
           VIDEO_PROJECT: motivation
-          VIDEO_TEMPLATE: ${{ inputs.template == 'Prompt to Video' && 'prompt-to-video' || inputs.template == 'Kinetic Captions' && 'kinetic-captions' || inputs.template == 'Smooth Transitions' && 'smooth-transitions' || inputs.template == 'Paper Sketch' && 'paper-sketch' || 'business-motivation' }}
+          VIDEO_TEMPLATE: ${{ inputs.template == 'Điện ảnh AI' && 'prompt-to-video' || inputs.template == 'Phụ đề động' && 'kinetic-captions' || inputs.template == 'Chuyển cảnh mượt' && 'smooth-transitions' || inputs.template == 'Phác thảo trên giấy' && 'paper-sketch' || 'business-motivation' }}
           VIDEO_IDEA: ${{ inputs.idea }}
-          VIDEO_DURATION: ${{ inputs.duration }}
-          VIDEO_TONE: ${{ inputs.tone }}
-          VIDEO_CONTENT_FORMAT: ${{ inputs.content_format }}
+          VIDEO_DURATION: ${{ inputs.duration == '30 giây' && '30' || inputs.duration == '60 giây' && '60' || '45' }}
+          VIDEO_TONE: ${{ inputs.tone == 'Sâu sắc' && 'sâu_sắc' || inputs.tone == 'Hài hước' && 'hài_hước' || inputs.tone == 'Chữa lành' && 'chữa_lành' || 'truyền_động_lực' }}
+          VIDEO_CONTENT_FORMAT: ${{ inputs.content_format == 'Đối thoại' && 'dialogue' || inputs.content_format == 'Tự động' && 'hybrid' || 'narration' }}
           VIENEU_VOICE: ${{ inputs.vieneu_voice }}
           VIENEU_CUSTOM_VOICE_ID: ${{ inputs.custom_voice_id }}
           VIENEU_EMOTION: ${{ inputs.voice_emotion }}
@@ -151,10 +166,10 @@ jobs:
       - name: Kiểm tra video
         run: test -s output/video.mp4 && test -s output/preview.png && test -s output/tts-info.json
 
-      - name: Upload artifact
+      - name: Tải video thành phẩm lên
         uses: actions/upload-artifact@v4
         with:
-          name: sticktalk-video
+          name: video-sticktalk
           path: |
             output/video.mp4
             output/preview.png
