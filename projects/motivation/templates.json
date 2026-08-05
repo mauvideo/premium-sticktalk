@@ -1,0 +1,63 @@
+{
+  "project": "motivation",
+  "name": "Động lực",
+  "description": "Các định dạng được đóng gói từ thành phần và mẫu Remotion mã nguồn mở; không kèm tài nguyên hình ảnh có bản quyền của bên thứ ba.",
+  "default_template": "prompt-to-video",
+  "templates": [
+    {
+      "id": "prompt-to-video",
+      "name": "Prompt to Video",
+      "source": "remotion-dev/template-prompt-to-video",
+      "license": "MIT",
+      "upstream_url": "https://github.com/remotion-dev/template-prompt-to-video",
+      "style": "người_que_kể_chuyện",
+      "motion_level": "trung_bình",
+      "script_mode": "Kể chuyện",
+      "writing_style": "Kể chuyện cảm xúc"
+    },
+    {
+      "id": "kinetic-captions",
+      "name": "Kinetic Captions",
+      "source": "remotion-dev/remotion",
+      "license": "Remotion License",
+      "upstream_url": "https://github.com/remotion-dev/remotion",
+      "style": "người_que_tiktok",
+      "motion_level": "viral_tiktok",
+      "script_mode": "Một người dẫn chuyện",
+      "writing_style": "Ngắn gọn TikTok"
+    },
+    {
+      "id": "smooth-transitions",
+      "name": "Smooth Transitions",
+      "source": "remotion-dev/remotion",
+      "license": "Remotion License",
+      "upstream_url": "https://github.com/remotion-dev/remotion",
+      "style": "người_que_triết_lý",
+      "motion_level": "nhiều",
+      "script_mode": "Một người dẫn chuyện",
+      "writing_style": "Kể chuyện cảm xúc"
+    },
+    {
+      "id": "paper-sketch",
+      "name": "Paper Sketch",
+      "source": "remotion-dev/remotion",
+      "license": "Remotion License",
+      "upstream_url": "https://github.com/remotion-dev/remotion",
+      "style": "Phác thảo điện ảnh — Trầm",
+      "motion_level": "nhẹ",
+      "script_mode": "Kể chuyện",
+      "writing_style": "Kể chuyện cảm xúc"
+    },
+    {
+      "id": "business-motivation",
+      "name": "Business Motivation",
+      "source": "remotion-dev/template-prompt-to-video",
+      "license": "MIT",
+      "upstream_url": "https://github.com/remotion-dev/template-prompt-to-video",
+      "style": "Phác thảo điện ảnh — Doanh nhân",
+      "motion_level": "trung_bình",
+      "script_mode": "Phân tích",
+      "writing_style": "Thực tế kinh doanh"
+    }
+  ]
+}
