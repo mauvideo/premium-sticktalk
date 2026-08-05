@@ -3,6 +3,24 @@ name: Tạo video Premium StickTalk
 on:
   workflow_dispatch:
     inputs:
+      project:
+        description: "Project video"
+        required: true
+        default: "Động lực"
+        type: choice
+        options:
+          - "Động lực"
+      template:
+        description: "Mẫu video Động lực (nguồn Remotion mã nguồn mở)"
+        required: true
+        default: "Prompt to Video"
+        type: choice
+        options:
+          - "Prompt to Video"
+          - "Kinetic Captions"
+          - "Smooth Transitions"
+          - "Paper Sketch"
+          - "Business Motivation"
       idea:
         description: "Ý tưởng video"
         required: true
@@ -19,61 +37,12 @@ on:
         default: hybrid
         type: choice
         options: [narration, dialogue, hybrid]
-      script_mode:
-        description: "Chế độ viết kịch bản"
-        required: true
-        default: "Tự động theo chủ đề"
-        type: choice
-        options:
-          - "Tự động theo chủ đề"
-          - "Một người dẫn chuyện"
-          - "Hai nhân vật đối thoại"
-          - "Kể chuyện"
-          - "Danh sách"
-          - "Phân tích"
-      writing_style:
-        description: "Phong cách viết nội dung"
-        required: true
-        default: "Tự động theo chủ đề"
-        type: choice
-        options:
-          - "Tự động theo chủ đề"
-          - "Ngắn gọn TikTok"
-          - "Kể chuyện cảm xúc"
-          - "Thực tế kinh doanh"
-          - "Giải thích dễ hiểu"
-          - "Đối thoại tự nhiên"
-          - "Tin tức rõ ràng"
       tone:
         description: "Giọng điệu"
         required: true
-        default: "sâu_sắc"
+        default: "truyền_động_lực"
         type: choice
         options: ["sâu_sắc", "hài_hước", "truyền_động_lực", "chữa_lành"]
-      style:
-        description: "Phong cách hình ảnh"
-        required: true
-        default: người_que_triết_lý
-        type: choice
-        options:
-          - người_que_triết_lý
-          - người_que_tiktok
-          - người_que_doanh_nhân
-          - người_que_kể_chuyện
-          - tin_tức_ai
-          - "Phác thảo điện ảnh — Trầm"
-          - "Phác thảo điện ảnh — Sách kỹ năng"
-          - "Phác thảo điện ảnh — Doanh nhân"
-      motion_level:
-        description: "Mức chuyển động"
-        required: true
-        default: trung_bình
-        type: choice
-        options:
-          - nhẹ
-          - trung_bình
-          - nhiều
-          - viral_tiktok
       vieneu_voice:
         description: "Giọng VieNeu-TTS Premium"
         required: true
@@ -157,24 +126,21 @@ jobs:
 
       - name: Hiển thị cấu hình
         run: |
+          echo "Project: ${{ inputs.project }}"
+          echo "Mẫu video: ${{ inputs.template }}"
           echo "Ý tưởng: ${{ inputs.idea }}"
           echo "Thời lượng: ${{ inputs.duration }} giây"
-          echo "Phong cách: ${{ inputs.style }}"
           echo "Giọng VieNeu: ${{ inputs.vieneu_voice }}"
-          echo "Tên/mã giọng tùy chỉnh: ${{ inputs.custom_voice_id }}"
           echo "Phong cách đọc: ${{ inputs.voice_emotion }}"
-          echo "Hệ thống giọng đọc: VieNeu-TTS v3 Turbo ONNX"
 
       - name: Tạo video
         env:
+          VIDEO_PROJECT: motivation
+          VIDEO_TEMPLATE: ${{ inputs.template == 'Prompt to Video' && 'prompt-to-video' || inputs.template == 'Kinetic Captions' && 'kinetic-captions' || inputs.template == 'Smooth Transitions' && 'smooth-transitions' || inputs.template == 'Paper Sketch' && 'paper-sketch' || 'business-motivation' }}
           VIDEO_IDEA: ${{ inputs.idea }}
           VIDEO_DURATION: ${{ inputs.duration }}
           VIDEO_TONE: ${{ inputs.tone }}
           VIDEO_CONTENT_FORMAT: ${{ inputs.content_format }}
-          VIDEO_SCRIPT_MODE: ${{ inputs.script_mode }}
-          VIDEO_WRITING_STYLE: ${{ inputs.writing_style }}
-          VIDEO_STYLE: ${{ inputs.style }}
-          VIDEO_MOTION_LEVEL: ${{ inputs.motion_level }}
           VIENEU_VOICE: ${{ inputs.vieneu_voice }}
           VIENEU_CUSTOM_VOICE_ID: ${{ inputs.custom_voice_id }}
           VIENEU_EMOTION: ${{ inputs.voice_emotion }}
