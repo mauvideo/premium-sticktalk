@@ -21,11 +21,14 @@ try:
     from .script_writer import NhaCungCapVietKichBan, tao_ban_thao, viet_lai_tu_nhien
     from .cham_diem_kich_ban import cham_diem
     from .story_similarity import too_similar
+    from .story_timing import fit_scene_narrations_to_duration
+    from .visual_planner import apply_visual_plans
 except ImportError:
     from script_writer import NhaCungCapVietKichBan, tao_ban_thao, viet_lai_tu_nhien
     from cham_diem_kich_ban import cham_diem
     from story_similarity import too_similar
-
+    from story_timing import fit_scene_narrations_to_duration
+    from visual_planner import apply_visual_plans
 
 LOAI_NOI_DUNG = (
     "danh sách", "giải thích", "câu chuyện", "đối thoại", "so sánh",
@@ -148,7 +151,7 @@ def phan_loai_chu_de(y_tuong: str) -> str:
     return best if scores[best] else "kể chuyện kết hợp giải thích"
 
 def _so_canh(kind: str, duration: int, idea: str) -> int:
-    ranges = {30: (5, 7), 45: (7, 10), 60: (9, 13)}
+    ranges = {30: (5, 7), 45: (7, 10), 60: (9, 13), 90: (12, 16), 180: (24, 32)}
     low, high = ranges[duration]
     if kind == "danh sách":
         match = re.search(r"\b(\d+)\b", idea)
@@ -180,8 +183,8 @@ class CauHinh:
 
 def tao_cau_chuyen(c: CauHinh, nha_cung_cap: NhaCungCapAI | None = None,
                    nha_viet: NhaCungCapVietKichBan | None = None) -> dict:
-    if c.thoi_luong not in (30, 45, 60):
-        raise ValueError("Thời lượng chỉ nhận 30, 45 hoặc 60 giây")
+    if c.thoi_luong not in (30, 45, 60, 90, 180):
+        raise ValueError("Thời lượng chỉ nhận 30, 45, 60, 90 hoặc 180 giây")
     override = {"mot_nguoi": None, "Một người dẫn chuyện": None,
                 "doi_thoai": "đối thoại", "Hai nhân vật đối thoại": "đối thoại",
                 "ke_chuyen": "câu chuyện", "Kể chuyện": "câu chuyện",
@@ -252,6 +255,7 @@ def tao_cau_chuyen(c: CauHinh, nha_cung_cap: NhaCungCapAI | None = None,
             "seed":rng.randrange(1, 1_000_000), "layout":layout, "roleNote": role_note,
         }
         scenes.append(scene)
+    timing = fit_scene_narrations_to_duration(scenes, c.thoi_luong)
     summary = f"Video {kind} về {c.y_tuong}, được đạo diễn theo giọng {c.giong_dieu}."
     structure = " → ".join(CAU_TRUC[kind])
     story = {
@@ -263,7 +267,9 @@ def tao_cau_chuyen(c: CauHinh, nha_cung_cap: NhaCungCapAI | None = None,
         "ket_luan":ban_thao.ket_luan, "message":f"Hiểu rõ {c.y_tuong} trước khi hành động.",
         "cta":scenes[-1]["narration"], "duration":c.thoi_luong, "style":style_map.get(c.phong_cach,c.phong_cach),
         "motionLevel":c.muc_chuyen_dong, "voice":c.giong_doc, "audio":"assets/narration.mp3", "scenes":scenes,
+        "timing": timing, "targetWordCount": timing["targetWordCount"], "estimatedDuration": timing["estimatedDuration"],
     }
+    apply_visual_plans(story)
     for _ in range(3):
         score = cham_diem(story)
         if score["tong_diem"] >= 75:
@@ -307,7 +313,7 @@ def main() -> None:
     output.write_text(json.dumps(story,ensure_ascii=False,indent=2),encoding='utf-8')
     Path('output/script.txt').write_text('\n'.join(s['loi_dan'] for s in story['canh']),encoding='utf-8')
     print(f"Đã phân loại: {story['loai_noi_dung']}")
-    print(f"Đã tạo {len(story['canh'])} cảnh, tổng thời lượng {sum(s['thoi_luong'] for s in story['canh']):.1f} giây")
+    print(f"Đã tạo {len(story['canh'])} cảnh, tổng thời lượng scene {sum(s['thoi_luong'] for s in story['canh']):.1f} giây, ước lượng đọc {story['estimatedDuration']:.1f} giây")
     print(f"Điểm chất lượng kịch bản: {story['chat_luong_kich_ban']['tong_diem']}/100")
     for warning in story['chat_luong_kich_ban']['canh_bao']: print(f"Cảnh báo: {warning}")
 
