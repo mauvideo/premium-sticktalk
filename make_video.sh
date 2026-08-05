@@ -54,7 +54,7 @@ done
 [[ -n "$IDEA" ]] || { echo 'Thiếu ý tưởng video' >&2; exit 2; }
 [[ "$DURATION" =~ ^(30|45|60)$ ]] || { echo "Thời lượng không hợp lệ: $DURATION" >&2; exit 2; }
 
-printf '%s\n' "=== CẤU HÌNH TẠO VIDEO ===" "Project: $PROJECT" "Mẫu video: $TEMPLATE" "Nguồn mở: ${VIDEO_TEMPLATE_SOURCE:-không rõ}" "Giấy phép: ${VIDEO_TEMPLATE_LICENSE:-không rõ}" "Ý tưởng: $IDEA" "Thời lượng: $DURATION giây" "Phong cách: $STYLE" "Giọng VieNeu: $VOICE" "Cảm xúc giọng: $VOICE_EMOTION"
+printf '%s\n' "=== CẤU HÌNH TẠO VIDEO ===" "Dự án: $PROJECT" "Mẫu video: $TEMPLATE" "Nguồn mở: ${VIDEO_TEMPLATE_SOURCE:-không rõ}" "Giấy phép: ${VIDEO_TEMPLATE_LICENSE:-không rõ}" "Chủ đề: $IDEA" "Thời lượng: $DURATION giây" "Phong cách: $STYLE" "Giọng VieNeu: $VOICE" "Cảm xúc giọng: $VOICE_EMOTION"
 
 mkdir -p assets output remotion/public/assets
 
@@ -68,6 +68,13 @@ if [[ "$PROJECT" == "motivation" ]]; then
     --story assets/story.json --topic "$IDEA" --template "$TEMPLATE" --duration "$DURATION"
 fi
 
+# Mỗi cảnh có một ảnh AI riêng, bám theo lời dẫn và phong cách mẫu đã chọn.
+python3 scripts/generate_scene_images.py
+rm -rf remotion/public/assets/generated-images
+mkdir -p remotion/public/assets/generated-images
+cp -R assets/generated-images/. remotion/public/assets/generated-images/
+
+# Giữ nguyên toàn bộ hệ thống VieNeu-TTS đã ổn định.
 python3 scripts/generate_tts.py --voice "$VOICE" --custom-voice-id "$CUSTOM_VOICE_ID" --emotion "$VOICE_EMOTION"
 cp assets/narration.mp3 remotion/public/assets/narration.mp3
 
