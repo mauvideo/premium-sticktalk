@@ -18,7 +18,6 @@ MOTION_LEVEL="${VIDEO_MOTION_LEVEL:-}"
 SCRIPT_MODE="${VIDEO_SCRIPT_MODE:-}"
 WRITING_STYLE="${VIDEO_WRITING_STYLE:-}"
 
-# Project/Template là nguồn cấu hình mặc định. Biến môi trường cụ thể vẫn có thể ghi đè.
 RESOLVED="$(python3 scripts/resolve_project_template.py --project "$PROJECT" --template "$TEMPLATE" --format shell)"
 eval "$RESOLVED"
 STYLE="${STYLE:-$VIDEO_STYLE}"
@@ -32,10 +31,7 @@ case "$STYLE" in
   "Phác thảo điện ảnh — Doanh nhân") STYLE=phac_thao_doanh_nhan;;
 esac
 
-require_value() {
-  [[ $# -ge 2 && -n "$2" && "$2" != --* ]] || { echo "Thiếu giá trị cho $1" >&2; exit 2; }
-}
-
+require_value() { [[ $# -ge 2 && -n "$2" && "$2" != --* ]] || { echo "Thiếu giá trị cho $1" >&2; exit 2; }; }
 while (($#)); do
   case "$1" in
     --idea|--y-tuong|--ý-tưởng) require_value "$@"; IDEA="$2"; shift 2;;
@@ -58,67 +54,40 @@ done
 [[ -n "$IDEA" ]] || { echo 'Thiếu ý tưởng video' >&2; exit 2; }
 [[ "$DURATION" =~ ^(30|45|60)$ ]] || { echo "Thời lượng không hợp lệ: $DURATION" >&2; exit 2; }
 
-printf '%s\n' \
-  "=== CẤU HÌNH TẠO VIDEO ===" \
-  "Project: $PROJECT" \
-  "Mẫu video: $TEMPLATE" \
-  "Nguồn mở: ${VIDEO_TEMPLATE_SOURCE:-không rõ}" \
-  "Giấy phép: ${VIDEO_TEMPLATE_LICENSE:-không rõ}" \
-  "Ý tưởng: $IDEA" \
-  "Thời lượng: $DURATION giây" \
-  "Phong cách: $STYLE" \
-  "Giọng VieNeu: $VOICE" \
-  "Mã giọng tùy chỉnh: ${CUSTOM_VOICE_ID:-không}" \
-  "Cảm xúc giọng: $VOICE_EMOTION"
+printf '%s\n' "=== CẤU HÌNH TẠO VIDEO ===" "Project: $PROJECT" "Mẫu video: $TEMPLATE" "Nguồn mở: ${VIDEO_TEMPLATE_SOURCE:-không rõ}" "Giấy phép: ${VIDEO_TEMPLATE_LICENSE:-không rõ}" "Ý tưởng: $IDEA" "Thời lượng: $DURATION giây" "Phong cách: $STYLE" "Giọng VieNeu: $VOICE" "Cảm xúc giọng: $VOICE_EMOTION"
 
 mkdir -p assets output remotion/public/assets
 
 python3 scripts/generate_story.py \
-  --idea "$IDEA" \
-  --duration "$DURATION" \
-  --tone "$TONE" \
-  --format "$CONTENT_FORMAT" \
-  --style "$STYLE" \
-  --voice "$VOICE" \
-  --motion-level "$MOTION_LEVEL" \
-  --script-mode "$SCRIPT_MODE" \
-  --writing-style "$WRITING_STYLE"
+  --idea "$IDEA" --duration "$DURATION" --tone "$TONE" --format "$CONTENT_FORMAT" \
+  --style "$STYLE" --voice "$VOICE" --motion-level "$MOTION_LEVEL" \
+  --script-mode "$SCRIPT_MODE" --writing-style "$WRITING_STYLE"
 
-python3 scripts/generate_tts.py \
-  --voice "$VOICE" \
-  --custom-voice-id "$CUSTOM_VOICE_ID" \
-  --emotion "$VOICE_EMOTION"
+if [[ "$PROJECT" == "motivation" ]]; then
+  python3 scripts/enrich_motivation_story.py \
+    --story assets/story.json --topic "$IDEA" --template "$TEMPLATE" --duration "$DURATION"
+fi
 
+python3 scripts/generate_tts.py --voice "$VOICE" --custom-voice-id "$CUSTOM_VOICE_ID" --emotion "$VOICE_EMOTION"
 cp assets/narration.mp3 remotion/public/assets/narration.mp3
 
 python3 - <<'PY'
 import json, os
-p = 'assets/story.json'
-with open(p, encoding='utf-8') as f:
-    d = json.load(f)
-d['audio'] = 'assets/narration.mp3'
-d['project'] = os.getenv('VIDEO_PROJECT', 'motivation')
-d['template'] = os.getenv('VIDEO_TEMPLATE', 'prompt-to-video')
-d['templateSource'] = os.getenv('VIDEO_TEMPLATE_SOURCE', '')
-d['templateLicense'] = os.getenv('VIDEO_TEMPLATE_LICENSE', '')
-with open(p, 'w', encoding='utf-8') as f:
-    json.dump(d, f, ensure_ascii=False, indent=2)
+p='assets/story.json'
+with open(p,encoding='utf-8') as f:d=json.load(f)
+d['audio']='assets/narration.mp3'
+d['project']=os.getenv('VIDEO_PROJECT','motivation')
+d['template']=os.getenv('VIDEO_TEMPLATE','prompt-to-video')
+d['templateSource']=os.getenv('VIDEO_TEMPLATE_SOURCE','')
+d['templateLicense']=os.getenv('VIDEO_TEMPLATE_LICENSE','')
+with open(p,'w',encoding='utf-8') as f:json.dump(d,f,ensure_ascii=False,indent=2)
 PY
 
 [[ -d remotion/node_modules ]] || npm --prefix remotion install
 BROWSER="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
-ARGS=()
-[[ -z "$BROWSER" ]] || ARGS+=(--browser-executable="$BROWSER")
-
-npx --prefix remotion remotion render \
-  remotion/src/index.ts StickTalk output/video.mp4 \
-  --props=assets/story.json \
-  --public-dir=remotion/public \
-  --codec=h264 \
-  "${ARGS[@]}"
-
+ARGS=(); [[ -z "$BROWSER" ]] || ARGS+=(--browser-executable="$BROWSER")
+npx --prefix remotion remotion render remotion/src/index.ts StickTalk output/video.mp4 --props=assets/story.json --public-dir=remotion/public --codec=h264 "${ARGS[@]}"
 ffmpeg -y -ss 00:00:03 -i output/video.mp4 -frames:v 1 output/preview.png
 cp assets/story.json output/story.json
 ffprobe -v error -show_entries stream=codec_name,width,height,r_frame_rate -show_entries format=duration,size -of default=noprint_wrappers=1 output/video.mp4
-
 echo 'Hoàn tất: output/video.mp4'
