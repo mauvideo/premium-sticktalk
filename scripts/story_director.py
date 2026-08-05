@@ -20,9 +20,11 @@ from typing import Protocol
 try:
     from .script_writer import NhaCungCapVietKichBan, tao_ban_thao, viet_lai_tu_nhien
     from .cham_diem_kich_ban import cham_diem
+    from .story_similarity import too_similar
 except ImportError:
     from script_writer import NhaCungCapVietKichBan, tao_ban_thao, viet_lai_tu_nhien
     from cham_diem_kich_ban import cham_diem
+    from story_similarity import too_similar
 
 
 LOAI_NOI_DUNG = (
@@ -57,6 +59,68 @@ CAU_TRUC = {
     "hài tình huống": ["Gài tình huống", "Kỳ vọng", "Va chạm", "Hiểu nhầm", "Cú bẻ", "Phản ứng", "Chốt hài"],
     "kể chuyện kết hợp giải thích": ["Mở nút thắt", "Nhân vật", "Hiện tượng", "Nguyên nhân", "Bước ngoặt", "Giải nghĩa", "Bài học"],
 }
+
+STORY_ARC = [
+    ("Hook", "Móc câu", "Mở một chi tiết lạ để tạo tò mò ngay lập tức", 88),
+    ("Context", "Bối cảnh", "Giới thiệu nhân vật hoặc nơi câu chuyện bắt đầu", 35),
+    ("Conflict", "Xung đột", "Đặt vấn đề cụ thể khiến nhân vật bị kẹt", 62),
+    ("Development", "Phát triển", "Cho nhân vật thử một hành động làm câu chuyện tiến lên", 72),
+    ("Turning Point", "Bước ngoặt", "Một sự kiện hoặc nhận ra làm đổi hướng diễn biến", 95),
+    ("Ending", "Kết thúc", "Khép lại kết quả của câu chuyện", 58),
+    ("Lesson", "Bài học", "Chốt lại 1–2 câu ngắn, không triết lý dài", 42),
+]
+IMAGE_FOCUS_BY_ROLE = {
+    "Hook": ["unexpected close-up object", "empty chair under spotlight", "door half open"],
+    "Context": ["small room with desk", "street corner morning", "workshop table with notebook"],
+    "Conflict": ["messy desk and warning note", "split path with obstacle", "tense conversation at table"],
+    "Development": ["hands arranging notes", "person walking along path", "calendar with marked deadline"],
+    "Turning Point": ["key falling onto table", "light through window", "arrow changing direction"],
+    "Ending": ["quiet room after decision", "completed checklist", "person leaving doorway"],
+    "Lesson": ["simple icon of compass", "single highlighted note", "path toward sunrise"],
+}
+HOOK_BANNED = ("hôm nay", "bạn có biết", "hãy")
+
+def _story_arc_role(index: int, count: int) -> tuple[str, str, str, int]:
+    if count <= 1:
+        return STORY_ARC[-1]
+    pos = round(index * (len(STORY_ARC) - 1) / (count - 1))
+    return STORY_ARC[min(pos, len(STORY_ARC) - 1)]
+
+def _sanitize_hook(text: str, idea: str) -> str:
+    stripped = text.strip()
+    low = stripped.casefold()
+    if any(low.startswith(bad) for bad in HOOK_BANNED):
+        subject = idea.strip(" .?!") or "câu chuyện này"
+        return f"Một chi tiết nhỏ trong {subject} đã đổi mọi thứ."
+    return stripped
+
+def _rewrite_for_role(text: str, role: str, idea: str, previous: list[str]) -> str:
+    subject = idea.strip(" .?!") or "chuyện này"
+    variant = len(previous) + 1
+    templates = {
+        "Hook": f"Một dấu hiệu nhỏ xuất hiện trước khi {subject} trở nên nghiêm trọng.",
+        "Context": f"Nhân vật bắt đầu ở cảnh {variant}: một bối cảnh đời thường quanh {subject}.",
+        "Conflict": f"Rắc rối ở cảnh {variant} không nằm ở khẩu hiệu, mà ở một lựa chọn đang chặn đường tiến lên.",
+        "Development": f"Ở cảnh {variant}, nhân vật thử đổi cách làm: quan sát dữ kiện, ghi lại phản ứng, rồi hành động từng bước.",
+        "Turning Point": f"Bước ngoặt ở cảnh {variant}: nhân vật nhận ra câu hỏi đúng không phải là cố thêm, mà là đổi hướng đúng chỗ.",
+        "Ending": f"Kết quả khép lại ở cảnh {variant} bằng một hành động rõ ràng, không phải một lời hô hào lặp lại.",
+        "Lesson": f"Bài học ngắn: đừng lặp khẩu hiệu. Tìm nút thắt và xử lý nó.",
+    }
+    candidate = text.strip()
+    if role == "Hook":
+        candidate = _sanitize_hook(candidate, idea)
+    for prior in previous:
+        if too_similar(candidate, prior):
+            candidate = templates[role]
+            break
+    while any(too_similar(candidate, prior) for prior in previous):
+        candidate = f"{candidate} Chi tiết riêng của cảnh {variant}: {IMAGE_FOCUS_BY_ROLE[role][variant % len(IMAGE_FOCUS_BY_ROLE[role])]}."
+        break
+    return candidate
+
+def _image_focus(role: str, index: int) -> str:
+    options = IMAGE_FOCUS_BY_ROLE[role]
+    return options[index % len(options)]
 
 class NhaCungCapAI(Protocol):
     """Hợp đồng tương thích cho nhà cung cấp tạo toàn bộ story.json."""
@@ -150,17 +214,20 @@ def tao_cau_chuyen(c: CauHinh, nha_cung_cap: NhaCungCapAI | None = None,
             chars.append({"ten":"B", "vi_tri":"phải", "hanh_dong":second_action, "cam_xuc":emotions[(offset+3)%len(emotions)],
                           "huong_nhin":"nhân vật A", "name":"B", "position":"right", "action":second_action,
                           "gesture":gesture_map[second_action], "emotion":emotion_map[emotions[(offset+3)%len(emotions)]]})
-        narration = ban_thao.canh[min(i, len(ban_thao.canh)-1)]
+        arc_role, story_progress, role_note, dramatic_level = _story_arc_role(i, count)
+        previous_narrations = [scene["narration"] for scene in scenes]
+        narration = _rewrite_for_role(ban_thao.canh[min(i, len(ban_thao.canh)-1)], arc_role, c.y_tuong, previous_narrations)
         camera = cameras[offset % len(cameras)]
         transition = transitions[(offset + i) % len(transitions)]
         layout = layouts[(offset + 2*i) % len(layouts)]
         background = backgrounds[(offset + (seed % 3)*i) % len(backgrounds)]
-        role = roles[min(round(i * (len(roles)-1) / max(1, count-1)), len(roles)-1)]
+        role = arc_role
         scene = {
             "id": i + 1, "loai_canh": "mở đầu" if i == 0 else "kết" if i == count-1 else kind,
             "vai_tro": role, "thoi_luong": durations[i], "loi_dan": narration,
             "hoi_thoai": ([ban_thao.hoi_thoai[i-1]] if kind == "đối thoại" and 0 < i <= len(ban_thao.hoi_thoai) else []),
             "tieu_de_canh": role, "tu_khoa": [w for w in re.findall(r"\w+", c.y_tuong.lower()) if len(w)>3][:3],
+            "sceneRole": arc_role, "storyProgress": story_progress, "imageFocus": _image_focus(arc_role, i), "dramaticLevel": dramatic_level,
             "boi_canh": background, "bo_cuc": layout, "camera": {"type":camera, "speed":round(rng.uniform(.88,1.12),2), "easing":"ease-in-out", "strength":strength, "duration":durations[i]},
             "chuyen_canh": {"type":transition, "strength":strength, "duration":round(rng.uniform(.3,.7),2)},
             "hoat_anh_phu_de": ["pop","fade","slide","word","karaoke"][offset % 5], "nhan_vat": chars,
@@ -172,13 +239,13 @@ def tao_cau_chuyen(c: CauHinh, nha_cung_cap: NhaCungCapAI | None = None,
             "emotion":chars[0]["emotion"], "gesture":chars[0]["gesture"], "zoom":round(rng.uniform(.06,.14),2),
             "subtitleAnimation":["pop","fade","slide","word","karaoke"][offset % 5],
             "keywords":[w for w in re.findall(r"\w+", c.y_tuong.lower()) if len(w)>3][:3], "characters":chars,
-            "seed":rng.randrange(1, 1_000_000), "layout":layout,
+            "seed":rng.randrange(1, 1_000_000), "layout":layout, "roleNote": role_note,
         }
         scenes.append(scene)
     summary = f"Video {kind} về {c.y_tuong}, được đạo diễn theo giọng {c.giong_dieu}."
     structure = " → ".join(CAU_TRUC[kind])
     story = {
-        "phien_ban":"3.6", "tieu_de":c.y_tuong, "loai_noi_dung":kind, "cau_truc_kich_ban":structure,
+        "phien_ban":"3.7", "tieu_de":c.y_tuong, "loai_noi_dung":kind, "cau_truc_kich_ban":structure,
         "linh_vuc":linh_vuc, "phong_cach_viet":phong_cach_viet,
         "thoi_luong":c.thoi_luong, "phong_cach":c.phong_cach, "giong_doc":c.giong_doc,
         "tom_tat":summary, "thong_diep_chinh":f"Hiểu và hành động phù hợp với {c.y_tuong}.", "canh":scenes,
