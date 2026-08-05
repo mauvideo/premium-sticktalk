@@ -84,7 +84,13 @@ def _story_arc_role(index: int, count: int) -> tuple[str, str, str, int]:
     if count <= 1:
         return STORY_ARC[-1]
     pos = round(index * (len(STORY_ARC) - 1) / (count - 1))
-    return STORY_ARC[min(pos, len(STORY_ARC) - 1)]
+    base_role, progress, note, dramatic = STORY_ARC[min(pos, len(STORY_ARC) - 1)]
+    if count <= len(STORY_ARC):
+        return base_role, progress, note, dramatic
+    previous_positions = [round(i * (len(STORY_ARC) - 1) / (count - 1)) for i in range(index)]
+    occurrence = previous_positions.count(pos) + 1
+    role = base_role if occurrence == 1 else f"{base_role} {occurrence}"
+    return role, progress, note, dramatic
 
 def _sanitize_hook(text: str, idea: str) -> str:
     stripped = text.strip()
@@ -111,15 +117,19 @@ def _rewrite_for_role(text: str, role: str, idea: str, previous: list[str]) -> s
         candidate = _sanitize_hook(candidate, idea)
     for prior in previous:
         if too_similar(candidate, prior):
-            candidate = templates[role]
+            candidate = templates[_base_role(role)]
             break
     while any(too_similar(candidate, prior) for prior in previous):
-        candidate = f"{candidate} Chi tiết riêng của cảnh {variant}: {IMAGE_FOCUS_BY_ROLE[role][variant % len(IMAGE_FOCUS_BY_ROLE[role])]}."
+        base_role = _base_role(role)
+        candidate = f"{candidate} Chi tiết riêng của cảnh {variant}: {IMAGE_FOCUS_BY_ROLE[base_role][variant % len(IMAGE_FOCUS_BY_ROLE[base_role])]}."
         break
     return candidate
 
+def _base_role(role: str) -> str:
+    return re.sub(r"\s+\d+$", "", role)
+
 def _image_focus(role: str, index: int) -> str:
-    options = IMAGE_FOCUS_BY_ROLE[role]
+    options = IMAGE_FOCUS_BY_ROLE[_base_role(role)]
     return options[index % len(options)]
 
 class NhaCungCapAI(Protocol):

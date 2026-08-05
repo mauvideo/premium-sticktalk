@@ -25,3 +25,11 @@ def test_similarity_module_reports_keyword_cosine_and_semantic_scores():
     scores = combined_similarity("Đừng bỏ cuộc, hãy kiên trì", "Đừng từ bỏ, hãy cố gắng")
     assert {"keywordOverlap", "cosineSimilarity", "semanticSimilarity", "combinedSimilarity"} <= scores.keys()
     assert scores["combinedSimilarity"] > 0.2
+
+
+def test_story_roles_are_unique_even_for_long_story():
+    story = tao_cau_chuyen(CauHinh("Hành trình vượt qua thất bại", 60, che_do="ke_chuyen"))
+    roles = [scene["sceneRole"] for scene in story["scenes"]]
+    assert len(roles) == len(set(roles))
+    assert roles[0] == "Hook"
+    assert roles[-1] == "Lesson"
