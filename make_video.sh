@@ -68,11 +68,11 @@ if [[ "$PROJECT" == "motivation" ]]; then
     --story assets/story.json --topic "$IDEA" --template "$TEMPLATE" --duration "$DURATION"
 fi
 
-# Mỗi cảnh có một ảnh AI riêng, bám theo lời dẫn và phong cách mẫu đã chọn.
-python3 scripts/generate_scene_images.py
-rm -rf remotion/public/assets/generated-images
-mkdir -p remotion/public/assets/generated-images
-cp -R assets/generated-images/. remotion/public/assets/generated-images/
+# Mỗi cảnh nhận tài nguyên miễn phí có giấy phép rõ ràng theo template đã chọn.
+python3 -m scripts.asset_providers.manager
+rm -rf remotion/public/assets/generated-assets
+mkdir -p remotion/public/assets/generated-assets
+cp -R assets/generated-assets/. remotion/public/assets/generated-assets/
 
 # Giữ nguyên toàn bộ hệ thống VieNeu-TTS đã ổn định.
 python3 scripts/generate_tts.py --voice "$VOICE" --custom-voice-id "$CUSTOM_VOICE_ID" --emotion "$VOICE_EMOTION"
