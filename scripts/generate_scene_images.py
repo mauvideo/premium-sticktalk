@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Tạo một ảnh AI riêng cho từng cảnh và ghi đường dẫn vào story.json.
 
-Dùng API hình ảnh mã nguồn mở Pollinations. Khóa API là tùy chọn qua
-POLLINATIONS_API_KEY; tuyệt đối không lưu khóa trong kho mã nguồn.
+Ưu tiên cổng công khai Pollinations không cần khóa. Nếu người dùng đã cấu hình
+POLLINATIONS_API_KEY thì hệ thống mới dùng cổng có xác thực. Không lưu khóa trong mã.
 """
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ import os
 import re
 import time
 from pathlib import Path
+from urllib.error import HTTPError
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 
@@ -39,27 +40,61 @@ def prompt_for(scene: dict, title: str, template: str) -> str:
     )
 
 
-def download_image(prompt: str, target: Path, seed: int, api_key: str) -> None:
+def candidate_urls(prompt: str, seed: int, api_key: str) -> list[str]:
     encoded = quote(prompt, safe="")
-    url = f"https://gen.pollinations.ai/image/{encoded}?width=1080&height=1920&seed={seed}&model=flux"
+    query = f"width=1080&height=1920&seed={seed}&model=flux&nologo=true&enhance=true"
+    urls: list[str] = []
+
+    # Cổng công khai: không yêu cầu API key.
+    urls.append(f"https://image.pollinations.ai/prompt/{encoded}?{query}")
+
+    # Chỉ dùng cổng có xác thực khi người dùng thật sự đã cấu hình khóa.
     if api_key:
-        url += f"&key={quote(api_key, safe='')}"
-    request = Request(url, headers={"User-Agent": "Premium-StickTalk/1.0"})
+        urls.insert(
+            0,
+            f"https://gen.pollinations.ai/image/{encoded}?{query}&key={quote(api_key, safe='')}",
+        )
+    return urls
+
+
+def download_image(prompt: str, target: Path, seed: int, api_key: str) -> str:
     last_error: Exception | None = None
-    for attempt in range(3):
-        try:
-            with urlopen(request, timeout=180) as response:
-                data = response.read()
-                content_type = response.headers.get("Content-Type", "")
-            if len(data) < 10_000 or "image" not in content_type:
-                raise RuntimeError(f"Phản hồi tạo ảnh không hợp lệ: {content_type}, {len(data)} byte")
-            target.write_bytes(data)
-            return
-        except Exception as error:  # noqa: BLE001
-            last_error = error
-            if attempt < 2:
-                time.sleep(5 * (attempt + 1))
-    raise RuntimeError(f"Không tạo được ảnh {target.name}: {last_error}")
+    for url in candidate_urls(prompt, seed, api_key):
+        for attempt in range(3):
+            request = Request(
+                url,
+                headers={
+                    "User-Agent": "Mozilla/5.0 Premium-StickTalk/1.0",
+                    "Accept": "image/avif,image/webp,image/apng,image/jpeg,image/png,*/*",
+                    "Referer": "https://pollinations.ai/",
+                },
+            )
+            try:
+                with urlopen(request, timeout=240) as response:
+                    data = response.read()
+                    content_type = response.headers.get("Content-Type", "")
+                    final_url = response.geturl()
+                if len(data) < 10_000 or "image" not in content_type.casefold():
+                    raise RuntimeError(
+                        f"Phản hồi không phải ảnh hợp lệ: {content_type}, {len(data)} byte"
+                    )
+                target.write_bytes(data)
+                return final_url
+            except HTTPError as error:
+                last_error = error
+                # 401/403 ở một cổng thì chuyển sang cổng công khai kế tiếp.
+                if error.code in {401, 403}:
+                    break
+                if attempt < 2:
+                    time.sleep(6 * (attempt + 1))
+            except Exception as error:  # noqa: BLE001
+                last_error = error
+                if attempt < 2:
+                    time.sleep(6 * (attempt + 1))
+
+    raise RuntimeError(
+        f"Không tạo được ảnh {target.name} sau khi thử các cổng công khai: {last_error}"
+    )
 
 
 def main() -> None:
@@ -85,14 +120,22 @@ def main() -> None:
         target = out_dir / filename
         seed = abs(hash(f"{title}|{index}|{template}")) % 2_147_483_647
         print(f"Đang tạo ảnh AI cho cảnh {index}/{len(scenes)}: {filename}")
-        download_image(prompt, target, seed, api_key)
+        provider_url = download_image(prompt, target, seed, api_key)
         public_path = f"assets/generated-images/{filename}"
         scene["image"] = public_path
         scene["imagePrompt"] = prompt
-        manifest.append({"scene": index, "file": public_path, "prompt": prompt})
+        manifest.append(
+            {
+                "scene": index,
+                "file": public_path,
+                "prompt": prompt,
+                "provider": "pollinations-flux-public",
+                "source": provider_url,
+            }
+        )
 
     story["scenes"] = scenes
-    story["imageProvider"] = "pollinations-flux"
+    story["imageProvider"] = "pollinations-flux-public"
     story_path.write_text(json.dumps(story, ensure_ascii=False, indent=2), encoding="utf-8")
     Path("output").mkdir(exist_ok=True)
     Path("output/image-manifest.json").write_text(
