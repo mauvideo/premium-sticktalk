@@ -1,0 +1,12 @@
+{
+  "title": "Tài liệu tiếng Việt có dấu",
+  "duration": 12,
+  "style": "cat_giay_tai_lieu",
+  "template": "paper-cut-documentary",
+  "audio": "",
+  "scenes": [
+    {"id": 1, "duration": 4, "headline": "Dòng tiêu đề mở đầu", "narration": "Người Việt đọc rõ chữ có dấu trong bố cục cắt giấy.", "background": "dark", "camera": {"type":"push"}, "transition": {"type":"slide"}, "keywords": ["Việt", "cắt"], "characters": [], "image": "assets/generated-images/missing-1.png"},
+    {"id": 2, "duration": 4, "headline": "Lớp giấy thứ hai", "narration": "Một cảnh thiếu ảnh vẫn phải render an toàn.", "background": "dark", "camera": {"type":"push"}, "transition": {"type":"slide"}, "keywords": ["ảnh", "render"], "characters": []},
+    {"id": 3, "duration": 4, "headline": "Kết luận tài liệu", "narration": "Từ khóa được tô nổi bật và camera chuyển động nhẹ.", "background": "dark", "camera": {"type":"push"}, "transition": {"type":"slide"}, "keywords": ["camera", "nhẹ"], "characters": [], "image": "assets/generated-images/missing-3.png"}
+  ]
+}

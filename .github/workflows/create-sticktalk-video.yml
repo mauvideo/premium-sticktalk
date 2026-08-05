@@ -21,6 +21,7 @@ on:
           - "Chuyển cảnh mượt"
           - "Phác thảo trên giấy"
           - "Động lực doanh nhân"
+          - "Cắt giấy tài liệu"
       idea:
         description: "Chủ đề video"
         required: true
@@ -168,7 +169,7 @@ jobs:
       - name: Tạo video
         env:
           VIDEO_PROJECT: motivation
-          VIDEO_TEMPLATE: ${{ inputs.template == 'Điện ảnh AI' && 'prompt-to-video' || inputs.template == 'Phụ đề động' && 'kinetic-captions' || inputs.template == 'Chuyển cảnh mượt' && 'smooth-transitions' || inputs.template == 'Phác thảo trên giấy' && 'paper-sketch' || 'business-motivation' }}
+          VIDEO_TEMPLATE: ${{ inputs.template == 'Điện ảnh AI' && 'prompt-to-video' || inputs.template == 'Phụ đề động' && 'kinetic-captions' || inputs.template == 'Chuyển cảnh mượt' && 'smooth-transitions' || inputs.template == 'Phác thảo trên giấy' && 'paper-sketch' || inputs.template == 'Cắt giấy tài liệu' && 'paper-cut-documentary' || 'business-motivation' }}
           VIDEO_IDEA: ${{ inputs.idea }}
           VIDEO_DURATION: ${{ inputs.duration == '30 giây' && '30' || inputs.duration == '60 giây' && '60' || '45' }}
           VIDEO_TONE: ${{ inputs.tone == 'Sâu sắc' && 'sâu_sắc' || inputs.tone == 'Hài hước' && 'hài_hước' || inputs.tone == 'Chữa lành' && 'chữa_lành' || 'truyền_động_lực' }}

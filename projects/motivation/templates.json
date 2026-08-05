@@ -58,6 +58,17 @@
       "motion_level": "trung_bình",
       "script_mode": "Phân tích",
       "writing_style": "Thực tế kinh doanh"
+    },
+    {
+      "id": "paper-cut-documentary",
+      "name": "Cắt giấy tài liệu",
+      "source": "Nội bộ - CSS/SVG/Remotion tự tạo",
+      "license": "MIT (theo giấy phép repository)",
+      "upstream_url": "",
+      "style": "cat_giay_tai_lieu",
+      "motion_level": "trung_bình",
+      "script_mode": "Phim tài liệu",
+      "writing_style": "Tin tức rõ ràng"
     }
   ]
 }
