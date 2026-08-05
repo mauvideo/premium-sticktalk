@@ -1,0 +1,3 @@
+ALLOWED_LICENSES={
+ 'Pexels License':'https://www.pexels.com/license/','Pixabay Content License':'https://pixabay.com/service/license-summary/','Unsplash License':'https://unsplash.com/license','CC0 1.0':'https://creativecommons.org/publicdomain/zero/1.0/','CC BY 4.0':'https://creativecommons.org/licenses/by/4.0/','MIT':'https://opensource.org/license/mit','Public Domain':'https://creativecommons.org/publicdomain/mark/1.0/','Local fallback asset':'docs/free-asset-providers.md#local-fallback-assets'}
+def is_allowed(name:str,url:str='')->bool: return name in ALLOWED_LICENSES or 'creativecommons.org' in url
