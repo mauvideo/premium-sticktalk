@@ -7,16 +7,16 @@ cd "$ROOT"
 IDEA="${VIDEO_IDEA:-}"
 DURATION="${VIDEO_DURATION:-45}"
 TONE="${VIDEO_TONE:-sâu_sắc}"
-CONTENT_FORMAT="${VIDEO_CONTENT_FORMAT:-hybrid}"
+CONTENT_FORMAT="${VIDEO_CONTENT_FORMAT:-narration}"
 PROJECT="${VIDEO_PROJECT:-motivation}"
-TEMPLATE="${VIDEO_TEMPLATE:-prompt-to-video}"
+TEMPLATE="${VIDEO_TEMPLATE:-vox-paper-collage}"
 STYLE="${VIDEO_STYLE:-}"
 VOICE="${VIENEU_VOICE:-default}"
 CUSTOM_VOICE_ID="${VIENEU_CUSTOM_VOICE_ID:-}"
 VOICE_EMOTION="${VIENEU_EMOTION:-Tự nhiên}"
 MOTION_LEVEL="${VIDEO_MOTION_LEVEL:-}"
-SCRIPT_MODE="${VIDEO_SCRIPT_MODE:-}"
-WRITING_STYLE="${VIDEO_WRITING_STYLE:-}"
+SCRIPT_MODE="${VIDEO_SCRIPT_MODE:-Phim tài liệu}"
+WRITING_STYLE="${VIDEO_WRITING_STYLE:-Bám sát chủ đề, mỗi cảnh một dữ kiện mới}"
 
 RESOLVED="$(python3 scripts/resolve_project_template.py --project "$PROJECT" --template "$TEMPLATE" --format shell)"
 eval "$RESOLVED"
@@ -28,7 +28,6 @@ WRITING_STYLE="${WRITING_STYLE:-$VIDEO_WRITING_STYLE}"
 case "$STYLE" in
   "Phác thảo điện ảnh — Trầm") STYLE=phac_thao_dien_anh_tram;;
   "Phác thảo điện ảnh — Sách kỹ năng") STYLE=phac_thao_sach_ky_nang;;
-  "Phác thảo điện ảnh — Doanh nhân") STYLE=phac_thao_doanh_nhan;;
 esac
 
 require_value() { [[ $# -ge 2 && -n "$2" && "$2" != --* ]] || { echo "Thiếu giá trị cho $1" >&2; exit 2; }; }
@@ -54,7 +53,7 @@ done
 [[ -n "$IDEA" ]] || { echo 'Thiếu ý tưởng video' >&2; exit 2; }
 [[ "$DURATION" =~ ^(30|45|60)$ ]] || { echo "Thời lượng không hợp lệ: $DURATION" >&2; exit 2; }
 
-printf '%s\n' "=== CẤU HÌNH TẠO VIDEO ===" "Dự án: $PROJECT" "Mẫu video: $TEMPLATE" "Nguồn mở: ${VIDEO_TEMPLATE_SOURCE:-không rõ}" "Giấy phép: ${VIDEO_TEMPLATE_LICENSE:-không rõ}" "Chủ đề: $IDEA" "Thời lượng: $DURATION giây" "Phong cách: $STYLE" "Giọng VieNeu: $VOICE" "Cảm xúc giọng: $VOICE_EMOTION"
+printf '%s\n' "=== CẤU HÌNH TẠO VIDEO ===" "Mẫu video: $TEMPLATE" "Nguồn mở: ${VIDEO_TEMPLATE_SOURCE:-không rõ}" "Giấy phép: ${VIDEO_TEMPLATE_LICENSE:-không rõ}" "Chủ đề: $IDEA" "Thời lượng: $DURATION giây" "Phong cách: $STYLE" "Giọng VieNeu: $VOICE" "Cảm xúc giọng: $VOICE_EMOTION"
 
 mkdir -p assets output remotion/public/assets
 
@@ -63,15 +62,11 @@ python3 scripts/generate_story.py \
   --style "$STYLE" --voice "$VOICE" --motion-level "$MOTION_LEVEL" \
   --script-mode "$SCRIPT_MODE" --writing-style "$WRITING_STYLE"
 
-if [[ "$PROJECT" == "motivation" ]]; then
-  python3 scripts/enrich_motivation_story.py \
-    --story assets/story.json --topic "$IDEA" --template "$TEMPLATE" --duration "$DURATION"
-fi
-
-# Suy luận thực thể/bối cảnh từ chính chủ đề; không dùng danh mục nhân vật cố định.
+# Không chạy bất kỳ bộ làm giàu nội dung động lực/doanh nhân nào.
+# Kịch bản phải được giữ nguyên theo chủ đề người dùng nhập.
 python3 -m scripts.entity_visual_planner --story assets/story.json --topic "$IDEA"
 
-# Mỗi cảnh nhận tài nguyên miễn phí có giấy phép rõ ràng theo template đã chọn.
+# Mỗi cảnh nhận tài nguyên miễn phí có giấy phép rõ ràng theo đúng chủ đề.
 python3 -m scripts.asset_providers.manager
 rm -rf remotion/public/assets/generated-assets
 mkdir -p remotion/public/assets/generated-assets
@@ -86,8 +81,8 @@ import json, os
 p='assets/story.json'
 with open(p,encoding='utf-8') as f:d=json.load(f)
 d['audio']='assets/narration.mp3'
-d['project']=os.getenv('VIDEO_PROJECT','motivation')
-d['template']=os.getenv('VIDEO_TEMPLATE','prompt-to-video')
+d['project']='documentary'
+d['template']=os.getenv('VIDEO_TEMPLATE','vox-paper-collage')
 d['templateSource']=os.getenv('VIDEO_TEMPLATE_SOURCE','')
 d['templateLicense']=os.getenv('VIDEO_TEMPLATE_LICENSE','')
 with open(p,'w',encoding='utf-8') as f:json.dump(d,f,ensure_ascii=False,indent=2)
