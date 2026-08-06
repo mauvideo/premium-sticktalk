@@ -62,6 +62,12 @@ python3 scripts/generate_story.py \
   --duration "$DURATION" \
   --voice "$VOICE"
 
+# Bắt buộc thay toàn bộ câu đệm bằng dữ kiện thực tế lấy từ đúng chủ đề.
+# Nếu không nghiên cứu được chủ đề, workflow phải dừng thay vì render nội dung sai.
+python3 scripts/ground_story.py \
+  --story assets/story.json \
+  --topic "$IDEA"
+
 python3 -m scripts.entity_visual_planner \
   --story assets/story.json \
   --topic "$IDEA"
@@ -91,7 +97,7 @@ story['project'] = 'documentary'
 story['template'] = 'vox-paper-collage'
 story['style'] = 'vox_giay_cat'
 story['motionLevel'] = 'high'
-story['contentMode'] = 'auto-by-topic'
+story['contentMode'] = 'auto-by-topic-grounded'
 
 with open(path, 'w', encoding='utf-8') as handle:
     json.dump(story, handle, ensure_ascii=False, indent=2)
