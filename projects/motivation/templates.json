@@ -1,8 +1,8 @@
 {
   "project": "motivation",
-  "name": "Động lực",
-  "description": "Các định dạng được đóng gói từ thành phần và mẫu Remotion mã nguồn mở; không kèm tài nguyên hình ảnh có bản quyền của bên thứ ba.",
-  "default_template": "prompt-to-video",
+  "name": "Video tài liệu tự động",
+  "description": "Pipeline tổng quát tạo video theo đúng chủ đề người dùng bằng Remotion và tài nguyên có giấy phép rõ ràng.",
+  "default_template": "vox-paper-collage",
   "templates": [
     {
       "id": "prompt-to-video",
@@ -10,10 +10,10 @@
       "source": "remotion-dev/template-prompt-to-video",
       "license": "MIT",
       "upstream_url": "https://github.com/remotion-dev/template-prompt-to-video",
-      "style": "người_que_kể_chuyện",
+      "style": "ke_chuyen_tai_lieu",
       "motion_level": "trung_bình",
       "script_mode": "Kể chuyện",
-      "writing_style": "Kể chuyện cảm xúc"
+      "writing_style": "Bám sát chủ đề"
     },
     {
       "id": "kinetic-captions",
@@ -21,10 +21,10 @@
       "source": "remotion-dev/remotion",
       "license": "Remotion License",
       "upstream_url": "https://github.com/remotion-dev/remotion",
-      "style": "người_que_tiktok",
+      "style": "phu_de_tai_lieu",
       "motion_level": "viral_tiktok",
       "script_mode": "Một người dẫn chuyện",
-      "writing_style": "Ngắn gọn TikTok"
+      "writing_style": "Ngắn gọn, đúng dữ kiện"
     },
     {
       "id": "smooth-transitions",
@@ -32,10 +32,10 @@
       "source": "remotion-dev/remotion",
       "license": "Remotion License",
       "upstream_url": "https://github.com/remotion-dev/remotion",
-      "style": "người_que_triết_lý",
+      "style": "tai_lieu_chuyen_canh",
       "motion_level": "nhiều",
       "script_mode": "Một người dẫn chuyện",
-      "writing_style": "Kể chuyện cảm xúc"
+      "writing_style": "Bám sát chủ đề"
     },
     {
       "id": "paper-sketch",
@@ -43,21 +43,10 @@
       "source": "remotion-dev/remotion",
       "license": "Remotion License",
       "upstream_url": "https://github.com/remotion-dev/remotion",
-      "style": "Phác thảo điện ảnh — Trầm",
+      "style": "phac_thao_tai_lieu",
       "motion_level": "nhẹ",
       "script_mode": "Kể chuyện",
-      "writing_style": "Kể chuyện cảm xúc"
-    },
-    {
-      "id": "business-motivation",
-      "name": "Business Motivation",
-      "source": "remotion-dev/template-prompt-to-video",
-      "license": "MIT",
-      "upstream_url": "https://github.com/remotion-dev/template-prompt-to-video",
-      "style": "Phác thảo điện ảnh — Doanh nhân",
-      "motion_level": "trung_bình",
-      "script_mode": "Phân tích",
-      "writing_style": "Thực tế kinh doanh"
+      "writing_style": "Bám sát chủ đề"
     },
     {
       "id": "paper-cut-documentary",
@@ -79,7 +68,7 @@
       "style": "vox_giay_cat",
       "motion_level": "nhiều",
       "script_mode": "Phim tài liệu",
-      "writing_style": "Biên tập truyền cảm hứng"
+      "writing_style": "Biên tập tài liệu, mỗi cảnh một dữ kiện mới"
     }
   ]
 }
