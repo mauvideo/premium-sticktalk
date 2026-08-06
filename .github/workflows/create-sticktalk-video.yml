@@ -94,7 +94,7 @@ jobs:
           echo "Chủ đề: ${{ inputs.idea }}"
           echo "Thời lượng: ${{ inputs.duration }}"
           echo "Giọng VieNeu: ${{ inputs.vieneu_voice }}"
-          echo "Kịch bản, bố cục và chuyển động được tự động quyết định theo chủ đề"
+          echo "Quy trình: nghiên cứu → lập câu chuyện → tìm ảnh/icon → dựng Vox"
 
       - name: Tạo video
         env:
@@ -109,8 +109,11 @@ jobs:
           chmod +x make_video.sh
           ./make_video.sh
 
-      - name: Kiểm tra video và asset
+      - name: Kiểm tra nghiên cứu, video và asset
         run: |
+          test -s output/research.json
+          test -s output/story.json
+          test -s output/script.txt
           test -s output/video.mp4
           test -s output/preview.png
           test -s output/tts-info.json
@@ -125,6 +128,7 @@ jobs:
           path: |
             output/video.mp4
             output/preview.png
+            output/research.json
             output/script.txt
             output/story.json
             output/tts-info.json
