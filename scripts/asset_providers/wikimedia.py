@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 import urllib.parse
 import urllib.request
+import re
+import unicodedata
 from datetime import datetime, timezone
 
 from .base import AssetProvider, AssetResult, cache_key, download, safe_name
@@ -28,7 +30,7 @@ class WikimediaProvider(AssetProvider):
         request = urllib.request.Request(f"{API}?{params}", headers={"User-Agent": "premium-sticktalk/2.0 (licensed-media-search)"})
         with urllib.request.urlopen(request, timeout=20) as response:
             pages = json.load(response).get("query", {}).get("pages", {}).values()
-        subject_tokens = {x.casefold() for x in subject.split() if len(x) > 2}
+        subject_tokens = normalized_tokens(subject)
         candidates = []
         for page in pages:
             info = (page.get("imageinfo") or [{}])[0]
@@ -37,8 +39,8 @@ class WikimediaProvider(AssetProvider):
             title = page.get("title", "")
             # A real person's result must match multiple name tokens.  Returning
             # no result is safer than silently substituting another person.
-            title_tokens = {x.casefold() for x in title.replace("File:", "").replace("_", " ").split()}
-            if len(subject_tokens) >= 2 and len(subject_tokens & title_tokens) < 2:
+            title_tokens = normalized_tokens(title.replace("File:", ""))
+            if query.get("subject_type") == "person" and len(subject_tokens) >= 2 and len(subject_tokens & title_tokens) < 2:
                 continue
             if not any(mark in license_name.casefold() for mark in FREE_LICENSES):
                 continue
@@ -64,5 +66,9 @@ class WikimediaProvider(AssetProvider):
 
 def re_text(value: str) -> str:
     """Remove the small amount of HTML commonly present in Artist metadata."""
-    import re
     return " ".join(re.sub(r"<[^>]+>", " ", value).split())
+
+
+def normalized_tokens(value: str) -> set[str]:
+    normalized = unicodedata.normalize("NFKC", value).casefold()
+    return {token for token in re.findall(r"[\wÀ-ỹĐđ]+", normalized) if len(token) > 2}

@@ -46,15 +46,34 @@ def _topic_subject(topic: str) -> str:
     return _clean(subject) or _clean(topic)
 
 
-def build_search_queries(subject: str, event: str = "", location: str = "", objects=None) -> list[str]:
+def classify_main_entity(subject: str, supplied_type: str = "") -> str:
+    """Classify the subject without maintaining a catalogue of known names.
+
+    Explicit upstream metadata wins.  The fallback only inspects linguistic
+    shape, which means it works for previously unseen people and subjects.
+    """
+    if supplied_type in {"person", "event", "organization", "place", "concept", "object"}:
+        return supplied_type
+    lower = subject.casefold()
+    if re.match(r"^(?:vì sao|tại sao|cách|how|why)\b", lower):
+        return "concept"
+    if re.match(r"^(?:lịch sử|trận|chiến dịch|sự kiện|history)\b", lower):
+        return "event"
+    words = subject.split()
+    title_words = sum(bool(re.match(r"^[A-ZÀ-ỸĐ]", word)) for word in words)
+    if 2 <= len(words) <= 7 and title_words >= max(2, len(words) - 1):
+        return "person"
+    return "concept"
+
+
+def build_search_queries(subject: str, event: str = "", location: str = "", objects=None, entity_type: str = "person") -> list[str]:
     """Create Vietnamese and English discovery queries for a visual role."""
     objects = objects or []
-    queries = [
-        f'"{subject}" chân dung Wikimedia Commons',
-        f'"{subject}" portrait Wikimedia Commons',
-        f'"{subject}" public domain',
-        f'"{subject}" Openverse',
-    ]
+    if entity_type == "person":
+        queries = [f'"{subject}" chân dung Wikimedia Commons', f'"{subject}" portrait Wikimedia Commons']
+    else:
+        queries = [f'"{subject}" sơ đồ minh họa Wikimedia Commons', f'"{subject}" explanatory diagram Wikimedia Commons']
+    queries += [f'"{subject}" public domain', f'"{subject}" Openverse']
     if event:
         queries += [f'"{subject}" "{event}" ảnh tư liệu', f'"{subject}" "{event}" historical photo', f'"{event}" bản đồ', f'"{event}" map']
     if location:
@@ -70,6 +89,7 @@ def plan_entities(story: dict, topic: str | None = None) -> dict:
     text = " ".join([topic] + [_clean(s.get("narration") or s.get("loi_dan") or s.get("text")) for s in scenes])
     supplied = story.get("entities") or {}
     subject = _clean(supplied.get("mainEntity") or _topic_subject(topic))
+    entity_type = classify_main_entity(subject, _clean(supplied.get("mainEntityType")))
     candidates = [n for n in _names(text) if n.casefold() not in {topic.casefold(), subject.casefold()}]
     years = _unique(YEAR.findall(text))
     organisations = _unique(supplied.get("organizations", []))
@@ -95,6 +115,7 @@ def plan_entities(story: dict, topic: str | None = None) -> dict:
 
     entity_plan = {
         "mainEntity": subject,
+        "mainEntityType": entity_type,
         "secondaryEntities": _unique(supplied.get("secondaryEntities", []) + candidates)[:12],
         "locations": locations,
         "timePeriods": _unique(supplied.get("timePeriods", []) + years),
@@ -103,7 +124,7 @@ def plan_entities(story: dict, topic: str | None = None) -> dict:
         "visualObjects": objects,
         "mapsNeeded": _unique(supplied.get("mapsNeeded", []) + ([f"Bản đồ {place}" for place in locations[:3]] if locations else [])),
         "chartsNeeded": _unique(supplied.get("chartsNeeded", []) + (["Dòng thời gian"] if years else [])),
-        "archivalSearchTerms": build_search_queries(subject, events[0] if events else "", locations[0] if locations else "", objects),
+        "archivalSearchTerms": build_search_queries(subject, events[0] if events else "", locations[0] if locations else "", objects, entity_type),
     }
     for index, scene in enumerate(scenes):
         narration = _clean(scene.get("narration") or scene.get("loi_dan") or scene.get("text"))
@@ -114,12 +135,13 @@ def plan_entities(story: dict, topic: str | None = None) -> dict:
         asset_roles = ["paper-background", "texture", "main-subject", "context-evidence", "data-map-icon", "annotation", "typography"]
         scene["entityVisualPlan"] = {
             "mainSubject": subject,
+            "mainSubjectType": entity_type,
             "supportingSubjects": _unique(scene_names + entity_plan["secondaryEntities"])[:4],
             "location": location,
             "timePeriod": scene_years[0] if scene_years else (years[index % len(years)] if years else ""),
             "event": event,
             "visualEvidence": _unique([event, location] + objects)[:4],
-            "searchQueries": build_search_queries(subject, event, location, objects),
+            "searchQueries": build_search_queries(subject, event, location, objects, entity_type),
             "assetRoles": asset_roles,
         }
         scene.setdefault("assetRoles", asset_roles)

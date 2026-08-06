@@ -20,7 +20,7 @@ def keyword(scene,template):
  style={'stick-figure':'stick figure simple action svg','paper-sketch':'hand drawn doodle line art','paper-cut-documentary':'documentary portrait paper collage','kinetic-captions':'dark minimal background empty space'}.get(template,'portrait real photo motivation')
  ep=scene.get('entityVisualPlan',{})
  queries=ep.get('searchQueries') or []
- return {'primary':queries[0] if queries else f'{base} {style}', 'secondary':queries[1:] or words[5:10], 'asset_type':'photo' if template in PHOTO_TEMPLATES|PAPER else 'svg', 'style':style, 'emotion':'documentary', 'subject':ep.get('mainSubject') or (words[0] if words else 'subject'), 'event':ep.get('event',''), 'setting':ep.get('location') or 'vertical video', 'template':template, 'size':'9:16'}
+ return {'primary':queries[0] if queries else f'{base} {style}', 'secondary':queries[1:] or words[5:10], 'asset_type':'photo' if template in PHOTO_TEMPLATES|PAPER else 'svg', 'style':style, 'emotion':'documentary', 'subject':ep.get('mainSubject') or (words[0] if words else 'subject'), 'subject_type':ep.get('mainSubjectType','concept'), 'event':ep.get('event',''), 'setting':ep.get('location') or 'vertical video', 'template':template, 'size':'9:16'}
 
 class AssetManager:
  def __init__(self,template:str,story_path='assets/story.json',assets_dir='assets/generated-assets',output_dir='output',cache_dir='assets/.asset-cache'):
