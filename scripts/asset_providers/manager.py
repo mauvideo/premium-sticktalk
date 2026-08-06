@@ -30,6 +30,7 @@ def keyword(scene: dict) -> dict:
         'emotion': 'documentary',
         'subject': subject,
         'subject_type': entity_plan.get('mainSubjectType', 'concept'),
+        'identity_required': bool(entity_plan.get('identityRequired')),
         'event': event,
         'setting': location or 'documentary context',
         'template': VOX_TEMPLATE,
@@ -56,7 +57,12 @@ class AssetManager:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
-    def providers(self):
+    def providers(self, query: dict):
+        # A named person's hero image must come from Wikimedia metadata that
+        # matches the person's name. Stock-photo providers may not substitute
+        # another face. Context scenes may use broader archival/stock imagery.
+        if query.get('identity_required'):
+            return [WikimediaProvider(self.assets_dir, self.cache_dir)]
         return [
             WikimediaProvider(self.assets_dir, self.cache_dir),
             PexelsProvider(self.assets_dir, self.cache_dir),
@@ -82,7 +88,7 @@ class AssetManager:
         if cached and cached.source_url not in self.used:
             return cached
 
-        for provider in self.providers():
+        for provider in self.providers(query):
             for _ in range(2):
                 try:
                     result = provider.search(query, scene_index, self.used)
@@ -92,6 +98,12 @@ class AssetManager:
                         return result
                 except Exception as error:  # noqa: BLE001
                     print(f'Asset provider {provider.name} skipped: {error}')
+
+        if query.get('identity_required'):
+            raise RuntimeError(
+                f"Không tìm được ảnh xác minh đúng nhân vật '{query['subject']}' "
+                "trên Wikimedia Commons. Dừng render để không dùng nhầm người."
+            )
 
         fallback = LocalAssetsProvider(self.assets_dir, self.cache_dir).search(
             query, scene_index, self.used
@@ -104,10 +116,17 @@ class AssetManager:
             story = plan_entities(story)
 
         manifest = []
+        verified_subject_images = 0
         for scene_index, scene in enumerate(story.get('scenes', []), start=1):
             query = keyword(scene)
             result = self.get(query, scene_index)
             relative_path = str(Path(result.file).as_posix())
+            identity_verified = bool(
+                query.get('identity_required')
+                and result.provider == 'wikimedia-commons'
+            )
+            if identity_verified:
+                verified_subject_images += 1
 
             scene.update({
                 'asset': relative_path,
@@ -119,22 +138,30 @@ class AssetManager:
                 'assetSource': result.source_url,
                 'searchQuery': result.search_query,
                 'qualityScore': result.qualityScore,
+                'identityVerified': identity_verified,
+                'cutoutStyle': 'white-outline-yellow-shadow',
             })
 
             item = result.manifest()
-            item['role'] = 'main-subject'
+            item['role'] = 'main-subject' if query.get('identity_required') else 'context-evidence'
             item['fallback'] = result.provider == 'local-assets'
             item['identityQuery'] = query['subject']
+            item['identityVerified'] = identity_verified
             item['searchQueries'] = [query['primary'], *query['secondary']]
+            item['cutoutStyle'] = 'white-outline-yellow-shadow'
             if item['fallback']:
                 item['fallbackReason'] = (
-                    'Không tìm thấy asset đúng chủ đề có giấy phép và danh tính rõ ràng; '
-                    'đã dùng minh họa trung tính, không thay bằng người khác.'
+                    'Không tìm thấy asset bối cảnh đúng chủ đề có giấy phép rõ ràng; '
+                    'đã dùng minh họa trung tính và không thay bằng người khác.'
                 )
             manifest.append(item)
 
-        story['assetProviderSystem'] = 'vox-free-licensed-assets-v1'
+        if story.get('entityVisualPlan', {}).get('mainEntityType') == 'person' and verified_subject_images < 1:
+            raise RuntimeError('Video về nhân vật phải có ít nhất một ảnh đúng danh tính đã xác minh.')
+
+        story['assetProviderSystem'] = 'vox-free-licensed-assets-v2'
         story['template'] = VOX_TEMPLATE
+        story['verifiedSubjectImages'] = verified_subject_images
         self.story_path.write_text(
             json.dumps(story, ensure_ascii=False, indent=2), encoding='utf-8'
         )
@@ -146,7 +173,8 @@ class AssetManager:
         for item in manifest:
             credits.append(
                 f"Scene {item['scene']}: {item['provider']} — {item['author']} — "
-                f"{item['license']} — {item['source_url']} — quality {item['qualityScore']}/100"
+                f"{item['license']} — {item['source_url']} — quality {item['qualityScore']}/100 — "
+                f"identityVerified={item['identityVerified']}"
             )
         (self.output_dir / 'credits.txt').write_text(
             '\n'.join(credits) + '\n', encoding='utf-8'
