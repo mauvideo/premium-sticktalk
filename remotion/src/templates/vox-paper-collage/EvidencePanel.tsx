@@ -11,8 +11,14 @@ const Graphic: React.FC<{item: DataLayer; index: number}> = ({item, index}) => {
 
 export const EvidencePanel: React.FC<{items: DataLayer[]; index: number; location?: string}> = ({items, index, location}) => {
   const frame = useCurrentFrame();
-  const enter = interpolate(frame, [8, 22], [70, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  return <div data-layer="data-map-chart-timeline" style={{position:'absolute',right:index%2 ? 48 : 610,top:1030,width:410,transform:`translateY(${enter}px) rotate(${index%2 ? 2 : -2}deg)`,display:'grid',gap:14}}>
-    {items.slice(0,2).map((item,i)=><div key={`${item.type}-${i}`} style={{background:C.paper,padding:'14px 20px 16px',clipPath:tear(index+i+8),border:`5px solid ${C.ink}`,boxShadow:`10px 12px 0 ${i ? C.red : C.yellow}`}}><Graphic item={item} index={index+i}/><div style={{font:'900 25px Arial',textTransform:'uppercase'}}>{item.label}</div>{location && i===0 ? <div style={{font:'700 19px Arial',marginTop:5,color:'#555'}}>{location}</div>:null}</div>)}
+  const enter = interpolate(frame, [8, 22], [60, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const item = items[0];
+  if (!item) return null;
+  return <div data-layer="data-map-chart-timeline" style={{position:'absolute',left:64,top:1215,width:330,transform:`translateY(${enter}px) rotate(-2deg)`,zIndex:8}}>
+    <div style={{background:C.paper,padding:'12px 16px 14px',clipPath:tear(index+8),border:`5px solid ${C.ink}`,boxShadow:`10px 12px 0 ${C.yellow}`}}>
+      <Graphic item={item} index={index}/>
+      <div style={{font:'900 23px Arial',textTransform:'uppercase'}}>{item.label}</div>
+      {location ? <div style={{font:'700 18px Arial',marginTop:4,color:'#555'}}>{location}</div>:null}
+    </div>
   </div>;
 };
