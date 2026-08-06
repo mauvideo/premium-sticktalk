@@ -19,13 +19,12 @@ on:
       tone:
         description: "Giọng điệu nội dung"
         required: true
-        default: "Truyền động lực"
+        default: "Sâu sắc"
         type: choice
         options:
           - "Sâu sắc"
           - "Hài hước"
-          - "Truyền động lực"
-          - "Chữa lành"
+          - "Trung tính"
       vieneu_voice:
         description: "Giọng đọc VieNeu-TTS Premium"
         required: true
@@ -55,7 +54,7 @@ on:
       voice_emotion:
         description: "Phong cách đọc VieNeu"
         required: true
-        default: "Tự nhiên"
+        default: "Kể chuyện"
         type: choice
         options:
           - "Tự nhiên"
@@ -109,25 +108,25 @@ jobs:
 
       - name: Hiển thị cấu hình
         run: |
-          echo "Dự án: ${{ inputs.project }}"
-          echo "Mẫu video: ${{ inputs.template }}"
+          echo "Mẫu video: Vox giấy cắt"
           echo "Chủ đề: ${{ inputs.idea }}"
           echo "Thời lượng: ${{ inputs.duration }}"
-          echo "Định dạng nội dung: ${{ inputs.content_format }}"
           echo "Giọng điệu: ${{ inputs.tone }}"
           echo "Giọng VieNeu: ${{ inputs.vieneu_voice }}"
           echo "Phong cách đọc: ${{ inputs.voice_emotion }}"
+          echo "Pipeline: phim tài liệu tổng quát, không dùng nội dung động lực/doanh nhân"
           echo "Asset: nguồn miễn phí có giấy phép rõ ràng"
-          echo "Fallback: tài nguyên SVG cục bộ"
 
       - name: Tạo video
         env:
           VIDEO_PROJECT: motivation
-          VIDEO_TEMPLATE: ${{ inputs.template == 'Điện ảnh AI' && 'prompt-to-video' || inputs.template == 'Phụ đề động' && 'kinetic-captions' || inputs.template == 'Chuyển cảnh mượt' && 'smooth-transitions' || inputs.template == 'Phác thảo trên giấy' && 'paper-sketch' || inputs.template == 'Cắt giấy tài liệu' && 'paper-cut-documentary' || inputs.template == 'Vox giấy cắt' && 'vox-paper-collage' || 'business-motivation' }}
+          VIDEO_TEMPLATE: vox-paper-collage
           VIDEO_IDEA: ${{ inputs.idea }}
           VIDEO_DURATION: ${{ inputs.duration == '30 giây' && '30' || inputs.duration == '60 giây' && '60' || '45' }}
-          VIDEO_TONE: ${{ inputs.tone == 'Sâu sắc' && 'sâu_sắc' || inputs.tone == 'Hài hước' && 'hài_hước' || inputs.tone == 'Chữa lành' && 'chữa_lành' || 'truyền_động_lực' }}
-          VIDEO_CONTENT_FORMAT: ${{ inputs.content_format == 'Đối thoại' && 'dialogue' || inputs.content_format == 'Tự động' && 'hybrid' || 'narration' }}
+          VIDEO_TONE: ${{ inputs.tone == 'Hài hước' && 'hài_hước' || inputs.tone == 'Trung tính' && 'trung_tính' || 'sâu_sắc' }}
+          VIDEO_CONTENT_FORMAT: narration
+          VIDEO_SCRIPT_MODE: Phim tài liệu
+          VIDEO_WRITING_STYLE: Bám sát chủ đề, mỗi cảnh một dữ kiện mới
           VIENEU_VOICE: ${{ inputs.vieneu_voice }}
           VIENEU_CUSTOM_VOICE_ID: ${{ inputs.custom_voice_id }}
           VIENEU_EMOTION: ${{ inputs.voice_emotion }}
