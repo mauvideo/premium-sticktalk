@@ -3,26 +3,6 @@ name: Tạo video Premium StickTalk
 on:
   workflow_dispatch:
     inputs:
-      project:
-        description: "Dự án video"
-        required: true
-        default: "Động lực"
-        type: choice
-        options:
-          - "Động lực"
-      template:
-        description: "Mẫu video Động lực (nguồn Remotion mã nguồn mở)"
-        required: true
-        default: "Điện ảnh AI"
-        type: choice
-        options:
-          - "Điện ảnh AI"
-          - "Phụ đề động"
-          - "Chuyển cảnh mượt"
-          - "Phác thảo trên giấy"
-          - "Động lực doanh nhân"
-          - "Cắt giấy tài liệu"
-          - "Vox giấy cắt"
       idea:
         description: "Chủ đề video"
         required: true
@@ -36,18 +16,6 @@ on:
           - "30 giây"
           - "45 giây"
           - "60 giây"
-      content_format:
-        description: "Định dạng nội dung"
-        required: true
-        default: "Tự động"
-        type: choice
-        options:
-          - "Tự động"
-          - "Phim tài liệu"
-          - "Kể chuyện"
-          - "Truyền cảm hứng"
-          - "Kinh doanh"
-          - "Đối thoại"
       tone:
         description: "Giọng điệu nội dung"
         required: true
