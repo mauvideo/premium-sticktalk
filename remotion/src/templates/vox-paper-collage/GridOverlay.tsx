@@ -1,0 +1,1 @@
+import React from 'react';export const GridOverlay:React.FC<{offset:number}>=({offset})=><div data-layer="technical-grid" style={{position:'absolute',inset:-100,opacity:.2,transform:`translate(${offset}px,${-offset/2}px)`,backgroundImage:'linear-gradient(#111 1px,transparent 1px),linear-gradient(90deg,#111 1px,transparent 1px)',backgroundSize:'64px 64px'}}/>;
