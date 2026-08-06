@@ -53,7 +53,7 @@ printf '%s\n' \
   "Chủ đề: $IDEA" \
   "Thời lượng: $DURATION giây" \
   "Giọng VieNeu: $VOICE" \
-  "Quy trình: nghiên cứu → lập câu chuyện → tìm ảnh/icon → dựng Vox"
+  "Quy trình: nghiên cứu → lập câu chuyện → cân thoại theo thời lượng → tìm ảnh/icon → dựng Vox"
 
 mkdir -p assets output remotion/public/assets
 
@@ -67,6 +67,12 @@ python3 scripts/generate_story.py \
 python3 scripts/ground_story.py \
   --story assets/story.json \
   --topic "$IDEA"
+
+# Cân lời thoại gần đủ thời lượng người dùng chọn, chỉ dùng dữ kiện thật từ
+# đúng bài nghiên cứu; không chèn câu đệm hoặc lặp ý để kéo dài.
+python3 scripts/fit_factual_narration.py \
+  --story assets/story.json \
+  --duration "$DURATION"
 
 python3 -m scripts.entity_visual_planner \
   --story assets/story.json \
