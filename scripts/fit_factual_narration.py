@@ -149,9 +149,9 @@ def fit(story: dict, duration: int) -> dict:
         "method": "factual-source-only",
     }
     if final_words < low:
-        raise RuntimeError(
-            f"Nguồn dữ kiện không đủ để tạo lời thoại gần {duration}s: "
-            f"ước tính {estimated}s. Không thêm câu đệm chung chung."
+        print(
+            f"Cảnh báo: nguồn dữ kiện chỉ đủ khoảng {estimated}s/{duration}s; "
+            "tiếp tục render và không thêm câu đệm chung chung."
         )
     return story
 
