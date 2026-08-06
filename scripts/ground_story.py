@@ -1,47 +1,124 @@
 #!/usr/bin/env python3
 """Research-first story planning for arbitrary Vox documentary topics.
 
-The module never hardcodes a person or topic. It resolves the current user
-request, extracts factual material, rewrites every scene from those facts, and
-creates scene-specific photo/icon queries before asset planning.
+The module resolves the complete subject requested by the user, builds factual
+research, rewrites every scene, and creates scene-specific photo/icon queries.
+Generic prefixes such as "lịch sử" or "cuộc đời" are not treated as subjects.
 """
 from __future__ import annotations
 
 import argparse
 import json
 import re
+import unicodedata
 import urllib.parse
 import urllib.request
 from pathlib import Path
 
 API = "https://vi.wikipedia.org/w/api.php"
-USER_AGENT = "premium-sticktalk/4.1 (research-first-story-engine)"
+USER_AGENT = "premium-sticktalk/4.2 (research-first-story-engine)"
 BANNED_FILLER = (
     "mỗi bước nhỏ", "đừng bỏ cuộc", "động lực", "khẩu hiệu", "nút thắt",
     "câu hỏi đúng", "hành động rõ ràng", "phản ứng quen thuộc",
     "tình huống rất cụ thể", "một lựa chọn đang", "đổi hướng đúng chỗ",
 )
+GENERIC_PREFIXES = (
+    "lịch sử", "cuộc đời", "tiểu sử", "sự nghiệp", "câu chuyện về",
+    "tìm hiểu về", "video về", "kể về", "giới thiệu về", "phim về",
+)
+STOP_WORDS = {
+    "lịch", "sử", "cuộc", "đời", "tiểu", "sự", "nghiệp", "câu", "chuyện",
+    "tìm", "hiểu", "video", "phim", "về", "của", "và", "theo",
+}
 
 
 def _get(params: dict) -> dict:
     query = urllib.parse.urlencode({**params, "format": "json", "origin": "*"})
-    request = urllib.request.Request(
-        f"{API}?{query}", headers={"User-Agent": USER_AGENT}
-    )
+    request = urllib.request.Request(f"{API}?{query}", headers={"User-Agent": USER_AGENT})
     with urllib.request.urlopen(request, timeout=25) as response:
         return json.load(response)
 
 
+def _normalize(value: str) -> str:
+    normalized = unicodedata.normalize("NFKC", value).casefold()
+    return " ".join(re.findall(r"[\wÀ-ỹĐđ]+", normalized))
+
+
+def _tokens(value: str) -> list[str]:
+    return [token for token in _normalize(value).split() if len(token) > 1]
+
+
+def subject_from_prompt(topic: str) -> str:
+    subject = re.sub(r"\s+", " ", topic).strip(" .,:;-_")
+    changed = True
+    while changed:
+        changed = False
+        lowered = subject.casefold()
+        for prefix in GENERIC_PREFIXES:
+            marker = prefix + " "
+            if lowered.startswith(marker):
+                subject = subject[len(marker):].strip(" .,:;-_")
+                changed = True
+                break
+    if not subject:
+        raise RuntimeError(f"Không xác định được chủ thể chính từ yêu cầu: {topic}")
+    return subject
+
+
+def _candidate_score(title: str, subject: str, search_index: int) -> tuple[int, int]:
+    title_norm = _normalize(title)
+    subject_norm = _normalize(subject)
+    subject_tokens = [token for token in _tokens(subject) if token not in STOP_WORDS]
+    title_tokens = set(_tokens(title))
+    overlap = sum(1 for token in subject_tokens if token in title_tokens)
+    score = overlap * 20
+    if title_norm == subject_norm:
+        score += 100
+    elif subject_norm in title_norm:
+        score += 45
+    if subject_tokens and overlap == len(subject_tokens):
+        score += 35
+    return (-score, search_index)
+
+
+def _validate_resolution(topic: str, subject: str, canonical: str) -> None:
+    subject_tokens = [token for token in _tokens(subject) if token not in STOP_WORDS]
+    canonical_tokens = set(_tokens(canonical))
+    overlap = [token for token in subject_tokens if token in canonical_tokens]
+    minimum = 1 if len(subject_tokens) == 1 else max(2, (len(subject_tokens) + 1) // 2)
+    if len(overlap) < minimum:
+        raise RuntimeError(
+            "Wikipedia đã trả về sai chủ đề. "
+            f"Yêu cầu='{topic}', chủ thể='{subject}', kết quả='{canonical}'."
+        )
+
+
 def research_topic(topic: str) -> dict:
-    search = _get({
-        "action": "query", "list": "search", "srsearch": topic,
-        "srlimit": 5, "utf8": 1,
-    })
-    results = search.get("query", {}).get("search", [])
-    if not results:
+    subject = subject_from_prompt(topic)
+    variants = [f'intitle:"{subject}"', f'"{subject}"', subject]
+    combined: list[dict] = []
+    seen_titles: set[str] = set()
+    for query_text in variants:
+        search = _get({
+            "action": "query", "list": "search", "srsearch": query_text,
+            "srlimit": 10, "utf8": 1,
+        })
+        for item in search.get("query", {}).get("search", []):
+            title = str(item.get("title") or "").strip()
+            if title and title not in seen_titles:
+                seen_titles.add(title)
+                combined.append(item)
+        if any(_normalize(item.get("title", "")) == _normalize(subject) for item in combined):
+            break
+
+    if not combined:
         raise RuntimeError(f"Không tìm thấy nguồn nghiên cứu cho chủ đề: {topic}")
 
-    title = results[0]["title"]
+    ranked = sorted(
+        enumerate(combined),
+        key=lambda pair: _candidate_score(str(pair[1].get("title") or ""), subject, pair[0]),
+    )
+    title = str(ranked[0][1]["title"])
     page = _get({
         "action": "query", "prop": "extracts|pageimages|info|categories",
         "titles": title, "explaintext": 1, "exsectionformat": "plain",
@@ -49,18 +126,19 @@ def research_topic(topic: str) -> dict:
         "inprop": "url", "cllimit": 30, "redirects": 1,
     })
     data = next(iter(page.get("query", {}).get("pages", {}).values()), {})
+    canonical = str(data.get("title") or title)
+    _validate_resolution(topic, subject, canonical)
+
     extract = re.sub(r"\s+", " ", str(data.get("extract") or "")).strip()
     if len(extract) < 180:
         raise RuntimeError(f"Nguồn nghiên cứu quá ít dữ liệu cho chủ đề: {topic}")
 
-    categories = [
-        str(item.get("title", "")).replace("Thể loại:", "")
-        for item in data.get("categories", [])
-    ]
+    categories = [str(item.get("title", "")).replace("Thể loại:", "") for item in data.get("categories", [])]
     image = data.get("original") or data.get("thumbnail") or {}
     return {
         "topicInput": topic,
-        "canonicalTitle": str(data.get("title") or title),
+        "resolvedSubject": subject,
+        "canonicalTitle": canonical,
         "sourceUrl": str(data.get("fullurl") or ""),
         "provider": "vi.wikipedia.org",
         "extract": extract,
@@ -116,10 +194,7 @@ def sentence_score(sentence: str, canonical: str, index: int) -> tuple[int, int]
 
 def choose_facts(research: dict, count: int) -> list[str]:
     candidates = split_sentences(research["extract"])
-    ranked = sorted(
-        enumerate(candidates),
-        key=lambda item: sentence_score(item[1], research["canonicalTitle"], item[0]),
-    )
+    ranked = sorted(enumerate(candidates), key=lambda item: sentence_score(item[1], research["canonicalTitle"], item[0]))
     selected: list[tuple[int, str]] = []
     seen: set[str] = set()
     for original_index, sentence in ranked:
@@ -137,7 +212,6 @@ def choose_facts(research: dict, count: int) -> list[str]:
 
 
 def narration_from_fact(fact: str, canonical: str, index: int) -> str:
-    """Create concise voice-over while preserving the factual sentence."""
     clean = re.sub(r"\s+", " ", fact).strip()
     if len(clean) > 190:
         clauses = re.split(r"(?<=[,;:])\s+", clean)
@@ -187,8 +261,7 @@ def build_story(story: dict, topic: str) -> dict:
         year = year_match.group(0) if year_match else ""
         location = extract_location(fact, research)
         scene_title = headline(fact, canonical, index)
-        fact_tokens = re.findall(r"[\wÀ-ỹĐđ]+", fact)[:8]
-        fact_keywords = " ".join(fact_tokens)
+        fact_keywords = " ".join(re.findall(r"[\wÀ-ỹĐđ]+", fact)[:8])
 
         scene["narration"] = narration
         scene["loi_dan"] = narration
@@ -245,15 +318,13 @@ def build_story(story: dict, topic: str) -> dict:
     }
 
     all_text = " ".join(scene["narration"].casefold() for scene in scenes)
-    relevant_tokens = [token for token in canonical.casefold().split() if len(token) > 3]
+    relevant_tokens = [token for token in _tokens(canonical) if token not in STOP_WORDS]
     if relevant_tokens and not any(token in all_text for token in relevant_tokens):
         raise RuntimeError("Kịch bản không chứa dữ kiện nhận diện đúng chủ đề")
     if any(phrase in all_text for phrase in BANNED_FILLER):
         raise RuntimeError("Kịch bản còn chứa câu đệm chung chung bị cấm")
 
-    Path("assets/research.json").write_text(
-        json.dumps(story["research"], ensure_ascii=False, indent=2), encoding="utf-8"
-    )
+    Path("assets/research.json").write_text(json.dumps(story["research"], ensure_ascii=False, indent=2), encoding="utf-8")
     return story
 
 
@@ -269,9 +340,8 @@ def main() -> None:
     path.write_text(json.dumps(story, ensure_ascii=False, indent=2), encoding="utf-8")
 
     Path("output").mkdir(exist_ok=True)
-    Path("output/script.txt").write_text(
-        "\n".join(scene["narration"] for scene in story["scenes"]), encoding="utf-8"
-    )
+    Path("output/script.txt").write_text("\n".join(scene["narration"] for scene in story["scenes"]), encoding="utf-8")
+    print(f"Chủ thể đã tách từ yêu cầu: {story['research']['resolvedSubject']}")
     print(f"Đã nghiên cứu và lập kịch bản theo chủ đề: {story['research']['canonicalTitle']}")
     print(f"Loại chủ đề: {story['research']['entityType']}")
     print(f"Số dữ kiện mới: {len(story['research']['timeline'])}")
