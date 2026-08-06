@@ -57,8 +57,12 @@ def combined_similarity(a: str, b: str) -> dict[str, float]:
     keyword = keyword_overlap(a, b)
     cosine = cosine_similarity(a, b)
     semantic = semantic_similarity(a, b)
-    combined = max(keyword, cosine * 0.9, semantic * 0.85)
+    # Semantic buckets are intentionally broad; cap their influence at the
+    # editorial ceiling so a shared word such as "action" alone cannot condemn
+    # two otherwise different scenes.
+    combined = max(keyword, cosine * 0.9, semantic * 0.55)
     return {"keywordOverlap": keyword, "cosineSimilarity": cosine, "semanticSimilarity": semantic, "combinedSimilarity": combined}
 
-def too_similar(a: str, b: str, threshold: float = 0.75) -> bool:
+def too_similar(a: str, b: str, threshold: float = 0.55) -> bool:
+    """Return whether scenes exceed the editorial repetition ceiling."""
     return combined_similarity(a, b)["combinedSimilarity"] > threshold
