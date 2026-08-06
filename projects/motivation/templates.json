@@ -13,7 +13,7 @@
       "style": "ke_chuyen_tai_lieu",
       "motion_level": "trung_bình",
       "script_mode": "Kể chuyện",
-      "writing_style": "Bám sát chủ đề"
+      "writing_style": "Tin tức rõ ràng"
     },
     {
       "id": "kinetic-captions",
@@ -24,7 +24,7 @@
       "style": "phu_de_tai_lieu",
       "motion_level": "viral_tiktok",
       "script_mode": "Một người dẫn chuyện",
-      "writing_style": "Ngắn gọn, đúng dữ kiện"
+      "writing_style": "Ngắn gọn TikTok"
     },
     {
       "id": "smooth-transitions",
@@ -35,7 +35,7 @@
       "style": "tai_lieu_chuyen_canh",
       "motion_level": "nhiều",
       "script_mode": "Một người dẫn chuyện",
-      "writing_style": "Bám sát chủ đề"
+      "writing_style": "Tin tức rõ ràng"
     },
     {
       "id": "paper-sketch",
@@ -46,7 +46,7 @@
       "style": "phac_thao_tai_lieu",
       "motion_level": "nhẹ",
       "script_mode": "Kể chuyện",
-      "writing_style": "Bám sát chủ đề"
+      "writing_style": "Tin tức rõ ràng"
     },
     {
       "id": "paper-cut-documentary",
@@ -68,7 +68,7 @@
       "style": "vox_giay_cat",
       "motion_level": "nhiều",
       "script_mode": "Phim tài liệu",
-      "writing_style": "Biên tập tài liệu, mỗi cảnh một dữ kiện mới"
+      "writing_style": "Tin tức rõ ràng"
     }
   ]
 }
