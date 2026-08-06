@@ -16,15 +16,6 @@ on:
           - "30 giây"
           - "45 giây"
           - "60 giây"
-      tone:
-        description: "Giọng điệu nội dung"
-        required: true
-        default: "Sâu sắc"
-        type: choice
-        options:
-          - "Sâu sắc"
-          - "Hài hước"
-          - "Trung tính"
       vieneu_voice:
         description: "Giọng đọc VieNeu-TTS Premium"
         required: true
@@ -51,15 +42,6 @@ on:
         required: false
         default: ""
         type: string
-      voice_emotion:
-        description: "Phong cách đọc VieNeu"
-        required: true
-        default: "Kể chuyện"
-        type: choice
-        options:
-          - "Tự nhiên"
-          - "Kể chuyện"
-          - "Tin tức"
 
 permissions:
   contents: read
@@ -108,28 +90,18 @@ jobs:
 
       - name: Hiển thị cấu hình
         run: |
-          echo "Mẫu video: Vox giấy cắt"
+          echo "Engine: Vox Paper Collage"
           echo "Chủ đề: ${{ inputs.idea }}"
           echo "Thời lượng: ${{ inputs.duration }}"
-          echo "Giọng điệu: ${{ inputs.tone }}"
           echo "Giọng VieNeu: ${{ inputs.vieneu_voice }}"
-          echo "Phong cách đọc: ${{ inputs.voice_emotion }}"
-          echo "Pipeline: phim tài liệu tổng quát, không dùng nội dung động lực/doanh nhân"
-          echo "Asset: nguồn miễn phí có giấy phép rõ ràng"
+          echo "Kịch bản, bố cục và chuyển động được tự động quyết định theo chủ đề"
 
       - name: Tạo video
         env:
-          VIDEO_PROJECT: motivation
-          VIDEO_TEMPLATE: vox-paper-collage
           VIDEO_IDEA: ${{ inputs.idea }}
           VIDEO_DURATION: ${{ inputs.duration == '30 giây' && '30' || inputs.duration == '60 giây' && '60' || '45' }}
-          VIDEO_TONE: ${{ inputs.tone == 'Hài hước' && 'hài_hước' || inputs.tone == 'Trung tính' && 'trung_tính' || 'sâu_sắc' }}
-          VIDEO_CONTENT_FORMAT: narration
-          VIDEO_SCRIPT_MODE: Phim tài liệu
-          VIDEO_WRITING_STYLE: Bám sát chủ đề, mỗi cảnh một dữ kiện mới
           VIENEU_VOICE: ${{ inputs.vieneu_voice }}
           VIENEU_CUSTOM_VOICE_ID: ${{ inputs.custom_voice_id }}
-          VIENEU_EMOTION: ${{ inputs.voice_emotion }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
           PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
           UNSPLASH_ACCESS_KEY: ${{ secrets.UNSPLASH_ACCESS_KEY }}
