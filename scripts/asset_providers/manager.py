@@ -9,18 +9,36 @@ from .local_assets import LocalAssetsProvider
 from .wikimedia import WikimediaProvider
 from scripts.entity_visual_planner import plan_entities
 
-PHOTO_TEMPLATES={'prompt-to-video','business-motivation','smooth-transitions','kinetic-captions'}
-PAPER={'paper-cut-documentary'}
+PHOTO_TEMPLATES={'prompt-to-video','smooth-transitions','kinetic-captions'}
+PAPER={'paper-cut-documentary','vox-paper-collage'}
 STOP={'và','là','của','một','những','các','cho','trong','khi','để','the','and','with','you','your'}
 
 def keyword(scene,template):
  text=' '.join(str(scene.get(k,'')) for k in ('headline','narration','text'))
  words=[w for w in re.findall(r"[\wÀ-ỹ]+",text.lower()) if len(w)>2 and w not in STOP]
- base=' '.join(words[:5]) or 'motivation focus'
- style={'stick-figure':'stick figure simple action svg','paper-sketch':'hand drawn doodle line art','paper-cut-documentary':'documentary portrait paper collage','kinetic-captions':'dark minimal background empty space'}.get(template,'portrait real photo motivation')
+ base=' '.join(words[:5]) or 'documentary subject'
+ style={
+  'stick-figure':'stick figure simple action svg',
+  'paper-sketch':'hand drawn documentary line art',
+  'paper-cut-documentary':'documentary portrait paper collage',
+  'vox-paper-collage':'editorial documentary portrait paper collage',
+  'kinetic-captions':'dark minimal documentary background empty space',
+ }.get(template,'editorial documentary real photo')
  ep=scene.get('entityVisualPlan',{})
  queries=ep.get('searchQueries') or []
- return {'primary':queries[0] if queries else f'{base} {style}', 'secondary':queries[1:] or words[5:10], 'asset_type':'photo' if template in PHOTO_TEMPLATES|PAPER else 'svg', 'style':style, 'emotion':'documentary', 'subject':ep.get('mainSubject') or (words[0] if words else 'subject'), 'subject_type':ep.get('mainSubjectType','concept'), 'event':ep.get('event',''), 'setting':ep.get('location') or 'vertical video', 'template':template, 'size':'9:16'}
+ return {
+  'primary':queries[0] if queries else f'{base} {style}',
+  'secondary':queries[1:] or words[5:10],
+  'asset_type':'photo' if template in PHOTO_TEMPLATES|PAPER else 'svg',
+  'style':style,
+  'emotion':'documentary',
+  'subject':ep.get('mainSubject') or (words[0] if words else 'subject'),
+  'subject_type':ep.get('mainSubjectType','concept'),
+  'event':ep.get('event',''),
+  'setting':ep.get('location') or 'documentary context',
+  'template':template,
+  'size':'9:16'
+ }
 
 class AssetManager:
  def __init__(self,template:str,story_path='assets/story.json',assets_dir='assets/generated-assets',output_dir='output',cache_dir='assets/.asset-cache'):
@@ -52,7 +70,7 @@ class AssetManager:
    q=keyword(scene,self.template); r=self.get(q,i); rel=str(Path(r.file).as_posix())
    scene.update({'asset':rel,'image':rel,'assetType':r.asset_type,'assetProvider':r.provider,'assetAuthor':r.author,'assetLicense':r.license,'assetSource':r.source_url,'searchQuery':r.search_query,'qualityScore':r.qualityScore})
    item=r.manifest(); item['role']='main-subject'; item['fallback']=r.provider=='local-assets'; item['identityQuery']=q['subject']; item['searchQueries']=[q['primary'],*q['secondary']]
-   if item['fallback']: item['fallbackReason']='No verified free-licensed matching portrait was available; neutral illustration used (never another person).'
+   if item['fallback']: item['fallbackReason']='No verified free-licensed matching asset was available; a neutral illustration was used without changing the subject identity.'
    manifest.append(item)
   story['assetProviderSystem']='free-licensed-assets-v2'
   self.story_path.write_text(json.dumps(story,ensure_ascii=False,indent=2),encoding='utf-8')
@@ -70,4 +88,4 @@ def generate_assets(story, template):
 
 if __name__=='__main__':
  p=Path(os.getenv('STORY_PATH','assets/story.json')); s=json.loads(p.read_text(encoding='utf-8'))
- generate_assets(p, os.getenv('VIDEO_TEMPLATE',s.get('template','prompt-to-video')))
+ generate_assets(p, os.getenv('VIDEO_TEMPLATE',s.get('template','vox-paper-collage')))
