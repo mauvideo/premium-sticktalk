@@ -41,10 +41,22 @@ def create_visual_plan(scene: dict, story: dict, scene_index: int) -> dict:
     tokens = _tokens(text + " " + str(story.get("title") or story.get("tieu_de", "")))
     seed = int(scene.get("seed") or (scene_index + 1) * 97)
     icons = FAILURE_ICONS if {"khó", "thất", "bại", "rắc", "xung", "đột"} & tokens else SUCCESS_ICONS
+    entity = scene.get("entityVisualPlan") or {}
+    global_entities = story.get("entityVisualPlan") or {}
+    evidence = list(entity.get("visualEvidence") or [])
+    maps = list(global_entities.get("mapsNeeded") or [])
+    charts = list(global_entities.get("chartsNeeded") or [])
+    time_period = str(entity.get("timePeriod") or "")
+    data_layers = ([{"type": "map", "label": maps[scene_index % len(maps)]}] if maps else [])
+    data_layers += ([{"type": "chart", "label": charts[scene_index % len(charts)]}] if charts else [])
+    if time_period:
+        data_layers.append({"type": "timeline", "label": time_period})
+    if not data_layers:
+        data_layers.append({"type": "evidence", "label": entity.get("event") or "Dữ kiện chính"})
     plan = {
         "background": _background(tokens, seed + scene_index),
-        "mainCharacter": _character(tokens, seed + scene_index * 2),
-        "secondaryObjects": [_pick(OBJECTS, seed + scene_index), _pick(OBJECTS, seed + scene_index + 3)],
+        "mainCharacter": entity.get("mainSubject") or _character(tokens, seed + scene_index * 2),
+        "secondaryObjects": (evidence or [_pick(OBJECTS, seed + scene_index), _pick(OBJECTS, seed + scene_index + 3)])[:2],
         "icons": [_pick(icons, seed + scene_index), _pick(icons, seed + scene_index + 2)],
         "paperElements": [_pick(PAPER, seed + scene_index), _pick(PAPER, seed + scene_index + 4)],
         "camera": _pick(CAMERAS, seed + scene_index),
@@ -53,6 +65,10 @@ def create_visual_plan(scene: dict, story: dict, scene_index: int) -> dict:
         "mood": "tense" if int(scene.get("dramaticLevel", 50)) >= 80 else "focused" if int(scene.get("dramaticLevel", 50)) >= 55 else "calm",
         "colorPalette": _pick(PALETTES, seed + scene_index),
         "composition": _pick(COMPOSITIONS, seed + scene_index),
+        "dataLayers": data_layers[:3],
+        "location": entity.get("location", ""),
+        "timePeriod": time_period,
+        "layerContract": entity.get("assetRoles") or ["paper-background", "texture", "main-subject", "context-evidence", "data-map-icon", "annotation", "typography"],
     }
     return plan
 
