@@ -1,0 +1,11 @@
+{
+  "title": "Đừng bỏ cuộc khi chưa thấy kết quả",
+  "duration": 15,
+  "style": "vox_giay_cat",
+  "template": "vox-paper-collage",
+  "scenes": [
+    {"id":1,"duration":5,"narration":"Có những ngày, nỗ lực của bạn dường như chưa tạo ra kết quả.","headline":"CHƯA THẤY KẾT QUẢ","background":"paper","camera":"push","transition":"mask","keywords":["kết quả"],"characters":[],"visualPlan":{"background":"hồ sơ hành trình","mainCharacter":"NGƯỜI ĐANG CỐ GẮNG","secondaryObjects":["đồng hồ","sổ tay"],"icons":["thời gian","nỗ lực","mục tiêu"],"paperElements":["lưới kỹ thuật","báo cũ"],"camera":"push-in","transition":"paper-slide","highlight":"KẾT QUẢ","mood":"trầm tư","composition":"subject-right"}},
+    {"id":2,"duration":5,"narration":"Nhưng hạt giống vẫn âm thầm bén rễ ở nơi bạn không nhìn thấy.","headline":"TIẾN BỘ ÂM THẦM","background":"paper","camera":"pan-right","transition":"slide","keywords":["tiến bộ"],"characters":[],"visualPlan":{"background":"trang báo cũ","mainCharacter":"MẦM CÂY BỀN BỈ","secondaryObjects":["hạt giống","rễ cây"],"icons":["mầm cây","mũi tên"],"paperElements":["chữ in mờ","ghi chú"],"camera":"pan-right","transition":"paper-reveal","highlight":"ÂM THẦM","mood":"hy vọng","composition":"subject-left"}},
+    {"id":3,"duration":5,"narration":"Đi tiếp thêm một bước. Thành quả thường đến sau lúc ta muốn dừng lại.","headline":"THÊM MỘT BƯỚC","background":"paper","camera":"parallax","transition":"camera-cut","keywords":["một bước"],"characters":[],"visualPlan":{"background":"bản đồ hành trình","mainCharacter":"NGƯỜI TIẾN VỀ PHÍA TRƯỚC","secondaryObjects":["bậc thang","vạch đích"],"icons":["la bàn","đích đến","tia sáng"],"paperElements":["bản đồ","con dấu"],"camera":"parallax","transition":"card-stack","highlight":"MỘT BƯỚC","mood":"quyết tâm","composition":"center-stack"}}
+  ]
+}

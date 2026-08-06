@@ -1,0 +1,2 @@
+import React from 'react';import {spring,useCurrentFrame,useVideoConfig} from 'remotion';import {C} from './shared';
+export const YellowShape:React.FC<{index:number}>=({index})=>{const f=useCurrentFrame(),{fps}=useVideoConfig(),s=spring({frame:f-3,fps,config:{damping:12}});return <div data-layer="yellow-shape" style={{position:'absolute',width:index%3===2?620:480,height:index%3===2?270:480,borderRadius:index%3===2?'50%':'50%',background:C.yellow,left:index%2?500:70,top:index%3===1?430:350,transform:`scale(${s}) rotate(${index*11}deg)`,boxShadow:'10px 12px 0 #171711'}}/>};

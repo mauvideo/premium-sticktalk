@@ -3,25 +3,6 @@ name: Tạo video Premium StickTalk
 on:
   workflow_dispatch:
     inputs:
-      project:
-        description: "Dự án video"
-        required: true
-        default: "Động lực"
-        type: choice
-        options:
-          - "Động lực"
-      template:
-        description: "Mẫu video Động lực (nguồn Remotion mã nguồn mở)"
-        required: true
-        default: "Điện ảnh AI"
-        type: choice
-        options:
-          - "Điện ảnh AI"
-          - "Phụ đề động"
-          - "Chuyển cảnh mượt"
-          - "Phác thảo trên giấy"
-          - "Động lực doanh nhân"
-          - "Cắt giấy tài liệu"
       idea:
         description: "Chủ đề video"
         required: true
@@ -35,18 +16,6 @@ on:
           - "30 giây"
           - "45 giây"
           - "60 giây"
-      content_format:
-        description: "Định dạng nội dung"
-        required: true
-        default: "Tự động"
-        type: choice
-        options:
-          - "Tự động"
-          - "Phim tài liệu"
-          - "Kể chuyện"
-          - "Truyền cảm hứng"
-          - "Kinh doanh"
-          - "Đối thoại"
       tone:
         description: "Giọng điệu nội dung"
         required: true
@@ -154,7 +123,7 @@ jobs:
       - name: Tạo video
         env:
           VIDEO_PROJECT: motivation
-          VIDEO_TEMPLATE: ${{ inputs.template == 'Điện ảnh AI' && 'prompt-to-video' || inputs.template == 'Phụ đề động' && 'kinetic-captions' || inputs.template == 'Chuyển cảnh mượt' && 'smooth-transitions' || inputs.template == 'Phác thảo trên giấy' && 'paper-sketch' || inputs.template == 'Cắt giấy tài liệu' && 'paper-cut-documentary' || 'business-motivation' }}
+          VIDEO_TEMPLATE: ${{ inputs.template == 'Điện ảnh AI' && 'prompt-to-video' || inputs.template == 'Phụ đề động' && 'kinetic-captions' || inputs.template == 'Chuyển cảnh mượt' && 'smooth-transitions' || inputs.template == 'Phác thảo trên giấy' && 'paper-sketch' || inputs.template == 'Cắt giấy tài liệu' && 'paper-cut-documentary' || inputs.template == 'Vox giấy cắt' && 'vox-paper-collage' || 'business-motivation' }}
           VIDEO_IDEA: ${{ inputs.idea }}
           VIDEO_DURATION: ${{ inputs.duration == '30 giây' && '30' || inputs.duration == '60 giây' && '60' || '45' }}
           VIDEO_TONE: ${{ inputs.tone == 'Sâu sắc' && 'sâu_sắc' || inputs.tone == 'Hài hước' && 'hài_hước' || inputs.tone == 'Chữa lành' && 'chữa_lành' || 'truyền_động_lực' }}

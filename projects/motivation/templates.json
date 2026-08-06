@@ -69,6 +69,17 @@
       "motion_level": "trung_bình",
       "script_mode": "Phim tài liệu",
       "writing_style": "Tin tức rõ ràng"
+    },
+    {
+      "id": "vox-paper-collage",
+      "name": "Vox giấy cắt",
+      "source": "Nội bộ - CSS/SVG/Remotion tự tạo",
+      "license": "MIT (theo giấy phép repository)",
+      "upstream_url": "",
+      "style": "vox_giay_cat",
+      "motion_level": "nhiều",
+      "script_mode": "Phim tài liệu",
+      "writing_style": "Biên tập truyền cảm hứng"
     }
   ]
 }
