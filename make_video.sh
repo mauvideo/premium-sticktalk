@@ -68,6 +68,9 @@ if [[ "$PROJECT" == "motivation" ]]; then
     --story assets/story.json --topic "$IDEA" --template "$TEMPLATE" --duration "$DURATION"
 fi
 
+# Suy luận thực thể/bối cảnh từ chính chủ đề; không dùng danh mục nhân vật cố định.
+python3 -m scripts.entity_visual_planner --story assets/story.json --topic "$IDEA"
+
 # Mỗi cảnh nhận tài nguyên miễn phí có giấy phép rõ ràng theo template đã chọn.
 python3 -m scripts.asset_providers.manager
 rm -rf remotion/public/assets/generated-assets
