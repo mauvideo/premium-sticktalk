@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .base import AssetResult, download, is_valid_mime, safe_name
+from .openverse import OpenverseProvider
 from .pexels import PexelsProvider
 from .pixabay import PixabayProvider
 from .unsplash import UnsplashProvider
@@ -54,16 +55,27 @@ class AssetManager:
 
     def providers(self, query: dict):
         if query.get('identity_required'):
-            return [WikimediaProvider(self.assets_dir, self.cache_dir)]
+            return [
+                WikimediaProvider(self.assets_dir, self.cache_dir),
+                OpenverseProvider(self.assets_dir, self.cache_dir),
+            ]
         return [
             WikimediaProvider(self.assets_dir, self.cache_dir),
+            OpenverseProvider(self.assets_dir, self.cache_dir),
             PexelsProvider(self.assets_dir, self.cache_dir),
             PixabayProvider(self.assets_dir, self.cache_dir),
             UnsplashProvider(self.assets_dir, self.cache_dir),
         ]
 
     def valid(self, result) -> bool:
-        return bool(result and Path(result.file).exists() and Path(result.file).stat().st_size > 100 and is_valid_mime(result.mime_type) and result.provider and result.qualityScore >= 0)
+        return bool(
+            result
+            and Path(result.file).exists()
+            and Path(result.file).stat().st_size > 100
+            and is_valid_mime(result.mime_type)
+            and result.provider
+            and result.qualityScore >= 0
+        )
 
     def lead_image_fallback(self, query: dict, scene_index: int):
         url = str(self.research.get('leadImageUrl') or '').strip()
@@ -73,23 +85,68 @@ class AssetManager:
         subject = query.get('subject') or self.research.get('canonicalTitle') or 'subject'
         path = self.assets_dir / f"scene-{scene_index:02d}-topic-{safe_name(subject)}{suffix}"
         cache = self.cache_dir / f"topic-lead-{safe_name(subject)}{suffix}"
-        _, mime, _ = download(url, path, headers={'User-Agent': 'premium-sticktalk/5.1 (topic-image-fallback)'}, cache_path=cache)
-        return AssetResult(scene=scene_index, file=str(path), asset_type='photo', provider='wikipedia-topic-image', source_url=str(self.research.get('sourceUrl') or url), author='Source page contributor', author_url='', license='unverified-source', license_url='', search_query=f'{subject} topic lead image', downloaded_at=datetime.now(timezone.utc).isoformat(), width=0, height=0, mime_type=mime, qualityScore=80, asset_id=f'topic-lead-{safe_name(subject)}')
+        _, mime, _ = download(
+            url,
+            path,
+            headers={'User-Agent': 'premium-sticktalk/6.0 (topic-image-fallback)'},
+            cache_path=cache,
+        )
+        return AssetResult(
+            scene=scene_index,
+            file=str(path),
+            asset_type='photo',
+            provider='wikipedia-topic-image',
+            source_url=str(self.research.get('sourceUrl') or url),
+            author='Source page contributor',
+            author_url='',
+            license='unverified-source',
+            license_url='',
+            search_query=f'{subject} topic lead image',
+            downloaded_at=datetime.now(timezone.utc).isoformat(),
+            width=0,
+            height=0,
+            mime_type=mime,
+            qualityScore=80,
+            asset_id=f'topic-lead-{safe_name(subject)}',
+        )
+
+    @staticmethod
+    def query_variants(query: dict) -> list[str]:
+        variants = [query.get('primary'), *(query.get('secondary') or [])]
+        event = str(query.get('event') or '').strip()
+        setting = str(query.get('setting') or '').strip()
+        subject = str(query.get('subject') or '').strip()
+        if subject and event:
+            variants.append(f'{subject} {event[:110]}')
+        if subject and setting and setting != 'documentary context':
+            variants.append(f'{subject} {setting}')
+        cleaned: list[str] = []
+        for value in variants:
+            value = str(value or '').replace('"', ' ').strip()
+            value = ' '.join(value.split())
+            if value and value not in cleaned:
+                cleaned.append(value)
+        return cleaned
 
     def get(self, query: dict, scene_index: int, allow_local: bool = True):
-        cache_key = (query['primary'], query['size'])
-        cached = self.memory_cache.get(cache_key)
-        if cached and cached.source_url not in self.used:
-            return cached
-        for provider in self.providers(query):
-            try:
-                result = provider.search(query, scene_index, self.used)
-                if self.valid(result):
-                    self.used.update({result.source_url, result.asset_id})
-                    self.memory_cache[cache_key] = result
-                    return result
-            except Exception as error:  # noqa: BLE001
-                print(f'Asset provider {provider.name} skipped: {error}')
+        for search_text in self.query_variants(query):
+            current_query = dict(query)
+            current_query['primary'] = search_text
+            cache_key = (search_text, current_query['size'])
+            cached = self.memory_cache.get(cache_key)
+            if cached and cached.source_url not in self.used:
+                return cached
+
+            for provider in self.providers(current_query):
+                try:
+                    result = provider.search(current_query, scene_index, self.used)
+                    if self.valid(result):
+                        self.used.update({result.source_url, result.asset_id})
+                        self.memory_cache[cache_key] = result
+                        return result
+                except Exception as error:  # noqa: BLE001
+                    print(f'Asset provider {provider.name} skipped for {search_text!r}: {error}')
+
         if query.get('identity_required'):
             try:
                 lead = self.lead_image_fallback(query, scene_index)
@@ -98,6 +155,7 @@ class AssetManager:
                     return lead
             except Exception as error:  # noqa: BLE001
                 print(f'Topic lead image fallback skipped: {error}')
+
         if not allow_local:
             return None
         fallback = LocalAssetsProvider(self.assets_dir, self.cache_dir).search(query, scene_index, self.used)
@@ -112,7 +170,10 @@ class AssetManager:
         item['fallback'] = result.provider == 'local-assets'
         item['identityQuery'] = subject
         item['identityVerified'] = result.provider == 'wikimedia-commons'
-        item['topicMatched'] = result.provider in {'wikimedia-commons', 'wikipedia-topic-image'}
+        item['topicMatched'] = result.provider in {
+            'wikimedia-commons', 'wikipedia-topic-image', 'openverse',
+            'pexels', 'pixabay', 'unsplash',
+        }
         item['searchQueries'] = queries
         item['cutoutStyle'] = 'white-outline-yellow-shadow'
         item['licenseCheckBypassed'] = result.license == 'unverified-source'
@@ -141,26 +202,35 @@ class AssetManager:
             scene['searchQuery'] = result.search_query
             scene['qualityScore'] = result.qualityScore
             scene['identityVerified'] = result.provider == 'wikimedia-commons'
-            scene['topicMatched'] = result.provider in {'wikimedia-commons', 'wikipedia-topic-image'}
+            scene['topicMatched'] = result.provider != 'local-assets'
             scene['cutoutStyle'] = 'white-outline-yellow-shadow'
-            manifest.append(self.manifest_item(result, scene_index, 'main-subject' if query.get('identity_required') else 'context-evidence', query['subject'], [query['primary'], *query['secondary']]))
+            manifest.append(
+                self.manifest_item(
+                    result,
+                    scene_index,
+                    'main-subject' if query.get('identity_required') else 'context-evidence',
+                    query['subject'],
+                    self.query_variants(query),
+                )
+            )
             if result.provider != 'local-assets' and relative_path not in topic_gallery and len(topic_gallery) < MAX_TOPIC_PHOTOS:
                 topic_gallery.append(relative_path)
 
-            # Download one additional on-topic photo for early scenes until the
-            # video has a 3-5 image gallery. These are displayed as smaller paper cards.
             if len(topic_gallery) < MAX_TOPIC_PHOTOS:
                 variants = [
-                    f'"{canonical}" historical photo',
-                    f'"{canonical}" {scene.get("timeMarker", "")}',
-                    f'"{canonical}" {scene.get("location", "")}',
+                    f'{canonical} portrait',
+                    f'{canonical} historical photo',
+                    f'{canonical} {scene.get("timeMarker", "")}',
+                    f'{canonical} {scene.get("location", "")}',
+                    str(scene.get('event') or '')[:120],
                 ]
                 for variant in variants:
-                    variant = variant.strip()
-                    if not variant or variant == query['primary']:
+                    variant = ' '.join(str(variant or '').replace('"', ' ').split())
+                    if not variant:
                         continue
                     extra_query = dict(query)
                     extra_query['primary'] = variant
+                    extra_query['secondary'] = []
                     extra_query['identity_required'] = False
                     extra = self.get(extra_query, scene_index, allow_local=False)
                     if not extra:
@@ -170,29 +240,47 @@ class AssetManager:
                         continue
                     topic_gallery.append(extra_path)
                     scene.setdefault('assets', []).append(extra_path)
-                    manifest.append(self.manifest_item(extra, scene_index, 'supporting-photo', canonical, [variant]))
-                    break
+                    manifest.append(
+                        self.manifest_item(extra, scene_index, 'supporting-photo', canonical, [variant])
+                    )
+                    if len(topic_gallery) >= MAX_TOPIC_PHOTOS:
+                        break
 
-        # Distribute the verified/on-topic gallery across scenes, at most two
-        # supporting cards per scene, without duplicating the main image.
         for index, scene in enumerate(scenes):
             main = scene.get('image')
             candidates = [path for path in topic_gallery if path != main]
             start = index % max(1, len(candidates)) if candidates else 0
             ordered = candidates[start:] + candidates[:start]
-            scene['assets'] = list(dict.fromkeys([*(scene.get('assets') or []), *ordered[:2]]))[:2]
+            scene['assets'] = list(
+                dict.fromkeys([*(scene.get('assets') or []), *ordered[:2]])
+            )[:2]
 
-        story['assetProviderSystem'] = 'vox-topic-assets-gallery-v4'
+        story['assetProviderSystem'] = 'vox-topic-assets-gallery-v5-openverse'
         story['template'] = VOX_TEMPLATE
         story['topicSubjectImages'] = len(topic_gallery)
         story['topicImageGallery'] = topic_gallery
+        story['topicImageMinimumMet'] = len(topic_gallery) >= MIN_TOPIC_PHOTOS
         self.story_path.write_text(json.dumps(story, ensure_ascii=False, indent=2), encoding='utf-8')
-        (self.output_dir / 'asset-manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8')
+        (self.output_dir / 'asset-manifest.json').write_text(
+            json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8'
+        )
         credits = ['Asset credits', '=============', '']
         for item in manifest:
-            credits.append(f"Scene {item['scene']}: {item['provider']} — {item['author']} — {item['license']} — {item['source_url']} — role={item['role']}")
+            credits.append(
+                f"Scene {item['scene']}: {item['provider']} — {item['author']} — "
+                f"{item['license']} — {item['source_url']} — role={item['role']}"
+            )
         (self.output_dir / 'credits.txt').write_text('\n'.join(credits) + '\n', encoding='utf-8')
-        print(f'Đã chuẩn bị {len(topic_gallery)} ảnh bám sát chủ đề cho video.')
+        print(
+            f'Đã chuẩn bị {len(topic_gallery)} ảnh trực tuyến bám sát chủ đề cho video '
+            f'(Pexels key={bool(os.getenv("PEXELS_API_KEY"))}, '
+            f'Pixabay key={bool(os.getenv("PIXABAY_API_KEY"))}).'
+        )
+        if len(topic_gallery) < MIN_TOPIC_PHOTOS:
+            print(
+                'CẢNH BÁO: chưa đủ 3 ảnh trực tuyến. Hãy kiểm tra PEXELS_API_KEY, '
+                'PIXABAY_API_KEY hoặc phản hồi của Wikimedia/Openverse.'
+            )
         return story
 
 
