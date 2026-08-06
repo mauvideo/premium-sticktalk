@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Ground a generated story in Wikipedia facts before asset planning.
+"""Research-first story planning for arbitrary Vox documentary topics.
 
-This module intentionally fails instead of rendering unrelated filler when the
-requested topic cannot be resolved. It uses Wikipedia only as a factual seed;
-asset licensing is still handled separately by Wikimedia Commons providers.
+The module does not hardcode or lock any person/topic. It resolves the current
+user topic, builds a compact research record, plans a factual sequence, and
+rewrites every scene from those facts before visual/asset planning.
 """
 from __future__ import annotations
 
@@ -15,72 +15,107 @@ import urllib.request
 from pathlib import Path
 
 API = "https://vi.wikipedia.org/w/api.php"
-USER_AGENT = "premium-sticktalk/3.0 (topic-grounding)"
+USER_AGENT = "premium-sticktalk/4.0 (research-first-story-engine)"
 BANNED_FILLER = (
-    "mỗi bước nhỏ", "đừng bỏ cuộc", "thành công", "động lực", "lựa chọn",
-    "nút thắt", "khẩu hiệu", "câu hỏi đúng", "hành động rõ ràng",
-    "phản ứng quen thuộc", "tình huống rất cụ thể",
+    "mỗi bước nhỏ", "đừng bỏ cuộc", "động lực", "khẩu hiệu", "nút thắt",
+    "câu hỏi đúng", "hành động rõ ràng", "phản ứng quen thuộc",
+    "tình huống rất cụ thể", "một lựa chọn đang", "đổi hướng đúng chỗ",
 )
 
 
 def _get(params: dict) -> dict:
     query = urllib.parse.urlencode({**params, "format": "json", "origin": "*"})
-    req = urllib.request.Request(f"{API}?{query}", headers={"User-Agent": USER_AGENT})
-    with urllib.request.urlopen(req, timeout=25) as response:
+    request = urllib.request.Request(
+        f"{API}?{query}", headers={"User-Agent": USER_AGENT}
+    )
+    with urllib.request.urlopen(request, timeout=25) as response:
         return json.load(response)
 
 
-def resolve_topic(topic: str) -> tuple[str, str, str]:
-    search = _get({"action": "query", "list": "search", "srsearch": topic, "srlimit": 5, "utf8": 1})
+def research_topic(topic: str) -> dict:
+    search = _get({
+        "action": "query", "list": "search", "srsearch": topic,
+        "srlimit": 5, "utf8": 1,
+    })
     results = search.get("query", {}).get("search", [])
     if not results:
         raise RuntimeError(f"Không tìm thấy nguồn nghiên cứu cho chủ đề: {topic}")
+
     title = results[0]["title"]
     page = _get({
-        "action": "query", "prop": "extracts|pageimages|info", "titles": title,
-        "explaintext": 1, "exsectionformat": "plain", "piprop": "original|thumbnail",
-        "pithumbsize": 1600, "inprop": "url", "redirects": 1,
+        "action": "query", "prop": "extracts|pageimages|info|categories",
+        "titles": title, "explaintext": 1, "exsectionformat": "plain",
+        "piprop": "original|thumbnail", "pithumbsize": 1600,
+        "inprop": "url", "cllimit": 30, "redirects": 1,
     })
     data = next(iter(page.get("query", {}).get("pages", {}).values()), {})
-    extract = str(data.get("extract") or "").strip()
-    source_url = str(data.get("fullurl") or "")
+    extract = re.sub(r"\s+", " ", str(data.get("extract") or "")).strip()
     if len(extract) < 180:
         raise RuntimeError(f"Nguồn nghiên cứu quá ít dữ liệu cho chủ đề: {topic}")
-    return str(data.get("title") or title), extract, source_url
+
+    categories = [
+        str(item.get("title", "")).replace("Thể loại:", "")
+        for item in data.get("categories", [])
+    ]
+    image = data.get("original") or data.get("thumbnail") or {}
+    return {
+        "topicInput": topic,
+        "canonicalTitle": str(data.get("title") or title),
+        "sourceUrl": str(data.get("fullurl") or ""),
+        "provider": "vi.wikipedia.org",
+        "extract": extract,
+        "categories": categories,
+        "leadImageUrl": str(image.get("source") or ""),
+    }
 
 
-def sentences(text: str) -> list[str]:
-    text = re.sub(r"\n+", " ", text)
-    text = re.sub(r"\s+", " ", text).strip()
+def split_sentences(text: str) -> list[str]:
     parts = re.split(r"(?<=[.!?])\s+", text)
     output: list[str] = []
     for part in parts:
-        part = part.strip()
-        low = part.casefold()
-        if not 45 <= len(part) <= 330:
+        sentence = part.strip()
+        low = sentence.casefold()
+        if not 45 <= len(sentence) <= 330:
             continue
         if any(marker in low for marker in ("tham khảo", "chú thích", "liên kết ngoài")):
             continue
-        if part not in output:
-            output.append(part)
+        if sentence not in output:
+            output.append(sentence)
     return output
 
 
-def score_sentence(sentence: str, canonical: str, index: int) -> tuple[int, int]:
+def entity_type(research: dict) -> str:
+    text = (research["extract"] + " " + " ".join(research["categories"])).casefold()
+    if any(token in text for token in ("sinh ngày", "sinh năm", "nhân vật", "chính khách", "tướng lĩnh", "nhà khoa học", "doanh nhân")):
+        return "person"
+    if any(token in text for token in ("trận đánh", "chiến dịch", "sự kiện", "thảm họa")):
+        return "event"
+    if any(token in text for token in ("thành phố", "quốc gia", "tỉnh", "đảo", "địa danh")):
+        return "place"
+    return "topic"
+
+
+def sentence_score(sentence: str, canonical: str, index: int) -> tuple[int, int]:
     low = sentence.casefold()
     score = 0
     if canonical.casefold() in low:
         score += 8
     if re.search(r"\b(18|19|20)\d{2}\b", sentence):
-        score += 6
-    if any(word in low for word in ("sinh", "thành lập", "chiến dịch", "đại tướng", "tổng tư lệnh", "chiến thắng", "qua đời", "di sản")):
+        score += 7
+    if any(word in low for word in (
+        "sinh", "thành lập", "chiến dịch", "phát minh", "công bố", "chiến thắng",
+        "qua đời", "di sản", "khởi công", "ra mắt", "phát triển", "được biết đến",
+    )):
         score += 4
     return (-score, index)
 
 
-def build_facts(extract: str, canonical: str, count: int) -> list[str]:
-    candidates = sentences(extract)
-    ranked = sorted(enumerate(candidates), key=lambda item: score_sentence(item[1], canonical, item[0]))
+def choose_facts(research: dict, count: int) -> list[str]:
+    candidates = split_sentences(research["extract"])
+    ranked = sorted(
+        enumerate(candidates),
+        key=lambda item: sentence_score(item[1], research["canonicalTitle"], item[0]),
+    )
     selected: list[tuple[int, str]] = []
     seen: set[str] = set()
     for original_index, sentence in ranked:
@@ -91,61 +126,112 @@ def build_facts(extract: str, canonical: str, count: int) -> list[str]:
         selected.append((original_index, sentence))
         if len(selected) >= count:
             break
+    if len(selected) < count:
+        raise RuntimeError(f"Chỉ tìm được {len(selected)} dữ kiện phù hợp, cần {count}")
     selected.sort(key=lambda item: item[0])
-    facts = [sentence for _, sentence in selected]
-    if len(facts) < count:
-        raise RuntimeError(f"Chỉ tìm được {len(facts)} dữ kiện phù hợp, cần {count}")
-    return facts
+    return [sentence for _, sentence in selected]
 
 
-def short_headline(sentence: str, canonical: str, index: int) -> str:
-    year = re.search(r"\b(18|19|20)\d{2}\b", sentence)
+def headline(fact: str, canonical: str, index: int) -> str:
+    year = re.search(r"\b(?:18|19|20)\d{2}\b", fact)
     if year:
         return f"{year.group(0)} · {canonical}"
-    return canonical if index == 0 else f"Dấu mốc {index + 1}"
+    if index == 0:
+        return canonical
+    words = re.findall(r"[\wÀ-ỹĐđ]+", fact)
+    return " ".join(words[:6]).rstrip(".,:;")
 
 
-def ground_story(story: dict, topic: str) -> dict:
-    canonical, extract, source_url = resolve_topic(topic)
+def extract_location(fact: str, research: dict) -> str:
+    common = ("Việt Nam", "Hà Nội", "Điện Biên", "Sài Gòn", "Thành phố Hồ Chí Minh", "Pháp", "Mỹ")
+    for place in common:
+        if place.casefold() in fact.casefold():
+            return place
+    return ""
+
+
+def build_story(story: dict, topic: str) -> dict:
+    research = research_topic(topic)
+    canonical = research["canonicalTitle"]
     scenes = story.get("scenes") or story.get("canh") or []
     if not scenes:
         raise RuntimeError("story.json không có cảnh")
-    facts = build_facts(extract, canonical, len(scenes))
+
+    facts = choose_facts(research, len(scenes))
+    kind = entity_type(research)
+    timeline: list[dict] = []
+
     for index, (scene, fact) in enumerate(zip(scenes, facts)):
+        year_match = re.search(r"\b(?:18|19|20)\d{2}\b", fact)
+        year = year_match.group(0) if year_match else ""
+        location = extract_location(fact, research)
+        scene_title = headline(fact, canonical, index)
+
         scene["narration"] = fact
         scene["loi_dan"] = fact
-        scene["headline"] = short_headline(fact, canonical, index)
-        scene["text"] = scene["headline"]
-        scene["keywords"] = [canonical, *re.findall(r"\b(?:18|19|20)\d{2}\b", fact)[:1]]
-        scene["tu_khoa"] = scene["keywords"]
+        scene["headline"] = scene_title
+        scene["text"] = scene_title
+        scene["newFact"] = fact
+        scene["timeMarker"] = year
+        scene["location"] = location
+        scene["event"] = fact
+        scene["visualEvidence"] = [fact]
         scene["mainSubject"] = canonical
+        scene["keywords"] = [canonical, *([year] if year else [])]
+        scene["tu_khoa"] = scene["keywords"]
         scene["entityVisualPlan"] = {
             "mainSubject": canonical,
-            "mainSubjectType": "person" if re.search(r"\b(sinh|ông|bà|đại tướng|tướng)\b", extract.casefold()) else "topic",
+            "mainSubjectType": kind,
             "event": fact,
-            "timePeriod": (re.search(r"\b(?:18|19|20)\d{2}\b", fact) or [""])[0] if re.search(r"\b(?:18|19|20)\d{2}\b", fact) else "",
-            "location": "Việt Nam" if "Việt Nam" in extract else "",
+            "timePeriod": year,
+            "location": location,
             "visualEvidence": [fact],
             "searchQueries": [
-                f'"{canonical}" portrait',
-                f'"{canonical}" {fact[:90]}',
                 f'"{canonical}" Wikimedia Commons',
+                f'"{canonical}" {year} {location}'.strip(),
+                f'"{canonical}" {" ".join(re.findall(r"[\wÀ-ỹĐđ]+", fact)[:8])}',
             ],
-            "assetRoles": ["main-subject", "context-evidence", "map-or-timeline", "topic-icon"],
+            "iconQueries": [
+                f'{canonical} icon',
+                f'{location or "timeline"} map icon',
+                f'{year or "document"} historical icon',
+            ],
+            "assetRoles": [
+                "main-subject", "context-evidence", "map-or-timeline",
+                "topic-icon", "newspaper-clipping", "annotation",
+            ],
         }
+        timeline.append({"scene": index + 1, "year": year, "fact": fact, "location": location})
+
     story["title"] = story["tieu_de"] = canonical
     story["topicInput"] = topic
-    story["research"] = {"canonicalTitle": canonical, "sourceUrl": source_url, "provider": "vi.wikipedia.org"}
+    story["research"] = {
+        key: value for key, value in research.items() if key != "extract"
+    }
+    story["research"]["entityType"] = kind
+    story["research"]["timeline"] = timeline
     story["entityVisualPlan"] = {
         "mainEntity": canonical,
-        "mainEntityType": scenes[0]["entityVisualPlan"]["mainSubjectType"],
-        "archivalSearchTerms": [f'"{canonical}" portrait', f'"{canonical}" historical photo'],
+        "mainEntityType": kind,
+        "archivalSearchTerms": [
+            f'"{canonical}" portrait',
+            f'"{canonical}" historical photo',
+            f'"{canonical}" Wikimedia Commons',
+        ],
+        "mapsNeeded": [item["location"] for item in timeline if item["location"]],
+        "chartsNeeded": ["timeline"],
     }
+
     all_text = " ".join(scene["narration"].casefold() for scene in scenes)
-    if canonical.casefold() not in all_text and not any(token in all_text for token in canonical.casefold().split() if len(token) > 3):
-        raise RuntimeError("Kịch bản không bám tên chủ đề sau bước grounding")
+    relevant_tokens = [token for token in canonical.casefold().split() if len(token) > 3]
+    if relevant_tokens and not any(token in all_text for token in relevant_tokens):
+        raise RuntimeError("Kịch bản không chứa dữ kiện nhận diện đúng chủ đề")
     if any(phrase in all_text for phrase in BANNED_FILLER):
         raise RuntimeError("Kịch bản còn chứa câu đệm chung chung bị cấm")
+
+    Path("assets/research.json").write_text(
+        json.dumps(story["research"], ensure_ascii=False, indent=2), encoding="utf-8"
+    )
     return story
 
 
@@ -154,13 +240,19 @@ def main() -> None:
     parser.add_argument("--story", default="assets/story.json")
     parser.add_argument("--topic", required=True)
     args = parser.parse_args()
+
     path = Path(args.story)
     story = json.loads(path.read_text(encoding="utf-8"))
-    story = ground_story(story, args.topic)
+    story = build_story(story, args.topic)
     path.write_text(json.dumps(story, ensure_ascii=False, indent=2), encoding="utf-8")
+
     Path("output").mkdir(exist_ok=True)
-    Path("output/script.txt").write_text("\n".join(s["narration"] for s in story["scenes"]), encoding="utf-8")
-    print(f"Đã khóa kịch bản theo nguồn: {story['research']['canonicalTitle']}")
+    Path("output/script.txt").write_text(
+        "\n".join(scene["narration"] for scene in story["scenes"]), encoding="utf-8"
+    )
+    print(f"Đã nghiên cứu và lập kịch bản theo chủ đề: {story['research']['canonicalTitle']}")
+    print(f"Loại chủ đề: {story['research']['entityType']}")
+    print(f"Số dữ kiện mới: {len(story['research']['timeline'])}")
 
 
 if __name__ == "__main__":
