@@ -1,0 +1,2 @@
+import React from 'react';import {interpolate,useCurrentFrame} from 'remotion';import {C} from './shared';
+export const MarkerHighlight:React.FC<{text:string}>=({text})=>{const f=useCurrentFrame(),w=interpolate(f,[12,30],[0,100],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});return <span data-layer="marker" style={{position:'relative',display:'inline-block'}}><i style={{position:'absolute',left:-8,bottom:3,width:`${w}%`,height:'38%',background:C.yellow,opacity:.8,transform:'rotate(-2deg)',zIndex:-1}}/>{text}</span>};

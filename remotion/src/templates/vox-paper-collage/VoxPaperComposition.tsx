@@ -1,0 +1,2 @@
+import React from 'react';import {AbsoluteFill,Sequence} from 'remotion';import {Story} from '../../engine/types';import {VoxScene} from './VoxScene';
+export const VoxPaperComposition:React.FC<Story>=(story)=>{let start=0;return <AbsoluteFill>{story.scenes.map((scene,index)=>{const from=Math.round(start*30),durationInFrames=Math.round(scene.duration*30);start+=scene.duration;return <Sequence key={scene.id} from={from} durationInFrames={durationInFrames}><VoxScene scene={scene} story={story} sceneIndex={index}/></Sequence>})}</AbsoluteFill>};
