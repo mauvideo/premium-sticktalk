@@ -53,7 +53,7 @@ printf '%s\n' \
   "Chủ đề: $IDEA" \
   "Thời lượng: $DURATION giây" \
   "Giọng VieNeu: $VOICE" \
-  "Kịch bản, bố cục và chuyển động: tự động theo chủ đề"
+  "Quy trình: nghiên cứu → lập câu chuyện → tìm ảnh/icon → dựng Vox"
 
 mkdir -p assets output remotion/public/assets
 
@@ -62,8 +62,8 @@ python3 scripts/generate_story.py \
   --duration "$DURATION" \
   --voice "$VOICE"
 
-# Bắt buộc thay toàn bộ câu đệm bằng dữ kiện thực tế lấy từ đúng chủ đề.
-# Nếu không nghiên cứu được chủ đề, workflow phải dừng thay vì render nội dung sai.
+# Research-first: nghiên cứu đúng chủ đề, tạo research.json và thay toàn bộ
+# câu đệm bằng các dữ kiện mới. Không hardcode hay khóa vào một nhân vật.
 python3 scripts/ground_story.py \
   --story assets/story.json \
   --topic "$IDEA"
@@ -97,7 +97,7 @@ story['project'] = 'documentary'
 story['template'] = 'vox-paper-collage'
 story['style'] = 'vox_giay_cat'
 story['motionLevel'] = 'high'
-story['contentMode'] = 'auto-by-topic-grounded'
+story['contentMode'] = 'research-first-auto-by-topic'
 
 with open(path, 'w', encoding='utf-8') as handle:
     json.dump(story, handle, ensure_ascii=False, indent=2)
@@ -119,6 +119,7 @@ npx --prefix remotion remotion render \
 
 ffmpeg -y -ss 00:00:03 -i output/video.mp4 -frames:v 1 output/preview.png
 cp assets/story.json output/story.json
+cp assets/research.json output/research.json
 ffprobe -v error \
   -show_entries stream=codec_name,width,height,r_frame_rate \
   -show_entries format=duration,size \
