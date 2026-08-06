@@ -1,6 +1,9 @@
 from __future__ import annotations
-import json, os, re
+
+import json
+import os
 from pathlib import Path
+
 from .base import is_valid_license, is_valid_mime
 from .pexels import PexelsProvider
 from .pixabay import PixabayProvider
@@ -9,83 +12,158 @@ from .local_assets import LocalAssetsProvider
 from .wikimedia import WikimediaProvider
 from scripts.entity_visual_planner import plan_entities
 
-PHOTO_TEMPLATES={'prompt-to-video','smooth-transitions','kinetic-captions'}
-PAPER={'paper-cut-documentary','vox-paper-collage'}
-STOP={'và','là','của','một','những','các','cho','trong','khi','để','the','and','with','you','your'}
+VOX_TEMPLATE = 'vox-paper-collage'
 
-def keyword(scene,template):
- text=' '.join(str(scene.get(k,'')) for k in ('headline','narration','text'))
- words=[w for w in re.findall(r"[\wÀ-ỹ]+",text.lower()) if len(w)>2 and w not in STOP]
- base=' '.join(words[:5]) or 'documentary subject'
- style={
-  'stick-figure':'stick figure simple action svg',
-  'paper-sketch':'hand drawn documentary line art',
-  'paper-cut-documentary':'documentary portrait paper collage',
-  'vox-paper-collage':'editorial documentary portrait paper collage',
-  'kinetic-captions':'dark minimal documentary background empty space',
- }.get(template,'editorial documentary real photo')
- ep=scene.get('entityVisualPlan',{})
- queries=ep.get('searchQueries') or []
- return {
-  'primary':queries[0] if queries else f'{base} {style}',
-  'secondary':queries[1:] or words[5:10],
-  'asset_type':'photo' if template in PHOTO_TEMPLATES|PAPER else 'svg',
-  'style':style,
-  'emotion':'documentary',
-  'subject':ep.get('mainSubject') or (words[0] if words else 'subject'),
-  'subject_type':ep.get('mainSubjectType','concept'),
-  'event':ep.get('event',''),
-  'setting':ep.get('location') or 'documentary context',
-  'template':template,
-  'size':'9:16'
- }
+
+def keyword(scene: dict) -> dict:
+    entity_plan = scene.get('entityVisualPlan', {})
+    queries = entity_plan.get('searchQueries') or []
+    subject = entity_plan.get('mainSubject') or 'documentary subject'
+    event = entity_plan.get('event', '')
+    location = entity_plan.get('location', '')
+
+    return {
+        'primary': queries[0] if queries else f'"{subject}" Wikimedia Commons',
+        'secondary': queries[1:],
+        'asset_type': 'photo',
+        'style': 'editorial documentary paper collage',
+        'emotion': 'documentary',
+        'subject': subject,
+        'subject_type': entity_plan.get('mainSubjectType', 'concept'),
+        'event': event,
+        'setting': location or 'documentary context',
+        'template': VOX_TEMPLATE,
+        'size': '9:16',
+    }
+
 
 class AssetManager:
- def __init__(self,template:str,story_path='assets/story.json',assets_dir='assets/generated-assets',output_dir='output',cache_dir='assets/.asset-cache'):
-  self.template=template; self.story_path=Path(story_path); self.assets_dir=Path(assets_dir); self.output_dir=Path(output_dir); self.cache_dir=Path(cache_dir); self.used=set(); self.memory_cache={}
-  self.assets_dir.mkdir(parents=True,exist_ok=True); self.output_dir.mkdir(parents=True,exist_ok=True); self.cache_dir.mkdir(parents=True,exist_ok=True)
- def providers(self):
-  online=[PexelsProvider(self.assets_dir,self.cache_dir),PixabayProvider(self.assets_dir,self.cache_dir),UnsplashProvider(self.assets_dir,self.cache_dir)]
-  if self.template in PHOTO_TEMPLATES or self.template in PAPER: return [WikimediaProvider(self.assets_dir,self.cache_dir)]+online+[LocalAssetsProvider(self.assets_dir,self.cache_dir)]
-  return [LocalAssetsProvider(self.assets_dir,self.cache_dir)]
- def valid(self,r):
-  return bool(r and Path(r.file).exists() and Path(r.file).stat().st_size>100 and is_valid_mime(r.mime_type) and is_valid_license(r.license,r.license_url) and r.provider and r.qualityScore>=0)
- def get(self,q,idx):
-  ck=(q['template'],q['primary'],q['size'])
-  if ck in self.memory_cache and self.memory_cache[ck].source_url not in self.used: return self.memory_cache[ck]
-  for provider in self.providers():
-   for _ in range(2):
-    try:
-     r=provider.search(q,idx,self.used)
-     if self.valid(r):
-      self.used.update({r.source_url,r.asset_id}); self.memory_cache[ck]=r; return r
-    except Exception as e: print(f'Asset provider {provider.name} skipped: {e}')
-  r=LocalAssetsProvider(self.assets_dir,self.cache_dir).search(q,idx,self.used)
-  self.used.update({r.source_url,r.asset_id}); return r
- def generate(self,story:dict):
-  if not story.get('entityVisualPlan'):
-   story=plan_entities(story)
-  manifest=[]
-  for i,scene in enumerate(story.get('scenes',[]),1):
-   q=keyword(scene,self.template); r=self.get(q,i); rel=str(Path(r.file).as_posix())
-   scene.update({'asset':rel,'image':rel,'assetType':r.asset_type,'assetProvider':r.provider,'assetAuthor':r.author,'assetLicense':r.license,'assetSource':r.source_url,'searchQuery':r.search_query,'qualityScore':r.qualityScore})
-   item=r.manifest(); item['role']='main-subject'; item['fallback']=r.provider=='local-assets'; item['identityQuery']=q['subject']; item['searchQueries']=[q['primary'],*q['secondary']]
-   if item['fallback']: item['fallbackReason']='No verified free-licensed matching asset was available; a neutral illustration was used without changing the subject identity.'
-   manifest.append(item)
-  story['assetProviderSystem']='free-licensed-assets-v2'
-  self.story_path.write_text(json.dumps(story,ensure_ascii=False,indent=2),encoding='utf-8')
-  (self.output_dir/'asset-manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf-8')
-  credits=['Asset credits','=============','']
-  for m in manifest: credits.append(f"Scene {m['scene']}: {m['provider']} — {m['author']} — {m['license']} — {m['source_url']} — quality {m['qualityScore']}/100")
-  (self.output_dir/'credits.txt').write_text('\n'.join(credits)+'\n',encoding='utf-8')
-  return story
+    def __init__(
+        self,
+        story_path: str = 'assets/story.json',
+        assets_dir: str = 'assets/generated-assets',
+        output_dir: str = 'output',
+        cache_dir: str = 'assets/.asset-cache',
+    ):
+        self.template = VOX_TEMPLATE
+        self.story_path = Path(story_path)
+        self.assets_dir = Path(assets_dir)
+        self.output_dir = Path(output_dir)
+        self.cache_dir = Path(cache_dir)
+        self.used: set[str] = set()
+        self.memory_cache: dict = {}
+        self.assets_dir.mkdir(parents=True, exist_ok=True)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
 
-def generate_assets(story, template):
- path=Path('assets/story.json')
- if isinstance(story,(str,Path)): path=Path(story); data=json.loads(path.read_text(encoding='utf-8'))
- else: data=story
- return AssetManager(template,story_path=path).generate(data)
+    def providers(self):
+        return [
+            WikimediaProvider(self.assets_dir, self.cache_dir),
+            PexelsProvider(self.assets_dir, self.cache_dir),
+            PixabayProvider(self.assets_dir, self.cache_dir),
+            UnsplashProvider(self.assets_dir, self.cache_dir),
+            LocalAssetsProvider(self.assets_dir, self.cache_dir),
+        ]
 
-if __name__=='__main__':
- p=Path(os.getenv('STORY_PATH','assets/story.json')); s=json.loads(p.read_text(encoding='utf-8'))
- generate_assets(p, os.getenv('VIDEO_TEMPLATE',s.get('template','vox-paper-collage')))
+    def valid(self, result) -> bool:
+        return bool(
+            result
+            and Path(result.file).exists()
+            and Path(result.file).stat().st_size > 100
+            and is_valid_mime(result.mime_type)
+            and is_valid_license(result.license, result.license_url)
+            and result.provider
+            and result.qualityScore >= 0
+        )
+
+    def get(self, query: dict, scene_index: int):
+        cache_key = (query['primary'], query['size'])
+        cached = self.memory_cache.get(cache_key)
+        if cached and cached.source_url not in self.used:
+            return cached
+
+        for provider in self.providers():
+            for _ in range(2):
+                try:
+                    result = provider.search(query, scene_index, self.used)
+                    if self.valid(result):
+                        self.used.update({result.source_url, result.asset_id})
+                        self.memory_cache[cache_key] = result
+                        return result
+                except Exception as error:  # noqa: BLE001
+                    print(f'Asset provider {provider.name} skipped: {error}')
+
+        fallback = LocalAssetsProvider(self.assets_dir, self.cache_dir).search(
+            query, scene_index, self.used
+        )
+        self.used.update({fallback.source_url, fallback.asset_id})
+        return fallback
+
+    def generate(self, story: dict):
+        if not story.get('entityVisualPlan'):
+            story = plan_entities(story)
+
+        manifest = []
+        for scene_index, scene in enumerate(story.get('scenes', []), start=1):
+            query = keyword(scene)
+            result = self.get(query, scene_index)
+            relative_path = str(Path(result.file).as_posix())
+
+            scene.update({
+                'asset': relative_path,
+                'image': relative_path,
+                'assetType': result.asset_type,
+                'assetProvider': result.provider,
+                'assetAuthor': result.author,
+                'assetLicense': result.license,
+                'assetSource': result.source_url,
+                'searchQuery': result.search_query,
+                'qualityScore': result.qualityScore,
+            })
+
+            item = result.manifest()
+            item['role'] = 'main-subject'
+            item['fallback'] = result.provider == 'local-assets'
+            item['identityQuery'] = query['subject']
+            item['searchQueries'] = [query['primary'], *query['secondary']]
+            if item['fallback']:
+                item['fallbackReason'] = (
+                    'Không tìm thấy asset đúng chủ đề có giấy phép và danh tính rõ ràng; '
+                    'đã dùng minh họa trung tính, không thay bằng người khác.'
+                )
+            manifest.append(item)
+
+        story['assetProviderSystem'] = 'vox-free-licensed-assets-v1'
+        story['template'] = VOX_TEMPLATE
+        self.story_path.write_text(
+            json.dumps(story, ensure_ascii=False, indent=2), encoding='utf-8'
+        )
+        (self.output_dir / 'asset-manifest.json').write_text(
+            json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8'
+        )
+
+        credits = ['Asset credits', '=============', '']
+        for item in manifest:
+            credits.append(
+                f"Scene {item['scene']}: {item['provider']} — {item['author']} — "
+                f"{item['license']} — {item['source_url']} — quality {item['qualityScore']}/100"
+            )
+        (self.output_dir / 'credits.txt').write_text(
+            '\n'.join(credits) + '\n', encoding='utf-8'
+        )
+        return story
+
+
+def generate_assets(story):
+    path = Path('assets/story.json')
+    if isinstance(story, (str, Path)):
+        path = Path(story)
+        data = json.loads(path.read_text(encoding='utf-8'))
+    else:
+        data = story
+    return AssetManager(story_path=path).generate(data)
+
+
+if __name__ == '__main__':
+    story_path = Path(os.getenv('STORY_PATH', 'assets/story.json'))
+    generate_assets(story_path)
