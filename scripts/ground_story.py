@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Research-first story planning for arbitrary Vox documentary topics.
 
-The module does not hardcode or lock any person/topic. It resolves the current
-user topic, builds a compact research record, plans a factual sequence, and
-rewrites every scene from those facts before visual/asset planning.
+The module never hardcodes a person or topic. It resolves the current user
+request, extracts factual material, rewrites every scene from those facts, and
+creates scene-specific photo/icon queries before asset planning.
 """
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ import urllib.request
 from pathlib import Path
 
 API = "https://vi.wikipedia.org/w/api.php"
-USER_AGENT = "premium-sticktalk/4.0 (research-first-story-engine)"
+USER_AGENT = "premium-sticktalk/4.1 (research-first-story-engine)"
 BANNED_FILLER = (
     "mỗi bước nhỏ", "đừng bỏ cuộc", "động lực", "khẩu hiệu", "nút thắt",
     "câu hỏi đúng", "hành động rõ ràng", "phản ứng quen thuộc",
@@ -75,7 +75,7 @@ def split_sentences(text: str) -> list[str]:
     for part in parts:
         sentence = part.strip()
         low = sentence.casefold()
-        if not 45 <= len(sentence) <= 330:
+        if not 45 <= len(sentence) <= 300:
             continue
         if any(marker in low for marker in ("tham khảo", "chú thích", "liên kết ngoài")):
             continue
@@ -86,7 +86,10 @@ def split_sentences(text: str) -> list[str]:
 
 def entity_type(research: dict) -> str:
     text = (research["extract"] + " " + " ".join(research["categories"])).casefold()
-    if any(token in text for token in ("sinh ngày", "sinh năm", "nhân vật", "chính khách", "tướng lĩnh", "nhà khoa học", "doanh nhân")):
+    if any(token in text for token in (
+        "sinh ngày", "sinh năm", "nhân vật", "chính khách", "tướng lĩnh",
+        "nhà khoa học", "doanh nhân", "nhà văn", "nghệ sĩ",
+    )):
         return "person"
     if any(token in text for token in ("trận đánh", "chiến dịch", "sự kiện", "thảm họa")):
         return "event"
@@ -99,14 +102,15 @@ def sentence_score(sentence: str, canonical: str, index: int) -> tuple[int, int]
     low = sentence.casefold()
     score = 0
     if canonical.casefold() in low:
-        score += 8
+        score += 9
     if re.search(r"\b(18|19|20)\d{2}\b", sentence):
         score += 7
     if any(word in low for word in (
         "sinh", "thành lập", "chiến dịch", "phát minh", "công bố", "chiến thắng",
         "qua đời", "di sản", "khởi công", "ra mắt", "phát triển", "được biết đến",
+        "tham gia", "chỉ huy", "giữ chức", "bổ nhiệm",
     )):
-        score += 4
+        score += 5
     return (-score, index)
 
 
@@ -132,6 +136,19 @@ def choose_facts(research: dict, count: int) -> list[str]:
     return [sentence for _, sentence in selected]
 
 
+def narration_from_fact(fact: str, canonical: str, index: int) -> str:
+    """Create concise voice-over while preserving the factual sentence."""
+    clean = re.sub(r"\s+", " ", fact).strip()
+    if len(clean) > 190:
+        clauses = re.split(r"(?<=[,;:])\s+", clean)
+        clean = " ".join(clauses[:2]).strip()
+        if len(clean) > 190:
+            clean = clean[:187].rsplit(" ", 1)[0] + "..."
+    if index == 0 and canonical.casefold() not in clean.casefold():
+        clean = f"{canonical} là nhân vật trung tâm của câu chuyện này. {clean}"
+    return clean
+
+
 def headline(fact: str, canonical: str, index: int) -> str:
     year = re.search(r"\b(?:18|19|20)\d{2}\b", fact)
     if year:
@@ -143,7 +160,10 @@ def headline(fact: str, canonical: str, index: int) -> str:
 
 
 def extract_location(fact: str, research: dict) -> str:
-    common = ("Việt Nam", "Hà Nội", "Điện Biên", "Sài Gòn", "Thành phố Hồ Chí Minh", "Pháp", "Mỹ")
+    common = (
+        "Việt Nam", "Hà Nội", "Điện Biên", "Điện Biên Phủ", "Sài Gòn",
+        "Thành phố Hồ Chí Minh", "Pháp", "Mỹ", "Trung Quốc", "Nhật Bản",
+    )
     for place in common:
         if place.casefold() in fact.casefold():
             return place
@@ -162,13 +182,16 @@ def build_story(story: dict, topic: str) -> dict:
     timeline: list[dict] = []
 
     for index, (scene, fact) in enumerate(zip(scenes, facts)):
+        narration = narration_from_fact(fact, canonical, index)
         year_match = re.search(r"\b(?:18|19|20)\d{2}\b", fact)
         year = year_match.group(0) if year_match else ""
         location = extract_location(fact, research)
         scene_title = headline(fact, canonical, index)
+        fact_tokens = re.findall(r"[\wÀ-ỹĐđ]+", fact)[:8]
+        fact_keywords = " ".join(fact_tokens)
 
-        scene["narration"] = fact
-        scene["loi_dan"] = fact
+        scene["narration"] = narration
+        scene["loi_dan"] = narration
         scene["headline"] = scene_title
         scene["text"] = scene_title
         scene["newFact"] = fact
@@ -181,20 +204,21 @@ def build_story(story: dict, topic: str) -> dict:
         scene["tu_khoa"] = scene["keywords"]
         scene["entityVisualPlan"] = {
             "mainSubject": canonical,
-            "mainSubjectType": kind,
+            "mainSubjectType": kind if index == 0 else "event",
+            "identityRequired": bool(kind == "person" and index == 0),
             "event": fact,
             "timePeriod": year,
             "location": location,
             "visualEvidence": [fact],
             "searchQueries": [
-                f'"{canonical}" Wikimedia Commons',
+                f'"{canonical}" portrait Wikimedia Commons' if index == 0 and kind == "person" else f'"{canonical}" Wikimedia Commons',
                 f'"{canonical}" {year} {location}'.strip(),
-                f'"{canonical}" {" ".join(re.findall(r"[\wÀ-ỹĐđ]+", fact)[:8])}',
+                f'"{canonical}" {fact_keywords}'.strip(),
             ],
             "iconQueries": [
-                f'{canonical} icon',
-                f'{location or "timeline"} map icon',
-                f'{year or "document"} historical icon',
+                f'{location or canonical} map icon',
+                f'{year or "timeline"} timeline icon',
+                f'{fact_keywords} historical icon',
             ],
             "assetRoles": [
                 "main-subject", "context-evidence", "map-or-timeline",
@@ -205,16 +229,14 @@ def build_story(story: dict, topic: str) -> dict:
 
     story["title"] = story["tieu_de"] = canonical
     story["topicInput"] = topic
-    story["research"] = {
-        key: value for key, value in research.items() if key != "extract"
-    }
+    story["research"] = {key: value for key, value in research.items() if key != "extract"}
     story["research"]["entityType"] = kind
     story["research"]["timeline"] = timeline
     story["entityVisualPlan"] = {
         "mainEntity": canonical,
         "mainEntityType": kind,
         "archivalSearchTerms": [
-            f'"{canonical}" portrait',
+            f'"{canonical}" portrait Wikimedia Commons',
             f'"{canonical}" historical photo',
             f'"{canonical}" Wikimedia Commons',
         ],
