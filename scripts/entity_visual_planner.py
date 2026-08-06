@@ -125,6 +125,11 @@ def plan_entities(story: dict, topic: str | None = None) -> dict:
         scene.setdefault("assetRoles", asset_roles)
     story["entityVisualPlan"] = entity_plan
     story["topic"] = topic
+    # Rebuild the composition brief only after entities and evidence are known.
+    # This makes the existing Vox template consume the same topic-derived plan
+    # instead of retaining a generic character/icon brief from Story Engine.
+    from scripts.visual_planner import apply_visual_plans
+    apply_visual_plans(story)
     return story
 
 

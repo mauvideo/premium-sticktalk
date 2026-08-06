@@ -23,6 +23,8 @@ def test_planner_is_topic_agnostic_and_populates_scene_contract():
     for scene in first["scenes"]:
         assert required <= scene["entityVisualPlan"].keys()
         assert len(scene["entityVisualPlan"]["assetRoles"]) >= 7
+        assert scene["visualPlan"]["mainCharacter"] == "Nhân vật Alpha"
+        assert scene["visualPlan"]["dataLayers"]
 
 
 def test_queries_are_bilingual_and_restrict_sources():
