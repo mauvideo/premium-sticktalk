@@ -1,74 +1,19 @@
 {
-  "project": "motivation",
-  "name": "Video tài liệu tự động",
-  "description": "Pipeline tổng quát tạo video theo đúng chủ đề người dùng bằng Remotion và tài nguyên có giấy phép rõ ràng.",
+  "project": "documentary",
+  "name": "Vox Paper Collage Engine",
+  "description": "Pipeline duy nhất tạo video Vox Style tự động theo chủ đề người dùng.",
   "default_template": "vox-paper-collage",
   "templates": [
     {
-      "id": "prompt-to-video",
-      "name": "Prompt to Video",
-      "source": "remotion-dev/template-prompt-to-video",
-      "license": "MIT",
-      "upstream_url": "https://github.com/remotion-dev/template-prompt-to-video",
-      "style": "ke_chuyen_tai_lieu",
-      "motion_level": "trung_bình",
-      "script_mode": "Kể chuyện",
-      "writing_style": "Tin tức rõ ràng"
-    },
-    {
-      "id": "kinetic-captions",
-      "name": "Kinetic Captions",
-      "source": "remotion-dev/remotion",
-      "license": "Remotion License",
-      "upstream_url": "https://github.com/remotion-dev/remotion",
-      "style": "phu_de_tai_lieu",
-      "motion_level": "viral_tiktok",
-      "script_mode": "Một người dẫn chuyện",
-      "writing_style": "Ngắn gọn TikTok"
-    },
-    {
-      "id": "smooth-transitions",
-      "name": "Smooth Transitions",
-      "source": "remotion-dev/remotion",
-      "license": "Remotion License",
-      "upstream_url": "https://github.com/remotion-dev/remotion",
-      "style": "tai_lieu_chuyen_canh",
-      "motion_level": "nhiều",
-      "script_mode": "Một người dẫn chuyện",
-      "writing_style": "Tin tức rõ ràng"
-    },
-    {
-      "id": "paper-sketch",
-      "name": "Paper Sketch",
-      "source": "remotion-dev/remotion",
-      "license": "Remotion License",
-      "upstream_url": "https://github.com/remotion-dev/remotion",
-      "style": "phac_thao_tai_lieu",
-      "motion_level": "nhẹ",
-      "script_mode": "Kể chuyện",
-      "writing_style": "Tin tức rõ ràng"
-    },
-    {
-      "id": "paper-cut-documentary",
-      "name": "Cắt giấy tài liệu",
-      "source": "Nội bộ - CSS/SVG/Remotion tự tạo",
-      "license": "MIT (theo giấy phép repository)",
-      "upstream_url": "",
-      "style": "cat_giay_tai_lieu",
-      "motion_level": "trung_bình",
-      "script_mode": "Phim tài liệu",
-      "writing_style": "Tin tức rõ ràng"
-    },
-    {
       "id": "vox-paper-collage",
-      "name": "Vox giấy cắt",
+      "name": "Vox Paper Collage",
       "source": "Nội bộ - CSS/SVG/Remotion tự tạo",
       "license": "MIT (theo giấy phép repository)",
       "upstream_url": "",
       "style": "vox_giay_cat",
-      "motion_level": "nhiều",
-      "script_mode": "Phim tài liệu",
-      "writing_style": "Tin tức rõ ràng"
+      "motion_level": "high",
+      "script_mode": "auto-by-topic",
+      "writing_style": "auto-by-topic"
     }
   ]
 }
