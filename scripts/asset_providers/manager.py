@@ -14,15 +14,14 @@ from .wikimedia import WikimediaProvider
 from scripts.entity_visual_planner import plan_entities
 
 VOX_TEMPLATE = 'vox-paper-collage'
+MIN_TOPIC_PHOTOS = 3
+MAX_TOPIC_PHOTOS = 5
 
 
 def keyword(scene: dict) -> dict:
     entity_plan = scene.get('entityVisualPlan', {})
     queries = entity_plan.get('searchQueries') or []
     subject = entity_plan.get('mainSubject') or 'documentary subject'
-    event = entity_plan.get('event', '')
-    location = entity_plan.get('location', '')
-
     return {
         'primary': queries[0] if queries else f'"{subject}"',
         'secondary': queries[1:],
@@ -32,21 +31,15 @@ def keyword(scene: dict) -> dict:
         'subject': subject,
         'subject_type': entity_plan.get('mainSubjectType', 'concept'),
         'identity_required': bool(entity_plan.get('identityRequired')),
-        'event': event,
-        'setting': location or 'documentary context',
+        'event': entity_plan.get('event', ''),
+        'setting': entity_plan.get('location', '') or 'documentary context',
         'template': VOX_TEMPLATE,
         'size': '9:16',
     }
 
 
 class AssetManager:
-    def __init__(
-        self,
-        story_path: str = 'assets/story.json',
-        assets_dir: str = 'assets/generated-assets',
-        output_dir: str = 'output',
-        cache_dir: str = 'assets/.asset-cache',
-    ):
+    def __init__(self, story_path='assets/story.json', assets_dir='assets/generated-assets', output_dir='output', cache_dir='assets/.asset-cache'):
         self.template = VOX_TEMPLATE
         self.story_path = Path(story_path)
         self.assets_dir = Path(assets_dir)
@@ -60,8 +53,6 @@ class AssetManager:
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
     def providers(self, query: dict):
-        # Wikimedia is tried first, but one HTTP 429 must not kill the render.
-        # Context scenes then continue through stock/archive providers.
         if query.get('identity_required'):
             return [WikimediaProvider(self.assets_dir, self.cache_dir)]
         return [
@@ -69,21 +60,10 @@ class AssetManager:
             PexelsProvider(self.assets_dir, self.cache_dir),
             PixabayProvider(self.assets_dir, self.cache_dir),
             UnsplashProvider(self.assets_dir, self.cache_dir),
-            LocalAssetsProvider(self.assets_dir, self.cache_dir),
         ]
 
     def valid(self, result) -> bool:
-        # The user requested that unavailable/unclear licence metadata must not
-        # stop rendering. Source and licence text are still recorded in the
-        # manifest so the output can be reviewed later.
-        return bool(
-            result
-            and Path(result.file).exists()
-            and Path(result.file).stat().st_size > 100
-            and is_valid_mime(result.mime_type)
-            and result.provider
-            and result.qualityScore >= 0
-        )
+        return bool(result and Path(result.file).exists() and Path(result.file).stat().st_size > 100 and is_valid_mime(result.mime_type) and result.provider and result.qualityScore >= 0)
 
     def lead_image_fallback(self, query: dict, scene_index: int):
         url = str(self.research.get('leadImageUrl') or '').strip()
@@ -93,38 +73,14 @@ class AssetManager:
         subject = query.get('subject') or self.research.get('canonicalTitle') or 'subject'
         path = self.assets_dir / f"scene-{scene_index:02d}-topic-{safe_name(subject)}{suffix}"
         cache = self.cache_dir / f"topic-lead-{safe_name(subject)}{suffix}"
-        _, mime, _ = download(
-            url,
-            path,
-            headers={'User-Agent': 'premium-sticktalk/5.0 (topic-image-fallback)'},
-            cache_path=cache,
-        )
-        return AssetResult(
-            scene=scene_index,
-            file=str(path),
-            asset_type='photo',
-            provider='wikipedia-topic-image',
-            source_url=str(self.research.get('sourceUrl') or url),
-            author='Source page contributor',
-            author_url='',
-            license='unverified-source',
-            license_url='',
-            search_query=f'{subject} topic lead image',
-            downloaded_at=datetime.now(timezone.utc).isoformat(),
-            width=0,
-            height=0,
-            mime_type=mime,
-            qualityScore=80,
-            asset_id=f'topic-lead-{safe_name(subject)}',
-        )
+        _, mime, _ = download(url, path, headers={'User-Agent': 'premium-sticktalk/5.1 (topic-image-fallback)'}, cache_path=cache)
+        return AssetResult(scene=scene_index, file=str(path), asset_type='photo', provider='wikipedia-topic-image', source_url=str(self.research.get('sourceUrl') or url), author='Source page contributor', author_url='', license='unverified-source', license_url='', search_query=f'{subject} topic lead image', downloaded_at=datetime.now(timezone.utc).isoformat(), width=0, height=0, mime_type=mime, qualityScore=80, asset_id=f'topic-lead-{safe_name(subject)}')
 
-    def get(self, query: dict, scene_index: int):
+    def get(self, query: dict, scene_index: int, allow_local: bool = True):
         cache_key = (query['primary'], query['size'])
         cached = self.memory_cache.get(cache_key)
         if cached and cached.source_url not in self.used:
             return cached
-
-        # Avoid repeated API hammering: one request per provider per scene.
         for provider in self.providers(query):
             try:
                 result = provider.search(query, scene_index, self.used)
@@ -134,9 +90,6 @@ class AssetManager:
                     return result
             except Exception as error:  # noqa: BLE001
                 print(f'Asset provider {provider.name} skipped: {error}')
-
-        # For a named subject, use the lead image attached to the resolved topic
-        # page when Commons is rate limited. This keeps the visual on-topic.
         if query.get('identity_required'):
             try:
                 lead = self.lead_image_fallback(query, scene_index)
@@ -145,83 +98,101 @@ class AssetManager:
                     return lead
             except Exception as error:  # noqa: BLE001
                 print(f'Topic lead image fallback skipped: {error}')
-
-        fallback = LocalAssetsProvider(self.assets_dir, self.cache_dir).search(
-            query, scene_index, self.used
-        )
+        if not allow_local:
+            return None
+        fallback = LocalAssetsProvider(self.assets_dir, self.cache_dir).search(query, scene_index, self.used)
         self.used.update({fallback.source_url, fallback.asset_id})
         return fallback
+
+    @staticmethod
+    def manifest_item(result, scene_index: int, role: str, subject: str, queries: list[str]):
+        item = result.manifest()
+        item['scene'] = scene_index
+        item['role'] = role
+        item['fallback'] = result.provider == 'local-assets'
+        item['identityQuery'] = subject
+        item['identityVerified'] = result.provider == 'wikimedia-commons'
+        item['topicMatched'] = result.provider in {'wikimedia-commons', 'wikipedia-topic-image'}
+        item['searchQueries'] = queries
+        item['cutoutStyle'] = 'white-outline-yellow-shadow'
+        item['licenseCheckBypassed'] = result.license == 'unverified-source'
+        return item
 
     def generate(self, story: dict):
         if not story.get('entityVisualPlan'):
             story = plan_entities(story)
-
         self.research = story.get('research') or {}
+        scenes = story.get('scenes', [])
         manifest = []
-        topic_subject_images = 0
+        topic_gallery: list[str] = []
+        canonical = str(self.research.get('canonicalTitle') or story.get('title') or '').strip()
 
-        for scene_index, scene in enumerate(story.get('scenes', []), start=1):
+        for scene_index, scene in enumerate(scenes, start=1):
             query = keyword(scene)
             result = self.get(query, scene_index)
             relative_path = str(Path(result.file).as_posix())
-            topic_matched = bool(
-                query.get('identity_required')
-                and result.provider in {'wikimedia-commons', 'wikipedia-topic-image'}
-            )
-            if topic_matched:
-                topic_subject_images += 1
+            scene['asset'] = relative_path
+            scene['image'] = relative_path
+            scene['assetType'] = result.asset_type
+            scene['assetProvider'] = result.provider
+            scene['assetAuthor'] = result.author
+            scene['assetLicense'] = result.license
+            scene['assetSource'] = result.source_url
+            scene['searchQuery'] = result.search_query
+            scene['qualityScore'] = result.qualityScore
+            scene['identityVerified'] = result.provider == 'wikimedia-commons'
+            scene['topicMatched'] = result.provider in {'wikimedia-commons', 'wikipedia-topic-image'}
+            scene['cutoutStyle'] = 'white-outline-yellow-shadow'
+            manifest.append(self.manifest_item(result, scene_index, 'main-subject' if query.get('identity_required') else 'context-evidence', query['subject'], [query['primary'], *query['secondary']]))
+            if result.provider != 'local-assets' and relative_path not in topic_gallery and len(topic_gallery) < MAX_TOPIC_PHOTOS:
+                topic_gallery.append(relative_path)
 
-            scene.update({
-                'asset': relative_path,
-                'image': relative_path,
-                'assetType': result.asset_type,
-                'assetProvider': result.provider,
-                'assetAuthor': result.author,
-                'assetLicense': result.license,
-                'assetSource': result.source_url,
-                'searchQuery': result.search_query,
-                'qualityScore': result.qualityScore,
-                'identityVerified': result.provider == 'wikimedia-commons',
-                'topicMatched': topic_matched,
-                'cutoutStyle': 'white-outline-yellow-shadow',
-            })
+            # Download one additional on-topic photo for early scenes until the
+            # video has a 3-5 image gallery. These are displayed as smaller paper cards.
+            if len(topic_gallery) < MAX_TOPIC_PHOTOS:
+                variants = [
+                    f'"{canonical}" historical photo',
+                    f'"{canonical}" {scene.get("timeMarker", "")}',
+                    f'"{canonical}" {scene.get("location", "")}',
+                ]
+                for variant in variants:
+                    variant = variant.strip()
+                    if not variant or variant == query['primary']:
+                        continue
+                    extra_query = dict(query)
+                    extra_query['primary'] = variant
+                    extra_query['identity_required'] = False
+                    extra = self.get(extra_query, scene_index, allow_local=False)
+                    if not extra:
+                        continue
+                    extra_path = str(Path(extra.file).as_posix())
+                    if extra_path in topic_gallery:
+                        continue
+                    topic_gallery.append(extra_path)
+                    scene.setdefault('assets', []).append(extra_path)
+                    manifest.append(self.manifest_item(extra, scene_index, 'supporting-photo', canonical, [variant]))
+                    break
 
-            item = result.manifest()
-            item['role'] = 'main-subject' if query.get('identity_required') else 'context-evidence'
-            item['fallback'] = result.provider == 'local-assets'
-            item['identityQuery'] = query['subject']
-            item['identityVerified'] = result.provider == 'wikimedia-commons'
-            item['topicMatched'] = topic_matched
-            item['searchQueries'] = [query['primary'], *query['secondary']]
-            item['cutoutStyle'] = 'white-outline-yellow-shadow'
-            item['licenseCheckBypassed'] = result.license == 'unverified-source'
-            if item['fallback']:
-                item['fallbackReason'] = 'Không tải được ảnh trực tuyến; dùng minh họa cục bộ.'
-            manifest.append(item)
+        # Distribute the verified/on-topic gallery across scenes, at most two
+        # supporting cards per scene, without duplicating the main image.
+        for index, scene in enumerate(scenes):
+            main = scene.get('image')
+            candidates = [path for path in topic_gallery if path != main]
+            start = index % max(1, len(candidates)) if candidates else 0
+            ordered = candidates[start:] + candidates[:start]
+            scene['assets'] = list(dict.fromkeys([*(scene.get('assets') or []), *ordered[:2]]))[:2]
 
-        # Do not fail the entire 20-40 minute render because Commons returned
-        # HTTP 429. The manifest shows whether a verified or topic-page image
-        # was used, and the video can still be inspected.
-        story['assetProviderSystem'] = 'vox-topic-assets-tolerant-v3'
+        story['assetProviderSystem'] = 'vox-topic-assets-gallery-v4'
         story['template'] = VOX_TEMPLATE
-        story['topicSubjectImages'] = topic_subject_images
-        self.story_path.write_text(
-            json.dumps(story, ensure_ascii=False, indent=2), encoding='utf-8'
-        )
-        (self.output_dir / 'asset-manifest.json').write_text(
-            json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8'
-        )
-
+        story['topicSubjectImages'] = len(topic_gallery)
+        story['topicImageGallery'] = topic_gallery
+        self.story_path.write_text(json.dumps(story, ensure_ascii=False, indent=2), encoding='utf-8')
+        (self.output_dir / 'asset-manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8')
         credits = ['Asset credits', '=============', '']
         for item in manifest:
-            credits.append(
-                f"Scene {item['scene']}: {item['provider']} — {item['author']} — "
-                f"{item['license']} — {item['source_url']} — quality {item['qualityScore']}/100 — "
-                f"topicMatched={item['topicMatched']} — identityVerified={item['identityVerified']}"
-            )
-        (self.output_dir / 'credits.txt').write_text(
-            '\n'.join(credits) + '\n', encoding='utf-8'
-        )
+            credits.append(f"Scene {item['scene']}: {item['provider']} — {item['author']} — {item['license']} — {item['source_url']} — role={item['role']}")
+        (self.output_dir / 'credits.txt').write_text('\n'.join(credits) + '\n', encoding='utf-8')
+        print(f'Đã chuẩn bị {len(topic_gallery)} ảnh bám sát chủ đề cho video.')
         return story
 
 
