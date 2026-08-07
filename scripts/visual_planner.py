@@ -14,7 +14,7 @@ COMPOSITIONS = [
 ]
 
 ICON_RULES = [
-    ({"bản", "đồ", "địa", "điểm", "chiến", "dịch", "quốc", "gia"}, "map"),
+    ({"bản", "đồ", "địa", "điểm", "quốc", "gia"}, "map"),
     ({"năm", "thời", "giai", "đoạn", "lịch", "sử"}, "timeline"),
     ({"tài", "liệu", "hồ", "sơ", "thư", "báo"}, "document"),
     ({"quân", "đội", "tướng", "chiến", "trận", "binh"}, "military"),
@@ -43,13 +43,13 @@ def _semantic_icons(tokens: set[str], evidence: list[str]) -> list[str]:
     for required, icon in ICON_RULES:
         if required & joined and icon not in icons:
             icons.append(icon)
-    for fallback in ("document", "map", "timeline"):
-        if fallback not in icons:
-            icons.append(fallback)
+    # Không ép icon mặc định. Scene không có ngữ nghĩa phù hợp thì để trống,
+    # tránh kiểu scene nào cũng document/map/timeline dù lời thoại không nói tới.
     return icons[:3]
 
 
 def create_visual_plan(scene: dict, story: dict, scene_index: int) -> dict:
+    narration = str(scene.get("narration") or scene.get("loi_dan") or "")
     text = " ".join(str(scene.get(k, "")) for k in ("narration", "loi_dan", "sceneRole", "storyProgress", "imageFocus", "headline"))
     tokens = _tokens(text + " " + str(story.get("title") or story.get("tieu_de", "")))
     seed = int(scene.get("seed") or (scene_index + 1) * 97)
@@ -62,16 +62,19 @@ def create_visual_plan(scene: dict, story: dict, scene_index: int) -> dict:
     event = str(entity.get("event") or "")
     location = str(entity.get("location") or "")
 
-    data_layers = ([{"type": "map", "label": maps[scene_index % len(maps)]}] if maps else [])
-    data_layers += ([{"type": "chart", "label": charts[scene_index % len(charts)]}] if charts else [])
-    if time_period:
+    narration_norm = narration.casefold()
+    data_layers = []
+    # Chỉ thêm map/chart/timeline khi chính scene có tín hiệu liên quan.
+    if maps and location and location.casefold() in narration_norm:
+        data_layers.append({"type": "map", "label": maps[0]})
+    if charts and ({"số", "liệu", "tăng", "giảm", "%", "phần", "trăm"} & tokens):
+        data_layers.append({"type": "chart", "label": charts[scene_index % len(charts)]})
+    if time_period and time_period in narration:
         data_layers.append({"type": "timeline", "label": time_period})
-    if not data_layers:
-        data_layers.append({"type": "evidence", "label": event or "Dữ kiện chính"})
+    if not data_layers and event:
+        data_layers.append({"type": "evidence", "label": event})
 
     secondary = [x for x in [event, location, *evidence] if x]
-    if not secondary:
-        secondary = ["ảnh tư liệu", "tài liệu gốc"]
 
     return {
         "background": "archival paper collage",
