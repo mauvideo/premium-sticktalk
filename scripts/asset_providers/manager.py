@@ -11,357 +11,143 @@ from .openverse import OpenverseProvider
 from .pexels import PexelsProvider
 from .pixabay import PixabayProvider
 from .unsplash import UnsplashProvider
-from .local_assets import LocalAssetsProvider
 from .wikimedia import WikimediaProvider
 from scripts.entity_visual_planner import plan_entities
 
 VOX_TEMPLATE = 'vox-paper-collage'
 MIN_TOPIC_PHOTOS = 3
-MAX_TOPIC_PHOTOS = 5
+MAX_TOPIC_PHOTOS = 8
 VERIFIED_IDENTITY_PROVIDERS = {'wikimedia-commons', 'wikipedia-topic-image'}
-ONLINE_PROVIDERS = {
-    'wikimedia-commons', 'wikipedia-topic-image', 'openverse',
-    'pexels', 'pixabay', 'unsplash',
-}
+ONLINE_PROVIDERS = {'wikimedia-commons','wikipedia-topic-image','openverse','pexels','pixabay','unsplash'}
 
 
 def keyword(scene: dict) -> dict:
-    entity_plan = scene.get('entityVisualPlan', {})
-    queries = entity_plan.get('searchQueries') or []
-    subject = entity_plan.get('mainSubject') or 'documentary subject'
+    p = scene.get('entityVisualPlan') or {}
+    queries = p.get('searchQueries') or []
     return {
-        'primary': queries[0] if queries else subject,
-        'secondary': queries[1:],
-        'asset_type': 'photo',
-        'style': 'editorial documentary paper collage',
-        'emotion': 'documentary',
-        'subject': subject,
-        'subject_type': entity_plan.get('mainSubjectType', 'concept'),
-        'identity_required': bool(entity_plan.get('identityRequired')),
-        'event': entity_plan.get('event', ''),
-        'setting': entity_plan.get('location', '') or 'documentary context',
-        'time_period': entity_plan.get('timePeriod', ''),
-        'visual_evidence': entity_plan.get('visualEvidence') or [],
-        'template': VOX_TEMPLATE,
-        'size': '9:16',
+        'primary': queries[0] if queries else p.get('mainSubject', 'documentary subject'),
+        'secondary': queries[1:], 'asset_type':'photo', 'style':'editorial documentary paper collage',
+        'emotion':'documentary', 'subject':p.get('mainSubject','documentary subject'),
+        'subject_type':p.get('mainSubjectType','concept'), 'identity_required':bool(p.get('identityRequired')),
+        'event':p.get('event',''), 'setting':p.get('location',''), 'time_period':p.get('timePeriod',''),
+        'visual_evidence':p.get('visualEvidence') or [], 'template':VOX_TEMPLATE, 'size':'9:16',
     }
 
 
 class AssetManager:
     def __init__(self, story_path='assets/story.json', assets_dir='assets/generated-assets', output_dir='output', cache_dir='assets/.asset-cache'):
-        self.template = VOX_TEMPLATE
-        self.story_path = Path(story_path)
-        self.assets_dir = Path(assets_dir)
-        self.output_dir = Path(output_dir)
-        self.cache_dir = Path(cache_dir)
-        self.used: set[str] = set()
-        self.memory_cache: dict = {}
-        self.research: dict = {}
-        self.assets_dir.mkdir(parents=True, exist_ok=True)
-        self.output_dir.mkdir(parents=True, exist_ok=True)
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        self.story_path=Path(story_path); self.assets_dir=Path(assets_dir); self.output_dir=Path(output_dir); self.cache_dir=Path(cache_dir)
+        for p in (self.assets_dir,self.output_dir,self.cache_dir): p.mkdir(parents=True,exist_ok=True)
+        self.used:set[str]=set(); self.research={}; self.memory_cache={}
 
-    def providers(self, query: dict):
-        subject_type = str(query.get('subject_type') or '').casefold()
-        if query.get('identity_required') or subject_type == 'person':
-            # Never use random stock people as the named person.
-            return [WikimediaProvider(self.assets_dir, self.cache_dir)]
-        if subject_type in {'event', 'place', 'company', 'organization'}:
-            return [
-                WikimediaProvider(self.assets_dir, self.cache_dir),
-                OpenverseProvider(self.assets_dir, self.cache_dir),
-                PexelsProvider(self.assets_dir, self.cache_dir),
-                PixabayProvider(self.assets_dir, self.cache_dir),
-                UnsplashProvider(self.assets_dir, self.cache_dir),
-            ]
-        return [
-            WikimediaProvider(self.assets_dir, self.cache_dir),
-            OpenverseProvider(self.assets_dir, self.cache_dir),
-            PexelsProvider(self.assets_dir, self.cache_dir),
-            PixabayProvider(self.assets_dir, self.cache_dir),
-            UnsplashProvider(self.assets_dir, self.cache_dir),
-        ]
-
-    def valid(self, result) -> bool:
-        return bool(
-            result
-            and Path(result.file).exists()
-            and Path(result.file).stat().st_size > 100
-            and is_valid_mime(result.mime_type)
-            and result.provider
-            and result.qualityScore >= 0
-        )
-
-    def lead_image_fallback(self, query: dict, scene_index: int):
-        url = str(self.research.get('leadImageUrl') or '').strip()
-        if not url:
-            return None
-        suffix = '.png' if '.png' in url.lower() else '.jpg'
-        subject = query.get('subject') or self.research.get('canonicalTitle') or 'subject'
-        path = self.assets_dir / f"scene-{scene_index:02d}-topic-{safe_name(subject)}{suffix}"
-        cache = self.cache_dir / f"topic-lead-{safe_name(subject)}{suffix}"
-        _, mime, _ = download(
-            url,
-            path,
-            headers={'User-Agent': 'premium-sticktalk/7.0 (verified-topic-image)'},
-            cache_path=cache,
-        )
-        return AssetResult(
-            scene=scene_index,
-            file=str(path),
-            asset_type='photo',
-            provider='wikipedia-topic-image',
-            source_url=str(self.research.get('sourceUrl') or url),
-            author='Source page contributor',
-            author_url='',
-            license='unverified-source',
-            license_url='',
-            search_query=f'{subject} verified topic lead image',
-            downloaded_at=datetime.now(timezone.utc).isoformat(),
-            width=0,
-            height=0,
-            mime_type=mime,
-            qualityScore=95,
-            asset_id=f'topic-lead-{safe_name(subject)}',
-        )
+    def providers(self, identity=False):
+        if identity:
+            return [WikimediaProvider(self.assets_dir,self.cache_dir)]
+        return [WikimediaProvider(self.assets_dir,self.cache_dir),OpenverseProvider(self.assets_dir,self.cache_dir),PexelsProvider(self.assets_dir,self.cache_dir),PixabayProvider(self.assets_dir,self.cache_dir),UnsplashProvider(self.assets_dir,self.cache_dir)]
 
     @staticmethod
-    def _clean_query(value: str) -> str:
-        value = str(value or '').replace('"', ' ')
-        value = re.sub(r'\s+', ' ', value).strip(' ,;:-')
-        return value[:180]
+    def _clean(v): return re.sub(r'\s+',' ',str(v or '').replace('"',' ')).strip(' ,;:-')[:180]
 
-    @classmethod
-    def query_variants(cls, query: dict) -> list[str]:
-        subject = cls._clean_query(query.get('subject', ''))
-        subject_type = cls._clean_query(query.get('subject_type', '')).casefold()
-        event = cls._clean_query(query.get('event', ''))
-        setting = cls._clean_query(query.get('setting', ''))
-        period = cls._clean_query(query.get('time_period', ''))
-        evidence = [cls._clean_query(item) for item in query.get('visual_evidence', [])]
+    def variants(self, q:dict, contextual=False):
+        subject=self._clean(q.get('subject')); event=self._clean(q.get('event')); setting=self._clean(q.get('setting')); period=self._clean(q.get('time_period'))
+        out=[]
+        if contextual:
+            out += [event, f'{event} historical photo' if event else '', setting, f'{setting} historical photo' if setting else '']
+            out += [self._clean(x) for x in q.get('visual_evidence',[]) if self._clean(x)]
+            if period and event: out.append(f'{event} {period}')
+            if subject and event: out.append(f'{subject} {event}')
+        else:
+            out += [q.get('primary'),*(q.get('secondary') or []),subject]
+            if q.get('subject_type')=='person':
+                out += [f'{subject} portrait',f'{subject} archival photograph',f'{subject} historical photograph',f'{subject} speaking']
+            elif subject:
+                out += [f'{subject} historical photo',f'{subject} archive']
+            if period: out.append(f'{subject} {period}')
+        seen=set(); cleaned=[]
+        for v in out:
+            v=self._clean(v); k=v.casefold()
+            if v and k not in seen: seen.add(k); cleaned.append(v)
+        return cleaned[:16]
 
-        variants = [query.get('primary'), *(query.get('secondary') or [])]
-        if subject:
-            variants.append(subject)
-            if subject_type == 'person':
-                variants.extend([
-                    f'{subject} portrait',
-                    f'{subject} archival photograph',
-                    f'{subject} historical photograph',
-                    f'{subject} speaking',
-                    f'{subject} official photograph',
-                ])
-            elif subject_type in {'company', 'organization'}:
-                variants.extend([
-                    f'{subject} headquarters', f'{subject} founder',
-                    f'{subject} products', f'{subject} historical photo',
-                ])
-            elif subject_type == 'event':
-                variants.extend([
-                    f'{subject} historical photo', f'{subject} map',
-                    f'{subject} newspaper', f'{subject} aftermath',
-                ])
-            elif subject_type == 'place':
-                variants.extend([
-                    f'{subject} landmark', f'{subject} aerial view',
-                    f'{subject} old photograph', f'{subject} map',
-                ])
-            else:
-                variants.extend([
-                    f'{subject} documentary photo', f'{subject} illustration',
-                    f'{subject} diagram',
-                ])
-        if subject and period:
-            variants.append(f'{subject} {period}')
-        if subject and setting and setting != 'documentary context':
-            variants.append(f'{subject} {setting}')
-        if subject and event:
-            variants.append(f'{subject} {" ".join(event.split()[:14])}')
-        variants.extend(evidence)
+    def valid(self,r):
+        return bool(r and Path(r.file).exists() and Path(r.file).stat().st_size>700 and is_valid_mime(r.mime_type) and r.provider and r.qualityScore>=0)
 
-        cleaned: list[str] = []
-        seen: set[str] = set()
-        for value in variants:
-            value = cls._clean_query(value)
-            folded = value.casefold()
-            if value and folded not in seen:
-                cleaned.append(value)
-                seen.add(folded)
-        return cleaned[:18]
+    def matches(self,r,identity=False):
+        if not self.valid(r): return False
+        return r.provider in VERIFIED_IDENTITY_PROVIDERS if identity else r.provider in ONLINE_PROVIDERS
 
-    def result_matches_query(self, result, query: dict) -> bool:
-        if not self.valid(result):
-            return False
-        subject_type = str(query.get('subject_type') or '').casefold()
-        if query.get('identity_required') or subject_type == 'person':
-            return result.provider in VERIFIED_IDENTITY_PROVIDERS
-        return result.provider in ONLINE_PROVIDERS
-
-    def get(self, query: dict, scene_index: int, allow_local: bool = True):
-        for search_text in self.query_variants(query):
-            current_query = dict(query)
-            current_query['primary'] = search_text
-            cache_key = (search_text.casefold(), current_query['size'], str(current_query.get('subject_type')))
-            cached = self.memory_cache.get(cache_key)
-            if cached and cached.source_url not in self.used and self.result_matches_query(cached, current_query):
-                return cached
-            for provider in self.providers(current_query):
+    def search(self,q:dict,scene_index:int,identity=False,contextual=False):
+        for text in self.variants(q,contextual=contextual):
+            current={**q,'primary':text,'identity_required':identity}
+            if contextual:
+                # Context searches must not be interpreted as the named person.
+                current['subject']=text; current['subject_type']='concept'
+            for provider in self.providers(identity=identity):
                 try:
-                    result = provider.search(current_query, scene_index, self.used)
-                    if self.result_matches_query(result, current_query):
-                        self.used.update({result.source_url, result.asset_id})
-                        self.memory_cache[cache_key] = result
-                        return result
-                except Exception as error:  # noqa: BLE001
-                    print(f'Asset provider {provider.name} skipped for {search_text!r}: {error}')
+                    r=provider.search(current,scene_index,self.used)
+                    if self.matches(r,identity=identity):
+                        self.used.update({r.source_url,r.asset_id}); return r
+                except Exception as e:
+                    print(f'ASSET SKIP {provider.name} {text!r}: {e}')
+        return None
 
-        if query.get('identity_required') or str(query.get('subject_type') or '').casefold() == 'person':
-            try:
-                lead = self.lead_image_fallback(query, scene_index)
-                if self.result_matches_query(lead, {**query, 'identity_required': True}):
-                    self.used.update({lead.source_url, lead.asset_id})
-                    return lead
-            except Exception as error:  # noqa: BLE001
-                print(f'Topic lead image fallback skipped: {error}')
+    def lead_image(self,q:dict,scene_index:int):
+        url=str(self.research.get('leadImageUrl') or '').strip()
+        if not url:return None
+        suffix='.png' if '.png' in url.lower() else '.jpg'; subject=q.get('subject') or self.research.get('canonicalTitle') or 'subject'
+        path=self.assets_dir/f'scene-{scene_index:02d}-topic-{safe_name(subject)}{suffix}'; cache=self.cache_dir/f'lead-{safe_name(subject)}{suffix}'
+        _,mime,_=download(url,path,headers={'User-Agent':'premium-sticktalk/8.0'},cache_path=cache)
+        return AssetResult(scene_index,str(path),'photo','wikipedia-topic-image',str(self.research.get('sourceUrl') or url),'Wikipedia contributor','','source-page','',f'{subject} topic lead',datetime.now(timezone.utc).isoformat(),0,0,mime,100,f'lead-{safe_name(subject)}')
 
-        if not allow_local:
-            return None
-        fallback = LocalAssetsProvider(self.assets_dir, self.cache_dir).search(query, scene_index, self.used)
-        self.used.update({fallback.source_url, fallback.asset_id})
-        return fallback
+    def item(self,r,scene,role,subject,queries):
+        d=r.manifest(); d.update({'scene':scene,'role':role,'fallback':False,'identityQuery':subject,'identityVerified':r.provider in VERIFIED_IDENTITY_PROVIDERS,'topicMatched':r.provider in ONLINE_PROVIDERS,'searchQueries':queries,'cutoutStyle':'white-outline-yellow-shadow'}); return d
 
-    @staticmethod
-    def manifest_item(result, scene_index: int, role: str, subject: str, queries: list[str]):
-        item = result.manifest()
-        item['scene'] = scene_index
-        item['role'] = role
-        item['fallback'] = result.provider == 'local-assets'
-        item['identityQuery'] = subject
-        item['identityVerified'] = result.provider in VERIFIED_IDENTITY_PROVIDERS
-        item['topicMatched'] = result.provider in ONLINE_PROVIDERS
-        item['searchQueries'] = queries
-        item['cutoutStyle'] = 'white-outline-yellow-shadow'
-        item['licenseCheckBypassed'] = result.license == 'unverified-source'
-        return item
+    def generate(self,story:dict):
+        # Re-plan from research every run so stale scene metadata cannot poison images.
+        story=plan_entities(story,story.get('topic') or story.get('title'))
+        self.research=story.get('research') or {}; scenes=story.get('scenes') or []; plan=story.get('entityVisualPlan') or {}
+        canonical=str(plan.get('mainEntity') or self.research.get('canonicalTitle') or story.get('title') or '').strip(); entity_type=str(plan.get('mainEntityType') or story.get('resolvedEntityType') or 'concept').casefold()
+        manifest=[]; gallery=[]
+        print(f'IMAGE ENGINE subject={canonical!r} type={entity_type}')
+        for idx,scene in enumerate(scenes,1):
+            q=keyword(scene); q['subject']=canonical; q['subject_type']=entity_type; identity=entity_type=='person'; q['identity_required']=identity
+            # MAIN VISUAL: named people must be verified. Never substitute local mountain/placeholders.
+            main=self.search(q,idx,identity=identity,contextual=False)
+            if not main:
+                try: main=self.lead_image(q,idx)
+                except Exception as e: print(f'LEAD IMAGE SKIP: {e}')
+            if not main:
+                raise RuntimeError(f'Không tìm được ảnh web phù hợp cho chủ thể {canonical!r}; dừng thay vì render placeholder sai chủ đề.')
+            main_path=Path(main.file).as_posix(); scene['image']=main_path; scene['asset']=main_path; scene['assetProvider']=main.provider; scene['assetSource']=main.source_url; scene['identityVerified']=main.provider in VERIFIED_IDENTITY_PROVIDERS; scene['topicMatched']=True
+            manifest.append(self.item(main,idx,'main-subject',canonical,self.variants(q)))
+            if main_path not in gallery: gallery.append(main_path)
 
-    def generate(self, story: dict):
-        if not story.get('entityVisualPlan'):
-            story = plan_entities(story)
-        self.research = story.get('research') or {}
-        scenes = story.get('scenes', [])
-        manifest = []
-        topic_gallery: list[str] = []
-        canonical = str(self.research.get('canonicalTitle') or story.get('title') or '').strip()
-        entity_type = str(self.research.get('entityType') or 'topic').strip().casefold()
+            # CONTEXT VISUALS: search from the actual scene fact/event/location, not from a generic stock keyword.
+            scene['assets']=[]
+            for _ in range(2):
+                extra=self.search(q,idx,identity=False,contextual=True)
+                if not extra: break
+                p=Path(extra.file).as_posix()
+                if p==main_path or p in scene['assets']: continue
+                scene['assets'].append(p); manifest.append(self.item(extra,idx,'context-evidence',canonical,self.variants(q,contextual=True)))
+                if p not in gallery and len(gallery)<MAX_TOPIC_PHOTOS: gallery.append(p)
 
-        for scene_index, scene in enumerate(scenes, start=1):
-            query = keyword(scene)
-            # The resolved topic type is authoritative. This prevents a person
-            # video from accidentally treating later scenes as generic stock.
-            if entity_type == 'person':
-                query['subject_type'] = 'person'
-                query['subject'] = canonical or query['subject']
-                query['identity_required'] = True
-            result = self.get(query, scene_index)
-            relative_path = str(Path(result.file).as_posix())
-            verified_identity = result.provider in VERIFIED_IDENTITY_PROVIDERS
-            scene.update({
-                'asset': relative_path,
-                'image': relative_path,
-                'assetType': result.asset_type,
-                'assetProvider': result.provider,
-                'assetAuthor': result.author,
-                'assetLicense': result.license,
-                'assetSource': result.source_url,
-                'searchQuery': result.search_query,
-                'qualityScore': result.qualityScore,
-                'identityVerified': verified_identity,
-                'topicMatched': result.provider in ONLINE_PROVIDERS,
-                'cutoutStyle': 'white-outline-yellow-shadow',
-            })
-            manifest.append(self.manifest_item(
-                result, scene_index,
-                'main-subject' if query.get('identity_required') else 'context-evidence',
-                query['subject'], self.query_variants(query),
-            ))
-            if result.provider in ONLINE_PROVIDERS and relative_path not in topic_gallery and len(topic_gallery) < MAX_TOPIC_PHOTOS:
-                topic_gallery.append(relative_path)
-
-            # Supporting photos must be scene-specific. For a person video,
-            # continue using verified images of that person instead of generic
-            # stock people. Other topic types may use contextual stock imagery.
-            if len(topic_gallery) < MAX_TOPIC_PHOTOS:
-                support_query = dict(query)
-                support_query['secondary'] = []
-                if entity_type == 'person':
-                    support_query['subject_type'] = 'person'
-                    support_query['identity_required'] = True
-                    support_query['subject'] = canonical
-                else:
-                    support_query['identity_required'] = False
-                    support_query['subject_type'] = entity_type
-                for variant in self.query_variants(support_query):
-                    support_query['primary'] = variant
-                    extra = self.get(support_query, scene_index, allow_local=False)
-                    if not extra:
-                        continue
-                    extra_path = str(Path(extra.file).as_posix())
-                    if extra_path in topic_gallery or extra_path == relative_path:
-                        continue
-                    topic_gallery.append(extra_path)
-                    scene.setdefault('assets', []).append(extra_path)
-                    manifest.append(self.manifest_item(
-                        extra, scene_index, 'supporting-photo', canonical, [variant]
-                    ))
-                    break
-
-        for index, scene in enumerate(scenes):
-            main = scene.get('image')
-            candidates = [path for path in topic_gallery if path != main]
-            start = index % max(1, len(candidates)) if candidates else 0
-            ordered = candidates[start:] + candidates[:start]
-            scene['assets'] = list(dict.fromkeys([*(scene.get('assets') or []), *ordered[:2]]))[:2]
-
-        story['assetProviderSystem'] = 'vox-verified-scene-assets-v7'
-        story['template'] = VOX_TEMPLATE
-        story['topicSubjectImages'] = len(topic_gallery)
-        story['topicImageGallery'] = topic_gallery
-        story['topicImageMinimumMet'] = len(topic_gallery) >= MIN_TOPIC_PHOTOS
-        story['identitySafetyRule'] = 'named-person-images-only-from-verified-topic-sources'
-        self.story_path.write_text(json.dumps(story, ensure_ascii=False, indent=2), encoding='utf-8')
-        (self.output_dir / 'asset-manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8')
-        credits = ['Asset credits', '=============', '']
-        for item in manifest:
-            credits.append(
-                f"Scene {item['scene']}: {item['provider']} — {item['author']} — "
-                f"{item['license']} — {item['source_url']} — role={item['role']} — "
-                f"identityVerified={item['identityVerified']}"
-            )
-        (self.output_dir / 'credits.txt').write_text('\n'.join(credits) + '\n', encoding='utf-8')
-        print(
-            f'Đã chuẩn bị {len(topic_gallery)} ảnh bám sát chủ đề; '
-            f'entityType={entity_type}; Pexels key={bool(os.getenv("PEXELS_API_KEY"))}; '
-            f'Pixabay key={bool(os.getenv("PIXABAY_API_KEY"))}.'
-        )
-        if entity_type == 'person' and any(
-            not item.get('identityVerified') for item in manifest if item.get('role') == 'main-subject'
-        ):
-            raise RuntimeError('Phát hiện ảnh nhân vật chính chưa được xác minh; dừng trước khi render sai người.')
-        if len(topic_gallery) < MIN_TOPIC_PHOTOS:
-            print('CẢNH BÁO: chưa đủ 3 ảnh trực tuyến; video vẫn dùng ảnh chủ đề đã xác minh và không dùng người lạ.')
+        story['assetProviderSystem']='vox-evidence-first-assets-v8'; story['template']=VOX_TEMPLATE; story['topicImageGallery']=gallery[:MAX_TOPIC_PHOTOS]; story['topicSubjectImages']=len(gallery); story['topicImageMinimumMet']=len(gallery)>=MIN_TOPIC_PHOTOS; story['resolvedEntityType']=entity_type
+        self.story_path.write_text(json.dumps(story,ensure_ascii=False,indent=2),encoding='utf-8')
+        (self.output_dir/'asset-manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf-8')
+        credits=['Asset credits','=============','']+[f"Scene {x['scene']}: {x['provider']} — {x['source_url']} — role={x['role']}" for x in manifest]
+        (self.output_dir/'credits.txt').write_text('\n'.join(credits)+'\n',encoding='utf-8')
+        if entity_type=='person' and any(not x['identityVerified'] for x in manifest if x['role']=='main-subject'):
+            raise RuntimeError('Ảnh nhân vật chính chưa xác minh; dừng trước khi render sai người.')
+        print(f'IMAGE ENGINE OK: {len(gallery)} unique web images; Pexels={bool(os.getenv("PEXELS_API_KEY"))}; Pixabay={bool(os.getenv("PIXABAY_API_KEY"))}')
         return story
 
 
 def generate_assets(story):
-    path = Path('assets/story.json')
-    if isinstance(story, (str, Path)):
-        path = Path(story)
-        data = json.loads(path.read_text(encoding='utf-8'))
-    else:
-        data = story
+    path=Path('assets/story.json')
+    if isinstance(story,(str,Path)): path=Path(story); data=json.loads(path.read_text(encoding='utf-8'))
+    else:data=story
     return AssetManager(story_path=path).generate(data)
 
-
-if __name__ == '__main__':
-    story_path = Path(os.getenv('STORY_PATH', 'assets/story.json'))
-    generate_assets(story_path)
+if __name__=='__main__':
+    generate_assets(Path(os.getenv('STORY_PATH','assets/story.json')))
