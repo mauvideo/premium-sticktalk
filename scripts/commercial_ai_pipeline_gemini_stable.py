@@ -95,9 +95,38 @@ NGỮ CẢNH THAM CHIẾU:
 Tạo facts chính xác, không bịa, không lặp, phủ đúng câu hỏi. Mỗi fact phải đủ cụ thể để vừa viết lời thoại vừa tìm hình minh họa.
 Trả DUY NHẤT JSON:
 {{"summary":"2-4 câu","facts":[{{"id":"F1","claim":"một dữ kiện cụ thể","date":"nếu có","places":["..."],"entities":["..."],"visual_queries":["3-5 truy vấn ảnh web cụ thể bằng tiếng Anh hoặc tên riêng, mô tả đúng người/vật/hành động/bối cảnh của fact"]}}]}}
-Yêu cầu tối thiểu 12 facts để đủ dữ liệu cho cả video dài 90 giây; fact nào không chắc thì bỏ.
+Mục tiêu 10-14 facts để đủ dữ liệu cho video dài 90 giây; nếu chủ đề đơn giản thì ưu tiên facts thật và hữu ích hơn là bịa cho đủ số lượng.
 visual_queries dùng cho Pexels, Pixabay, Unsplash và Openverse; KHÔNG dùng Wikimedia và Gemini KHÔNG tạo ảnh.
 """.strip()
+
+
+def _validate_research_resilient(data: dict) -> None:
+    """Clean usable Gemini facts instead of killing the whole workflow for a short list."""
+    raw = data.get("facts") or []
+    cleaned = []
+    seen = set()
+    for fact in raw:
+        claim = re.sub(r"\s+", " ", str((fact or {}).get("claim") or "")).strip()
+        if len(claim) < 12:
+            continue
+        key = claim.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        item = dict(fact)
+        item["claim"] = claim
+        item["id"] = f"F{len(cleaned)+1}"
+        item["visual_queries"] = [
+            re.sub(r"\s+", " ", str(q)).strip()
+            for q in (item.get("visual_queries") or [])
+            if str(q).strip()
+        ][:5]
+        cleaned.append(item)
+    if len(cleaned) < 3:
+        raise RuntimeError(f"Gemini research chỉ có {len(cleaned)} fact dùng được; cần ít nhất 3 fact thật để viết kịch bản.")
+    if len(cleaned) < 5:
+        print(f"CẢNH BÁO: Gemini chỉ trả {len(cleaned)} facts dùng được; vẫn tiếp tục và để script mở rộng cách kể từ chính các facts này.")
+    data["facts"] = cleaned
 
 
 def _script_prompt(topic: str, duration: int, research: dict) -> str:
@@ -121,7 +150,7 @@ FACTS: {fact_json}
 Trả DUY NHẤT JSON:
 {{"title":"...","scenes":[{{"id":"scene-01","headline":"ngắn","narration":"1-2 câu tự nhiên, giàu thông tin","fact_ids":["F1"],"visual_queries":["3-5 truy vấn ảnh thật cụ thể bám chính xác câu thoại này"],"icons":["1-2 từ khóa icon đúng ngữ nghĩa cảnh, ví dụ dumbbell, heart, map, clock, phone, car, plane; để [] nếu không cần"]}}]}}
 Quy tắc số cảnh: {scene_rule}.
-Không lặp câu, không triết lý, không câu đệm. Mỗi scene phải có visual_queries riêng; ưu tiên ảnh thật về hành động/đối tượng đang được nói tới, không dùng ảnh người nổi tiếng không liên quan.
+Có thể khai thác nhiều góc kể khác nhau từ cùng một fact nhưng KHÔNG được tạo fact mới hoặc lặp nguyên câu. Mỗi scene phải có visual_queries riêng; ưu tiên ảnh thật về hành động/đối tượng đang được nói tới, không dùng ảnh người nổi tiếng không liên quan.
 narration là CHÍNH XÁC văn bản gửi sang VieNeu và dùng làm phụ đề.
 """.strip()
 
@@ -130,6 +159,7 @@ def main() -> None:
     base._extract_json = _extract_json_stable
     base.ai_text = _gemini_only_ai_text
     base.research_prompt = _research_prompt
+    base.validate_research = _validate_research_resilient
     base.script_prompt = _script_prompt
     base.main()
 
