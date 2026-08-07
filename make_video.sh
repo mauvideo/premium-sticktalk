@@ -36,6 +36,11 @@ PY
 BROWSER="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"; ARGS=(); [[ -z "$BROWSER" ]] || ARGS+=(--browser-executable="$BROWSER")
 npx --prefix remotion remotion render remotion/src/index.ts StickTalk output/video.mp4 --props=assets/story.json --public-dir=remotion/public --codec=h264 "${ARGS[@]}"
 ffmpeg -y -ss 00:00:03 -i output/video.mp4 -frames:v 1 output/preview.png
-cp assets/story.json output/story.json; cp assets/research.json output/research.json
+cp assets/story.json output/story.json
+# research.json is an optional diagnostic artifact. The grounded research is already
+# embedded in story.json, so its absence must never fail an otherwise successful render.
+if [[ -f assets/research.json ]]; then
+  cp assets/research.json output/research.json
+fi
 ffprobe -v error -show_entries stream=codec_name,width,height,r_frame_rate -show_entries format=duration,size -of default=noprint_wrappers=1 output/video.mp4
 echo 'Hoàn tất: output/video.mp4'
