@@ -94,7 +94,8 @@ jobs:
           echo "Chủ đề: ${{ inputs.idea }}"
           echo "Thời lượng: ${{ inputs.duration }}"
           echo "Giọng VieNeu: ${{ inputs.vieneu_voice }}"
-          echo "Quy trình: nghiên cứu → lập câu chuyện → tìm ảnh/icon → dựng Vox"
+          echo "AI viết kịch bản: Gemini API free tier"
+          echo "Quy trình: Gemini nghiên cứu web → viết kịch bản Vox → tìm ảnh miễn phí → VieNeu → Remotion"
 
       - name: Tạo video
         env:
@@ -102,10 +103,16 @@ jobs:
           VIDEO_DURATION: ${{ inputs.duration == '30 giây' && '30' || inputs.duration == '60 giây' && '60' || '45' }}
           VIENEU_VOICE: ${{ inputs.vieneu_voice }}
           VIENEU_CUSTOM_VOICE_ID: ${{ inputs.custom_voice_id }}
+          AI_PROVIDER: gemini
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
           PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
           UNSPLASH_ACCESS_KEY: ${{ secrets.UNSPLASH_ACCESS_KEY }}
         run: |
+          if [ -z "$GEMINI_API_KEY" ]; then
+            echo "Thiếu GEMINI_API_KEY trong GitHub Secrets. Gemini API có free tier nhưng vẫn cần API key."
+            exit 1
+          fi
           chmod +x make_video.sh
           ./make_video.sh
 
