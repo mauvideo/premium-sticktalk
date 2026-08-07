@@ -16,6 +16,14 @@ on:
           - "30 giây"
           - "45 giây"
           - "60 giây"
+      aspect_ratio:
+        description: "Tỷ lệ khung hình"
+        required: true
+        default: "9:16 dọc"
+        type: choice
+        options:
+          - "9:16 dọc"
+          - "16:9 ngang"
       vieneu_voice:
         description: "Giọng đọc VieNeu-TTS Premium"
         required: true
@@ -93,8 +101,9 @@ jobs:
           echo "Engine: Vox Paper Collage"
           echo "Chủ đề: ${{ inputs.idea }}"
           echo "Thời lượng: ${{ inputs.duration }}"
+          echo "Khung hình: ${{ inputs.aspect_ratio }}"
           echo "Giọng VieNeu: ${{ inputs.vieneu_voice }}"
-          echo "AI: Gemini 3.6 Flash — chỉ nghiên cứu + viết kịch bản text"
+          echo "AI: Gemini — chỉ nghiên cứu + viết kịch bản text"
           echo "Ảnh: nguồn web miễn phí — không dùng Gemini tạo ảnh"
           echo "Quy trình: Gemini text → ảnh web → VieNeu → Remotion"
 
@@ -102,10 +111,12 @@ jobs:
         env:
           VIDEO_IDEA: ${{ inputs.idea }}
           VIDEO_DURATION: ${{ inputs.duration == '30 giây' && '30' || inputs.duration == '60 giây' && '60' || '45' }}
+          VIDEO_ASPECT_RATIO: ${{ inputs.aspect_ratio == '16:9 ngang' && '16:9' || '9:16' }}
           VIENEU_VOICE: ${{ inputs.vieneu_voice }}
           VIENEU_CUSTOM_VOICE_ID: ${{ inputs.custom_voice_id }}
           AI_PROVIDER: gemini
           GEMINI_MODEL: gemini-3.6-flash
+          GEMINI_FALLBACK_MODEL: gemini-3.5-flash
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
           PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
