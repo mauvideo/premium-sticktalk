@@ -21,7 +21,11 @@ export const CutoutSubject:React.FC<{src?:string;label:string;index:number}>=({s
       clipPath:tear(index+3),boxShadow:'0 0 0 14px #fffdf4'
     }}>
       {url?<Img src={url} style={{
-        width:'100%',height:'100%',objectFit:'cover',filter:'grayscale(1) contrast(1.18)',
+        width:'100%',height:'100%',objectFit:'cover',
+        // Main subject must retain the source photograph's original color.
+        // Keep only a light editorial contrast boost; archival/supporting photos
+        // may still be monochrome elsewhere in the Vox collage.
+        filter:'contrast(1.06) saturate(1.08)',
         clipPath:tear(index)
       }}/>:<div style={{
         height:'100%',display:'grid',placeItems:'center',background:'#d8d3c7',
