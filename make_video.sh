@@ -11,14 +11,12 @@ while (($#)); do case "$1" in
   --aspect-ratio|--ty-le) require_value "$@"; ASPECT="$2"; shift 2;;
   *) echo "Tham số không hợp lệ: $1" >&2; exit 2;; esac; done
 [[ -n "$IDEA" ]] || { echo 'Thiếu chủ đề video' >&2; exit 2; }
-[[ "$DURATION" =~ ^(30|45|60)$ ]] || { echo "Thời lượng không hợp lệ: $DURATION" >&2; exit 2; }
+[[ "$DURATION" =~ ^(30|45|60|90)$ ]] || { echo "Thời lượng không hợp lệ: $DURATION" >&2; exit 2; }
 [[ "$ASPECT" =~ ^(9:16|16:9)$ ]] || { echo "Tỷ lệ không hợp lệ: $ASPECT" >&2; exit 2; }
 export VIDEO_PROJECT="documentary" VIDEO_TEMPLATE="vox-paper-collage" VIDEO_STYLE="vox_giay_cat" VIDEO_MOTION_LEVEL="high" VIDEO_SCRIPT_MODE="ai_research_grounded" VIDEO_CONTENT_FORMAT="narration" VIDEO_TONE="trung_tính" VIENEU_EMOTION="Kể chuyện"
-printf '%s\n' "=== PREMIUM STICKTALK COMMERCIAL PIPELINE ===" "Chủ đề: $IDEA" "Thời lượng: $DURATION giây" "Khung hình: $ASPECT" "Giọng VieNeu: $VOICE" "Quy trình: Gemini text → facts → kịch bản Vox → ảnh miễn phí → VieNeu + phụ đề cùng text → Remotion"
+printf '%s\n' "=== PREMIUM STICKTALK COMMERCIAL PIPELINE ===" "Chủ đề: $IDEA" "Thời lượng: $DURATION giây" "Khung hình: $ASPECT" "Giọng VieNeu: $VOICE" "Quy trình: Gemini text → facts → kịch bản Vox theo đúng thời lượng → ảnh Pexels/Pixabay/Unsplash/Openverse → VieNeu + phụ đề cùng text → Remotion"
 mkdir -p assets output remotion/public/assets
 
-# Gemini-only text pipeline. Wrapper handles 429/503 retry, model fallback,
-# and tolerant parsing when Gemini returns valid JSON plus trailing content.
 PRIMARY_MODEL="${GEMINI_MODEL:-gemini-3.6-flash}"
 FALLBACK_MODEL="${GEMINI_FALLBACK_MODEL:-gemini-3.5-flash}"
 export GEMINI_MODEL="$PRIMARY_MODEL" GEMINI_FALLBACK_MODEL="$FALLBACK_MODEL"
