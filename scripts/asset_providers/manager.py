@@ -26,12 +26,11 @@ class AssetManager:
   for p in (self.assets_dir,self.output_dir,self.cache_dir):p.mkdir(parents=True,exist_ok=True)
   self.used=set();self.research={}
  def providers(self):
-  # API-key providers first; Openverse last because its public endpoint can timeout/rate-limit.
   return [PexelsProvider(self.assets_dir,self.cache_dir),PixabayProvider(self.assets_dir,self.cache_dir),UnsplashProvider(self.assets_dir,self.cache_dir),OpenverseProvider(self.assets_dir,self.cache_dir)]
  @staticmethod
  def _clean(v):return re.sub(r'\s+',' ',str(v or '').replace('"',' ')).strip(' ,;:-')[:180]
  def variants(self,q,contextual=False):
-  s=self._clean(q.get('subject'));e=self._clean(q.get('event'));loc=self._clean(q.get('setting'));period=self._clean(q.get('time_period'));out=[]
+  s=self._clean(q.get('subject'));e=self._clean(q.get('event'));loc=self._clean(q.get('setting'));out=[]
   if contextual:
    out += [e,loc];out += [self._clean(x) for x in q.get('visual_evidence',[]) if self._clean(x)]
    if s and e:out.append(f'{s} {e}')
@@ -43,57 +42,71 @@ class AssetManager:
    v=self._clean(v);k=v.casefold()
    if v and k not in seen:seen.add(k);clean.append(v)
   return clean[:10]
+ def semantic_variants(self,scene,q,canonical):
+  """Broaden a failed exact query while staying inside the scene/topic meaning."""
+  headline=self._clean(scene.get('headline'));event=self._clean(scene.get('event'));loc=self._clean(q.get('setting'))
+  evidence=[self._clean(x) for x in (q.get('visual_evidence') or []) if self._clean(x)]
+  raw=[*evidence,event,headline]
+  if event and loc:raw.append(f'{event} {loc}')
+  if headline and loc:raw.append(f'{headline} {loc}')
+  if event:raw += [f'{event} people',f'{event} lifestyle',f'{event} activity',f'{event} environment']
+  if headline:raw += [f'{headline} people',f'{headline} lifestyle',f'{headline} activity']
+  raw += [f'{canonical} activity',f'{canonical} lifestyle',f'{canonical} environment',canonical]
+  seen=set();out=[]
+  for v in raw:
+   v=self._clean(v);k=v.casefold()
+   if v and k not in seen:seen.add(k);out.append(v)
+  return out[:14]
  def valid(self,r):return bool(r and Path(r.file).exists() and Path(r.file).stat().st_size>700 and is_valid_mime(r.mime_type) and r.provider and r.qualityScore>=0)
  def matches(self,r):return self.valid(r) and r.provider in ONLINE_PROVIDERS
- def search(self,q,scene_index,contextual=False):
-  for text in self.variants(q,contextual):
-   current={**q,'primary':text,'identity_required':False}
-   if contextual:current['subject']=text;current['subject_type']='concept'
+ def search_texts(self,q,scene_index,texts):
+  for text in texts:
+   current={**q,'primary':text,'subject':text,'subject_type':'concept','identity_required':False}
    for provider in self.providers():
     try:
      r=provider.search(current,scene_index,self.used)
      if self.matches(r):self.used.update({r.source_url,r.asset_id});return r
     except Exception as e:print(f'ASSET SKIP {provider.name} {text!r}: {e}')
   return None
- def item(self,r,scene,role,subject,queries):
-  d=r.manifest();d.update({'scene':scene,'role':role,'fallback':False,'identityQuery':subject,'identityVerified':False,'topicMatched':True,'searchQueries':queries,'cutoutStyle':'white-outline-yellow-shadow'});return d
+ def search(self,q,scene_index,contextual=False):return self.search_texts(q,scene_index,self.variants(q,contextual))
+ def item(self,r,scene,role,subject,queries,fallback=False):
+  d=r.manifest();d.update({'scene':scene,'role':role,'fallback':fallback,'identityQuery':subject,'identityVerified':False,'topicMatched':True,'searchQueries':queries,'cutoutStyle':'white-outline-yellow-shadow'});return d
  def generate(self,story):
   story=plan_entities(story,story.get('topic') or story.get('title'));self.research=story.get('research') or {};scenes=story.get('scenes') or [];plan=story.get('entityVisualPlan') or {}
   canonical=str(self.research.get('canonicalTitle') or plan.get('mainEntity') or story.get('resolvedSubject') or story.get('title') or '').strip();entity_type=str(story.get('resolvedEntityType') or plan.get('mainEntityType') or 'concept').casefold()
   bad={'nhạc chủ đề','tài liệu gốc','mốc thời gian','ảnh bối cảnh','documentary subject'}
   if canonical.casefold() in bad:raise RuntimeError(f'Chủ thể hình ảnh không hợp lệ: {canonical!r}. Research stage phải cung cấp canonicalTitle trước khi tìm ảnh.')
   manifest=[];gallery=[];max_gallery=max(12,len(scenes)*3);last_good=None
-  print(f'IMAGE ENGINE subject={canonical!r} type={entity_type} sources=Pexels,Pixabay,Unsplash,Openverse')
+  print(f'IMAGE ENGINE subject={canonical!r} type={entity_type} sources=Pexels,Pixabay,Unsplash,Openverse mode=semantic-fallback')
   for idx,scene in enumerate(scenes,1):
    q=keyword(scene);q['subject']=canonical;q['subject_type']=entity_type;q['identity_required']=False
-   main=self.search(q,idx,contextual=False)
+   exact_queries=self.variants(q)
+   main=self.search_texts(q,idx,exact_queries)
+   fallback_used=False
    if not main:
-    fallback={**q,'primary':self._clean(scene.get('headline') or scene.get('event') or canonical),'secondary':[canonical]}
-    main=self.search(fallback,idx,contextual=False)
-   # A temporary stock-site timeout must not kill a 90s render. Reuse the nearest verified topic image.
+    semantic=self.semantic_variants(scene,q,canonical)
+    print(f'ASSET SEMANTIC FALLBACK scene {idx}: {semantic[:6]}')
+    main=self.search_texts(q,idx,semantic);fallback_used=bool(main)
    if not main and last_good:
-    print(f'ASSET FALLBACK scene {idx}: provider unavailable; reuse previous topic-matched image')
-    main=last_good
-   if not main:
-    # First scene has no previous image: make one final broad subject search.
-    broad={**q,'primary':canonical,'secondary':[f'{canonical} photo',f'{canonical} lifestyle']}
-    main=self.search(broad,idx,contextual=False)
-   if not main:raise RuntimeError(f'Không tìm được bất kỳ ảnh web hợp lệ nào cho chủ thể {canonical!r}. Hãy cấu hình ít nhất một API ảnh PEXELS/PIXABAY/UNSPLASH hoặc thử lại khi Openverse hoạt động.')
+    print(f'ASSET LAST RESORT scene {idx}: reuse previous topic-matched image')
+    main=last_good;fallback_used=True
+   if not main:raise RuntimeError(f'Không tìm được ảnh đúng hoặc tương tự cho chủ đề {canonical!r}. Hãy cấu hình ít nhất một API ảnh PEXELS/PIXABAY/UNSPLASH hoặc thử lại khi nguồn ảnh hoạt động.')
    last_good=main
-   main_path=Path(main.file).as_posix();scene['image']=main_path;scene['asset']=main_path;scene['assetProvider']=main.provider;scene['assetSource']=main.source_url;scene['identityVerified']=False;scene['topicMatched']=True
-   manifest.append(self.item(main,idx,'main-subject',canonical,self.variants(q)))
+   main_path=Path(main.file).as_posix();scene['image']=main_path;scene['asset']=main_path;scene['assetProvider']=main.provider;scene['assetSource']=main.source_url;scene['identityVerified']=False;scene['topicMatched']=True;scene['semanticImageFallback']=fallback_used
+   manifest.append(self.item(main,idx,'main-subject' if not fallback_used else 'semantic-topic-match',canonical,exact_queries,fallback_used))
    if main_path not in gallery:gallery.append(main_path)
    scene['assets']=[]
-   # Supporting images are optional. Failure/timeouts never abort the render.
+   # Prefer different but semantically related supporting images. They remain optional.
+   support_queries=self.semantic_variants(scene,q,canonical)
    attempts=0
-   while len(scene['assets'])<2 and attempts<4:
-    attempts+=1;extra=self.search(q,idx,contextual=True)
+   while len(scene['assets'])<2 and attempts<3:
+    attempts+=1;extra=self.search_texts(q,idx,support_queries)
     if not extra:break
     p=Path(extra.file).as_posix()
     if p==main_path or p in scene['assets']:continue
-    scene['assets'].append(p);manifest.append(self.item(extra,idx,'context-evidence',canonical,self.variants(q,True)))
+    scene['assets'].append(p);manifest.append(self.item(extra,idx,'context-evidence',canonical,support_queries,True))
     if p not in gallery and len(gallery)<max_gallery:gallery.append(p)
-  story['assetProviderSystem']='vox-resilient-stock-assets-v11';story['template']=VOX_TEMPLATE;story['topicImageGallery']=gallery[:max_gallery];story['topicSubjectImages']=len(gallery);story['topicImageMinimumMet']=len(gallery)>=MIN_TOPIC_PHOTOS;story['resolvedEntityType']=entity_type
+  story['assetProviderSystem']='vox-semantic-stock-assets-v12';story['template']=VOX_TEMPLATE;story['topicImageGallery']=gallery[:max_gallery];story['topicSubjectImages']=len(gallery);story['topicImageMinimumMet']=len(gallery)>=MIN_TOPIC_PHOTOS;story['resolvedEntityType']=entity_type
   self.story_path.write_text(json.dumps(story,ensure_ascii=False,indent=2),encoding='utf-8');(self.output_dir/'asset-manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf-8');(self.output_dir/'credits.txt').write_text('\n'.join(['Asset credits','=============','']+[f"Scene {x['scene']}: {x['provider']} — {x['source_url']} — role={x['role']}" for x in manifest])+'\n',encoding='utf-8')
   print(f'IMAGE ENGINE OK: {len(gallery)} unique images; Pexels={bool(os.getenv("PEXELS_API_KEY"))}; Pixabay={bool(os.getenv("PIXABAY_API_KEY"))}; Unsplash={bool(os.getenv("UNSPLASH_ACCESS_KEY"))}');return story
 
