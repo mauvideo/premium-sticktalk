@@ -143,21 +143,11 @@ jobs:
           test -s output/credits.txt
           test "$(find assets/generated-assets -type f | wc -l)" -gt 0
 
-      - name: Tải video thành phẩm lên
+      - name: Tải video MP4 thành phẩm lên
         uses: actions/upload-artifact@v4
         with:
-          name: video-sticktalk
-          path: |
-            output/video.mp4
-            output/preview.png
-            output/research.json
-            output/script.txt
-            output/story.json
-            output/tts-info.json
-            output/asset-manifest.json
-            output/credits.txt
-            assets/generated-assets/
-            assets/narration.wav
+          name: video-sticktalk-mp4
+          path: output/video.mp4
           if-no-files-found: error
           retention-days: 7
           compression-level: 0
