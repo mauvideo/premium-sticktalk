@@ -15,7 +15,7 @@ export VIDEO_PROJECT="documentary" VIDEO_TEMPLATE="vox-paper-collage" VIDEO_STYL
 printf '%s\n' "=== VOX PAPER COLLAGE ENGINE ===" "Chủ đề: $IDEA" "Thời lượng: $DURATION giây" "Giọng VieNeu: $VOICE" "Quy trình: nghiên cứu → biên tập phủ toàn chủ đề → cân thoại → ảnh/icon → dựng Vox"
 mkdir -p assets output remotion/public/assets
 python3 scripts/generate_story.py --idea "$IDEA" --duration "$DURATION" --voice "$VOICE"
-python3 scripts/ground_story.py --story assets/story.json --topic "$IDEA"
+python3 scripts/ground_story.py assets/story.json --topic "$IDEA"
 # Editorial guard: broad history/biography prompts must cover the full chronology,
 # not collapse into one subtopic such as death/funeral. Generic for every topic.
 python3 scripts/editorial_story_guard.py --story assets/story.json --topic "$IDEA"
