@@ -16,6 +16,7 @@ on:
           - "30 giây"
           - "45 giây"
           - "60 giây"
+          - "90 giây"
       aspect_ratio:
         description: "Tỷ lệ khung hình"
         required: true
@@ -104,13 +105,14 @@ jobs:
           echo "Khung hình: ${{ inputs.aspect_ratio }}"
           echo "Giọng VieNeu: ${{ inputs.vieneu_voice }}"
           echo "AI: Gemini — chỉ nghiên cứu + viết kịch bản text"
-          echo "Ảnh: nguồn web miễn phí — không dùng Gemini tạo ảnh"
+          echo "Ảnh: Pexels / Pixabay / Unsplash / Openverse"
+          echo "Icon: Lucide open-source"
           echo "Quy trình: Gemini text → ảnh web → VieNeu → Remotion"
 
       - name: Tạo video
         env:
           VIDEO_IDEA: ${{ inputs.idea }}
-          VIDEO_DURATION: ${{ inputs.duration == '30 giây' && '30' || inputs.duration == '60 giây' && '60' || '45' }}
+          VIDEO_DURATION: ${{ inputs.duration == '30 giây' && '30' || inputs.duration == '60 giây' && '60' || inputs.duration == '90 giây' && '90' || '45' }}
           VIDEO_ASPECT_RATIO: ${{ inputs.aspect_ratio == '16:9 ngang' && '16:9' || '9:16' }}
           VIENEU_VOICE: ${{ inputs.vieneu_voice }}
           VIENEU_CUSTOM_VOICE_ID: ${{ inputs.custom_voice_id }}
