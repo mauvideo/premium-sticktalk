@@ -14,12 +14,19 @@ COMPOSITIONS = [
 ]
 
 ICON_RULES = [
+    ({"gym", "tạ", "tập", "cơ", "weight"}, "dumbbell"),
+    ({"tim", "nhịp", "sức", "khỏe"}, "heart"),
+    ({"điện", "thoại", "gọi"}, "phone"),
+    ({"đi", "bộ", "chạy", "khởi", "động"}, "walk"),
+    ({"nước", "uống"}, "water"),
+    ({"ăn", "bữa", "dinh", "dưỡng"}, "food"),
+    ({"ngủ", "nghỉ"}, "sleep"),
     ({"bản", "đồ", "địa", "điểm", "quốc", "gia"}, "map"),
     ({"năm", "thời", "giai", "đoạn", "lịch", "sử"}, "timeline"),
     ({"tài", "liệu", "hồ", "sơ", "thư", "báo"}, "document"),
     ({"quân", "đội", "tướng", "chiến", "trận", "binh"}, "military"),
     ({"nhà", "máy", "sản", "xuất", "công", "nghiệp"}, "factory"),
-    ({"xe", "ô", "tô", "điện"}, "car"),
+    ({"xe", "ô", "tô"}, "car"),
     ({"tàu", "biển", "đại", "dương"}, "ship"),
     ({"máy", "bay", "hàng", "không"}, "airplane"),
     ({"sách", "học", "giáo", "dục"}, "book"),
@@ -27,6 +34,12 @@ ICON_RULES = [
     ({"thành", "phố", "đô", "thị", "tòa", "nhà"}, "building"),
     ({"người", "nhân", "vật", "chân", "dung"}, "person"),
 ]
+
+ALLOWED_ICON_HINTS = {
+    "dumbbell","gym","heart","phone","walk","water","food","sleep","brain","computer","laptop",
+    "map","timeline","clock","timer","document","military","factory","car","ship","airplane","plane",
+    "book","chart","building","landmark","person"
+}
 
 
 def _tokens(text: str) -> set[str]:
@@ -43,9 +56,18 @@ def _semantic_icons(tokens: set[str], evidence: list[str]) -> list[str]:
     for required, icon in ICON_RULES:
         if required & joined and icon not in icons:
             icons.append(icon)
-    # Không ép icon mặc định. Scene không có ngữ nghĩa phù hợp thì để trống,
-    # tránh kiểu scene nào cũng document/map/timeline dù lời thoại không nói tới.
-    return icons[:3]
+    return icons[:2]
+
+
+def _scene_icons(scene: dict, tokens: set[str], evidence: list[str]) -> list[str]:
+    ai=[]
+    for raw in scene.get("icons") or []:
+        v=str(raw).strip().casefold()
+        if not v: continue
+        # Chỉ giữ keyword có thể ánh xạ sang Lucide; icon lạ bị bỏ thay vì hiện dấu hỏi.
+        if any(h in v for h in ALLOWED_ICON_HINTS) and v not in ai:
+            ai.append(v)
+    return (ai or _semantic_icons(tokens,evidence))[:2]
 
 
 def create_visual_plan(scene: dict, story: dict, scene_index: int) -> dict:
@@ -64,7 +86,6 @@ def create_visual_plan(scene: dict, story: dict, scene_index: int) -> dict:
 
     narration_norm = narration.casefold()
     data_layers = []
-    # Chỉ thêm map/chart/timeline khi chính scene có tín hiệu liên quan.
     if maps and location and location.casefold() in narration_norm:
         data_layers.append({"type": "map", "label": maps[0]})
     if charts and ({"số", "liệu", "tăng", "giảm", "%", "phần", "trăm"} & tokens):
@@ -80,7 +101,7 @@ def create_visual_plan(scene: dict, story: dict, scene_index: int) -> dict:
         "background": "archival paper collage",
         "mainCharacter": entity.get("mainSubject") or story.get("title") or "documentary subject",
         "secondaryObjects": secondary[:3],
-        "icons": _semantic_icons(tokens, secondary),
+        "icons": _scene_icons(scene,tokens,secondary),
         "paperElements": [_pick(PAPER, seed + scene_index), _pick(PAPER, seed + scene_index + 2)],
         "camera": _pick(CAMERAS, seed + scene_index),
         "transition": _pick(TRANSITIONS, seed + scene_index),
