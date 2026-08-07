@@ -17,22 +17,12 @@ export VIDEO_PROJECT="documentary" VIDEO_TEMPLATE="vox-paper-collage" VIDEO_STYL
 printf '%s\n' "=== PREMIUM STICKTALK COMMERCIAL PIPELINE ===" "Chủ đề: $IDEA" "Thời lượng: $DURATION giây" "Khung hình: $ASPECT" "Giọng VieNeu: $VOICE" "Quy trình: Gemini text → facts → kịch bản Vox → ảnh miễn phí → VieNeu + phụ đề cùng text → Remotion"
 mkdir -p assets output remotion/public/assets
 
-# Gemini 503/429 là lỗi tạm thời. Retry toàn bước text với backoff; nếu model chính
-# vẫn bận thì lần cuối chuyển sang model Flash ổn định dự phòng.
+# Gemini-only text pipeline. Wrapper handles 429/503 retry, model fallback,
+# and tolerant parsing when Gemini returns valid JSON plus trailing content.
 PRIMARY_MODEL="${GEMINI_MODEL:-gemini-3.6-flash}"
 FALLBACK_MODEL="${GEMINI_FALLBACK_MODEL:-gemini-3.5-flash}"
-AI_OK=0
-for attempt in 1 2 3 4 5; do
-  if (( attempt == 5 )); then export GEMINI_MODEL="$FALLBACK_MODEL"; else export GEMINI_MODEL="$PRIMARY_MODEL"; fi
-  echo "Gemini text attempt $attempt/5 — model=$GEMINI_MODEL"
-  if python3 scripts/commercial_ai_pipeline.py --topic "$IDEA" --duration "$DURATION" --voice "$VOICE"; then
-    AI_OK=1; break
-  fi
-  wait_seconds=$((2 ** attempt))
-  echo "Gemini tạm lỗi; chờ ${wait_seconds}s rồi thử lại..."
-  sleep "$wait_seconds"
-done
-[[ "$AI_OK" == "1" ]] || { echo "Gemini vẫn không khả dụng sau retry + fallback." >&2; exit 1; }
+export GEMINI_MODEL="$PRIMARY_MODEL" GEMINI_FALLBACK_MODEL="$FALLBACK_MODEL"
+python3 scripts/commercial_ai_pipeline_gemini_stable.py --topic "$IDEA" --duration "$DURATION" --voice "$VOICE"
 
 python3 - <<PY
 import json
