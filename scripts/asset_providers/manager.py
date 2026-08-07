@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -24,7 +25,7 @@ def keyword(scene: dict) -> dict:
     queries = entity_plan.get('searchQueries') or []
     subject = entity_plan.get('mainSubject') or 'documentary subject'
     return {
-        'primary': queries[0] if queries else f'"{subject}"',
+        'primary': queries[0] if queries else subject,
         'secondary': queries[1:],
         'asset_type': 'photo',
         'style': 'editorial documentary paper collage',
@@ -34,6 +35,8 @@ def keyword(scene: dict) -> dict:
         'identity_required': bool(entity_plan.get('identityRequired')),
         'event': entity_plan.get('event', ''),
         'setting': entity_plan.get('location', '') or 'documentary context',
+        'time_period': entity_plan.get('timePeriod', ''),
+        'visual_evidence': entity_plan.get('visualEvidence') or [],
         'template': VOX_TEMPLATE,
         'size': '9:16',
     }
@@ -54,11 +57,12 @@ class AssetManager:
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
     def providers(self, query: dict):
+        # A named person's main portrait must never come from a generic stock
+        # provider. Stock search can return an unrelated person, as happened in
+        # the earlier test video. Use Commons first and the resolved Wikipedia
+        # lead image as fallback for identity-critical scenes.
         if query.get('identity_required'):
-            return [
-                WikimediaProvider(self.assets_dir, self.cache_dir),
-                OpenverseProvider(self.assets_dir, self.cache_dir),
-            ]
+            return [WikimediaProvider(self.assets_dir, self.cache_dir)]
         return [
             WikimediaProvider(self.assets_dir, self.cache_dir),
             OpenverseProvider(self.assets_dir, self.cache_dir),
@@ -88,7 +92,7 @@ class AssetManager:
         _, mime, _ = download(
             url,
             path,
-            headers={'User-Agent': 'premium-sticktalk/6.0 (topic-image-fallback)'},
+            headers={'User-Agent': 'premium-sticktalk/6.1 (topic-image-fallback)'},
             cache_path=cache,
         )
         return AssetResult(
@@ -106,33 +110,86 @@ class AssetManager:
             width=0,
             height=0,
             mime_type=mime,
-            qualityScore=80,
+            qualityScore=90,
             asset_id=f'topic-lead-{safe_name(subject)}',
         )
 
     @staticmethod
-    def query_variants(query: dict) -> list[str]:
+    def _clean_query(value: str) -> str:
+        value = str(value or '').replace('"', ' ')
+        value = re.sub(r'\s+', ' ', value).strip(' ,;:-')
+        return value[:180]
+
+    @classmethod
+    def query_variants(cls, query: dict) -> list[str]:
+        """Create generic, scene-aware searches for any topic type."""
+        subject = cls._clean_query(query.get('subject', ''))
+        subject_type = cls._clean_query(query.get('subject_type', '')).casefold()
+        event = cls._clean_query(query.get('event', ''))
+        setting = cls._clean_query(query.get('setting', ''))
+        period = cls._clean_query(query.get('time_period', ''))
+        evidence = [cls._clean_query(item) for item in query.get('visual_evidence', [])]
+
         variants = [query.get('primary'), *(query.get('secondary') or [])]
-        event = str(query.get('event') or '').strip()
-        setting = str(query.get('setting') or '').strip()
-        subject = str(query.get('subject') or '').strip()
-        if subject and event:
-            variants.append(f'{subject} {event[:110]}')
+
+        if subject:
+            variants.append(subject)
+            if subject_type == 'person':
+                variants.extend([
+                    f'{subject} portrait',
+                    f'{subject} historical photograph',
+                    f'{subject} archival photo',
+                    f'{subject} speech',
+                ])
+            elif subject_type in {'company', 'organization'}:
+                variants.extend([
+                    f'{subject} headquarters',
+                    f'{subject} founder',
+                    f'{subject} products',
+                    f'{subject} historical photo',
+                ])
+            elif subject_type == 'event':
+                variants.extend([
+                    f'{subject} historical photo',
+                    f'{subject} map',
+                    f'{subject} newspaper',
+                    f'{subject} aftermath',
+                ])
+            elif subject_type == 'place':
+                variants.extend([
+                    f'{subject} landmark',
+                    f'{subject} aerial view',
+                    f'{subject} old photograph',
+                    f'{subject} map',
+                ])
+            else:
+                variants.extend([
+                    f'{subject} documentary photo',
+                    f'{subject} illustration',
+                    f'{subject} diagram',
+                ])
+
+        if subject and period:
+            variants.append(f'{subject} {period}')
         if subject and setting and setting != 'documentary context':
             variants.append(f'{subject} {setting}')
+        if subject and event:
+            event_words = ' '.join(event.split()[:14])
+            variants.append(f'{subject} {event_words}')
+        variants.extend(evidence)
+
         cleaned: list[str] = []
         for value in variants:
-            value = str(value or '').replace('"', ' ').strip()
-            value = ' '.join(value.split())
-            if value and value not in cleaned:
+            value = cls._clean_query(value)
+            if value and value.casefold() not in {item.casefold() for item in cleaned}:
                 cleaned.append(value)
-        return cleaned
+        return cleaned[:18]
 
     def get(self, query: dict, scene_index: int, allow_local: bool = True):
         for search_text in self.query_variants(query):
             current_query = dict(query)
             current_query['primary'] = search_text
-            cache_key = (search_text, current_query['size'])
+            cache_key = (search_text.casefold(), current_query['size'])
             cached = self.memory_cache.get(cache_key)
             if cached and cached.source_url not in self.used:
                 return cached
@@ -169,7 +226,7 @@ class AssetManager:
         item['role'] = role
         item['fallback'] = result.provider == 'local-assets'
         item['identityQuery'] = subject
-        item['identityVerified'] = result.provider == 'wikimedia-commons'
+        item['identityVerified'] = result.provider in {'wikimedia-commons', 'wikipedia-topic-image'}
         item['topicMatched'] = result.provider in {
             'wikimedia-commons', 'wikipedia-topic-image', 'openverse',
             'pexels', 'pixabay', 'unsplash',
@@ -187,6 +244,7 @@ class AssetManager:
         manifest = []
         topic_gallery: list[str] = []
         canonical = str(self.research.get('canonicalTitle') or story.get('title') or '').strip()
+        entity_type = str(self.research.get('entityType') or 'topic').strip().casefold()
 
         for scene_index, scene in enumerate(scenes, start=1):
             query = keyword(scene)
@@ -201,7 +259,7 @@ class AssetManager:
             scene['assetSource'] = result.source_url
             scene['searchQuery'] = result.search_query
             scene['qualityScore'] = result.qualityScore
-            scene['identityVerified'] = result.provider == 'wikimedia-commons'
+            scene['identityVerified'] = result.provider in {'wikimedia-commons', 'wikipedia-topic-image'}
             scene['topicMatched'] = result.provider != 'local-assets'
             scene['cutoutStyle'] = 'white-outline-yellow-shadow'
             manifest.append(
@@ -216,36 +274,31 @@ class AssetManager:
             if result.provider != 'local-assets' and relative_path not in topic_gallery and len(topic_gallery) < MAX_TOPIC_PHOTOS:
                 topic_gallery.append(relative_path)
 
+            # Search supporting material from the current scene's fact, event,
+            # date and location. This remains generic for people, companies,
+            # events, places and concepts; no topic name is hard-coded.
             if len(topic_gallery) < MAX_TOPIC_PHOTOS:
-                variants = [
-                    f'{canonical} portrait',
-                    f'{canonical} historical photo',
-                    f'{canonical} {scene.get("timeMarker", "")}',
-                    f'{canonical} {scene.get("location", "")}',
-                    str(scene.get('event') or '')[:120],
-                ]
-                for variant in variants:
-                    variant = ' '.join(str(variant or '').replace('"', ' ').split())
-                    if not variant:
-                        continue
-                    extra_query = dict(query)
-                    extra_query['primary'] = variant
-                    extra_query['secondary'] = []
-                    extra_query['identity_required'] = False
-                    extra = self.get(extra_query, scene_index, allow_local=False)
+                support_query = dict(query)
+                support_query['identity_required'] = False
+                support_query['subject_type'] = entity_type
+                for variant in self.query_variants(support_query):
+                    support_query['primary'] = variant
+                    support_query['secondary'] = []
+                    extra = self.get(support_query, scene_index, allow_local=False)
                     if not extra:
                         continue
                     extra_path = str(Path(extra.file).as_posix())
-                    if extra_path in topic_gallery:
+                    if extra_path in topic_gallery or extra_path == relative_path:
                         continue
                     topic_gallery.append(extra_path)
                     scene.setdefault('assets', []).append(extra_path)
                     manifest.append(
                         self.manifest_item(extra, scene_index, 'supporting-photo', canonical, [variant])
                     )
-                    if len(topic_gallery) >= MAX_TOPIC_PHOTOS:
-                        break
+                    break
 
+        # Share the 3-5 on-topic images across scenes while keeping no more than
+        # two supporting cards in a scene, preventing visual overcrowding.
         for index, scene in enumerate(scenes):
             main = scene.get('image')
             candidates = [path for path in topic_gallery if path != main]
@@ -255,7 +308,7 @@ class AssetManager:
                 dict.fromkeys([*(scene.get('assets') or []), *ordered[:2]])
             )[:2]
 
-        story['assetProviderSystem'] = 'vox-topic-assets-gallery-v5-openverse'
+        story['assetProviderSystem'] = 'vox-generic-multisource-assets-v6'
         story['template'] = VOX_TEMPLATE
         story['topicSubjectImages'] = len(topic_gallery)
         story['topicImageGallery'] = topic_gallery
