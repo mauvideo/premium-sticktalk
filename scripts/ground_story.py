@@ -16,7 +16,7 @@ import urllib.request
 from pathlib import Path
 
 API = "https://vi.wikipedia.org/w/api.php"
-USER_AGENT = "premium-sticktalk/4.2 (research-first-story-engine)"
+USER_AGENT = "premium-sticktalk/4.3 (research-first-story-engine)"
 BANNED_FILLER = (
     "mỗi bước nhỏ", "đừng bỏ cuộc", "động lực", "khẩu hiệu", "nút thắt",
     "câu hỏi đúng", "hành động rõ ràng", "phản ứng quen thuộc",
@@ -26,9 +26,14 @@ GENERIC_PREFIXES = (
     "lịch sử", "cuộc đời", "tiểu sử", "sự nghiệp", "câu chuyện về",
     "tìm hiểu về", "video về", "kể về", "giới thiệu về", "phim về",
 )
+GENERIC_CONNECTORS = (
+    "và hành trình", "và câu chuyện", "và quá trình", "và sự nghiệp",
+    "và những", "qua các", "từ khi", "đến khi",
+)
 STOP_WORDS = {
     "lịch", "sử", "cuộc", "đời", "tiểu", "sự", "nghiệp", "câu", "chuyện",
-    "tìm", "hiểu", "video", "phim", "về", "của", "và", "theo",
+    "tìm", "hiểu", "video", "phim", "về", "của", "và", "theo", "hành", "trình",
+    "tạo", "nên", "quá", "trình", "những", "qua", "các", "đến", "khi", "từ",
 }
 
 
@@ -49,7 +54,7 @@ def _tokens(value: str) -> list[str]:
 
 
 def subject_from_prompt(topic: str) -> str:
-    subject = re.sub(r"\s+", " ", topic).strip(" .,:;-_")
+    subject = re.sub(r"\s+", " ", topic).strip(" .,:;-_\"'“”")
     changed = True
     while changed:
         changed = False
@@ -57,9 +62,16 @@ def subject_from_prompt(topic: str) -> str:
         for prefix in GENERIC_PREFIXES:
             marker = prefix + " "
             if lowered.startswith(marker):
-                subject = subject[len(marker):].strip(" .,:;-_")
+                subject = subject[len(marker):].strip(" .,:;-_\"'“”")
                 changed = True
                 break
+    # Documentary prompts often append a scope after the actual named subject,
+    # e.g. "Steve Jobs và hành trình tạo nên Apple". Resolve Wikipedia against
+    # the named subject, while keeping the complete original topic as story scope.
+    lowered = subject.casefold()
+    cuts = [lowered.find(marker) for marker in GENERIC_CONNECTORS if lowered.find(marker) > 0]
+    if cuts:
+        subject = subject[:min(cuts)].strip(" .,:;-_\"'“”")
     if not subject:
         raise RuntimeError(f"Không xác định được chủ thể chính từ yêu cầu: {topic}")
     return subject
@@ -85,7 +97,12 @@ def _validate_resolution(topic: str, subject: str, canonical: str) -> None:
     subject_tokens = [token for token in _tokens(subject) if token not in STOP_WORDS]
     canonical_tokens = set(_tokens(canonical))
     overlap = [token for token in subject_tokens if token in canonical_tokens]
-    minimum = 1 if len(subject_tokens) == 1 else max(2, (len(subject_tokens) + 1) // 2)
+    # A valid encyclopedia title is allowed to be shorter than the user's
+    # documentary scope. For multi-word proper names require a majority match;
+    # never compare the canonical title against generic scope words.
+    if not subject_tokens:
+        return
+    minimum = 1 if len(subject_tokens) <= 2 else max(2, (len(subject_tokens) + 1) // 2)
     if len(overlap) < minimum:
         raise RuntimeError(
             "Wikipedia đã trả về sai chủ đề. "
@@ -148,203 +165,161 @@ def research_topic(topic: str) -> dict:
 
 
 def split_sentences(text: str) -> list[str]:
-    parts = re.split(r"(?<=[.!?])\s+", text)
-    output: list[str] = []
-    for part in parts:
-        sentence = part.strip()
-        low = sentence.casefold()
-        if not 45 <= len(sentence) <= 300:
-            continue
-        if any(marker in low for marker in ("tham khảo", "chú thích", "liên kết ngoài")):
-            continue
-        if sentence not in output:
-            output.append(sentence)
-    return output
+    return [s.strip() for s in re.split(r"(?<=[.!?])\s+", text) if len(s.strip()) > 35]
 
 
-def entity_type(research: dict) -> str:
-    text = (research["extract"] + " " + " ".join(research["categories"])).casefold()
-    if any(token in text for token in (
-        "sinh ngày", "sinh năm", "nhân vật", "chính khách", "tướng lĩnh",
-        "nhà khoa học", "doanh nhân", "nhà văn", "nghệ sĩ",
-    )):
-        return "person"
-    if any(token in text for token in ("trận đánh", "chiến dịch", "sự kiện", "thảm họa")):
-        return "event"
-    if any(token in text for token in ("thành phố", "quốc gia", "tỉnh", "đảo", "địa danh")):
-        return "place"
-    return "topic"
-
-
-def sentence_score(sentence: str, canonical: str, index: int) -> tuple[int, int]:
-    low = sentence.casefold()
+def sentence_score(sentence: str, subject: str) -> int:
+    norm = _normalize(sentence)
     score = 0
-    if canonical.casefold() in low:
-        score += 9
+    if _normalize(subject) in norm:
+        score += 8
     if re.search(r"\b(18|19|20)\d{2}\b", sentence):
-        score += 7
-    if any(word in low for word in (
-        "sinh", "thành lập", "chiến dịch", "phát minh", "công bố", "chiến thắng",
-        "qua đời", "di sản", "khởi công", "ra mắt", "phát triển", "được biết đến",
-        "tham gia", "chỉ huy", "giữ chức", "bổ nhiệm",
-    )):
         score += 5
-    return (-score, index)
+    if any(word in norm for word in ("sinh", "thành lập", "ra mắt", "chiến dịch", "phát triển", "được bổ nhiệm", "sáng lập", "thành công", "qua đời", "phát minh", "xây dựng")):
+        score += 4
+    if any(filler in norm for filler in BANNED_FILLER):
+        score -= 20
+    return score
 
 
-def choose_facts(research: dict, count: int) -> list[str]:
-    candidates = split_sentences(research["extract"])
-    ranked = sorted(enumerate(candidates), key=lambda item: sentence_score(item[1], research["canonicalTitle"], item[0]))
-    selected: list[tuple[int, str]] = []
-    seen: set[str] = set()
-    for original_index, sentence in ranked:
-        normalized = re.sub(r"\W+", " ", sentence.casefold()).strip()
-        if normalized in seen:
-            continue
-        seen.add(normalized)
-        selected.append((original_index, sentence))
-        if len(selected) >= count:
+def _year(sentence: str) -> int | None:
+    match = re.search(r"\b(18|19|20)\d{2}\b", sentence)
+    return int(match.group(0)) if match else None
+
+
+def _historical_scope(topic: str) -> bool:
+    norm = _normalize(topic)
+    return any(prefix in norm for prefix in ("lich su", "cuoc doi", "tieu su", "su nghiep", "hanh trinh"))
+
+
+def _balanced_facts(sentences: list[str], subject: str, topic: str, limit: int = 18) -> list[str]:
+    candidates = [s for s in sentences if sentence_score(s, subject) >= 0]
+    if not candidates:
+        return sentences[:limit]
+    if not _historical_scope(topic):
+        return sorted(candidates, key=lambda s: sentence_score(s, subject), reverse=True)[:limit]
+    dated = [(i, s, _year(s)) for i, s in enumerate(candidates) if _year(s) is not None]
+    undated = [(i, s) for i, s in enumerate(candidates) if _year(s) is None]
+    dated.sort(key=lambda item: (item[2] or 9999, item[0]))
+    chosen: list[str] = []
+    if dated:
+        # Sample the whole chronology instead of allowing one late-life cluster
+        # (death/funeral, retirement, etc.) to dominate a broad history prompt.
+        slots = min(max(6, limit - 4), len(dated))
+        for n in range(slots):
+            idx = round(n * (len(dated) - 1) / max(1, slots - 1))
+            s = dated[idx][1]
+            if s not in chosen:
+                chosen.append(s)
+    for _, s in undated:
+        if len(chosen) >= limit:
             break
-    if len(selected) < count:
-        raise RuntimeError(f"Chỉ tìm được {len(selected)} dữ kiện phù hợp, cần {count}")
-    selected.sort(key=lambda item: item[0])
-    return [sentence for _, sentence in selected]
+        if s not in chosen and sentence_score(s, subject) >= 4:
+            chosen.append(s)
+    # Cap end-of-life material at one fact unless the user explicitly asks for it.
+    end_terms = ("qua đời", "từ trần", "quốc tang", "tang lễ", "an táng", "lễ viếng")
+    end_count = 0
+    balanced: list[str] = []
+    for s in chosen:
+        if any(term in _normalize(s) for term in end_terms):
+            if end_count >= 1:
+                continue
+            end_count += 1
+        balanced.append(s)
+    return balanced[:limit]
 
 
-def narration_from_fact(fact: str, canonical: str, index: int) -> str:
-    clean = re.sub(r"\s+", " ", fact).strip()
-    if len(clean) > 190:
-        clauses = re.split(r"(?<=[,;:])\s+", clean)
-        clean = " ".join(clauses[:2]).strip()
-        if len(clean) > 190:
-            clean = clean[:187].rsplit(" ", 1)[0] + "..."
-    if index == 0 and canonical.casefold() not in clean.casefold():
-        clean = f"{canonical} là nhân vật trung tâm của câu chuyện này. {clean}"
-    return clean
+def _entities(sentence: str, canonical: str) -> list[str]:
+    entities = [canonical]
+    for name in re.findall(r"\b[A-ZÀ-ỸĐ][\wÀ-ỹĐđ.-]+(?:\s+[A-ZÀ-ỸĐ][\wÀ-ỹĐđ.-]+){0,4}", sentence):
+        if name not in entities and len(name) > 3:
+            entities.append(name)
+    return entities[:6]
 
 
-def headline(fact: str, canonical: str, index: int) -> str:
-    year = re.search(r"\b(?:18|19|20)\d{2}\b", fact)
-    if year:
-        return f"{year.group(0)} · {canonical}"
-    if index == 0:
-        return canonical
-    words = re.findall(r"[\wÀ-ỹĐđ]+", fact)
-    return " ".join(words[:6]).rstrip(".,:;")
+def _places(sentence: str) -> list[str]:
+    markers = re.findall(r"(?:tại|ở|đến|từ)\s+([A-ZÀ-ỸĐ][\wÀ-ỹĐđ.-]+(?:\s+[A-ZÀ-ỸĐ][\wÀ-ỹĐđ.-]+){0,3})", sentence)
+    return list(dict.fromkeys(markers))[:4]
 
 
-def extract_location(fact: str, research: dict) -> str:
-    common = (
-        "Việt Nam", "Hà Nội", "Điện Biên", "Điện Biên Phủ", "Sài Gòn",
-        "Thành phố Hồ Chí Minh", "Pháp", "Mỹ", "Trung Quốc", "Nhật Bản",
-    )
-    for place in common:
-        if place.casefold() in fact.casefold():
-            return place
-    return ""
+def _event_phrase(sentence: str) -> str:
+    clean = re.sub(r"\s+", " ", sentence).strip()
+    return clean[:150]
+
+
+def _scene_visual_plan(sentence: str, canonical: str, index: int) -> dict:
+    year = str(_year(sentence) or "")
+    places = _places(sentence)
+    entities = _entities(sentence, canonical)
+    event = _event_phrase(sentence)
+    queries = [
+        canonical,
+        f'"{canonical}" {year}'.strip(),
+        f'"{canonical}" {event[:70]}'.strip(),
+    ]
+    if places:
+        queries.append(f'"{canonical}" {places[0]}')
+    queries.append(f'{event[:90]} historical photo')
+    return {
+        "mainCharacter": canonical,
+        "event": event,
+        "time": year,
+        "location": places[0] if places else "",
+        "entities": entities,
+        "assetQueries": list(dict.fromkeys(q for q in queries if q.strip())),
+        "icons": ["timeline", "document"] if year else ["document", "map"],
+        "dataLayers": [year] if year else [],
+        "secondaryObjects": entities[1:3],
+        "paperElements": ["newspaper", "grid"],
+        "background": "paper-grid",
+        "camera": ["push-in", "pan-left", "pan-right", "parallax"][index % 4],
+        "transition": "paper-swipe",
+        "highlight": year or canonical,
+    }
 
 
 def build_story(story: dict, topic: str) -> dict:
     research = research_topic(topic)
-    canonical = research["canonicalTitle"]
-    scenes = story.get("scenes") or story.get("canh") or []
+    subject = research["canonicalTitle"]
+    sentences = split_sentences(research["extract"])
+    facts = _balanced_facts(sentences, subject, topic, limit=max(16, len(story.get("scenes", [])) * 2))
+    if len(facts) < 4:
+        raise RuntimeError(f"Nguồn nghiên cứu không đủ dữ kiện riêng cho chủ đề: {topic}")
+
+    scenes = story.get("scenes") or []
     if not scenes:
-        raise RuntimeError("story.json không có cảnh")
+        raise RuntimeError("Kịch bản không có scene để biên tập.")
 
-    facts = choose_facts(research, len(scenes))
-    kind = entity_type(research)
-    timeline: list[dict] = []
-
-    for index, (scene, fact) in enumerate(zip(scenes, facts)):
-        narration = narration_from_fact(fact, canonical, index)
-        year_match = re.search(r"\b(?:18|19|20)\d{2}\b", fact)
-        year = year_match.group(0) if year_match else ""
-        location = extract_location(fact, research)
-        scene_title = headline(fact, canonical, index)
-        fact_keywords = " ".join(re.findall(r"[\wÀ-ỹĐđ]+", fact)[:8])
-
-        scene["narration"] = narration
-        scene["loi_dan"] = narration
-        scene["headline"] = scene_title
-        scene["text"] = scene_title
-        scene["newFact"] = fact
-        scene["timeMarker"] = year
-        scene["location"] = location
-        scene["event"] = fact
-        scene["visualEvidence"] = [fact]
-        scene["mainSubject"] = canonical
-        scene["keywords"] = [canonical, *([year] if year else [])]
-        scene["tu_khoa"] = scene["keywords"]
-        scene["entityVisualPlan"] = {
-            "mainSubject": canonical,
-            "mainSubjectType": kind if index == 0 else "event",
-            "identityRequired": bool(kind == "person" and index == 0),
-            "event": fact,
-            "timePeriod": year,
-            "location": location,
-            "visualEvidence": [fact],
-            "searchQueries": [
-                f'"{canonical}" portrait Wikimedia Commons' if index == 0 and kind == "person" else f'"{canonical}" Wikimedia Commons',
-                f'"{canonical}" {year} {location}'.strip(),
-                f'"{canonical}" {fact_keywords}'.strip(),
-            ],
-            "iconQueries": [
-                f'{location or canonical} map icon',
-                f'{year or "timeline"} timeline icon',
-                f'{fact_keywords} historical icon',
-            ],
-            "assetRoles": [
-                "main-subject", "context-evidence", "map-or-timeline",
-                "topic-icon", "newspaper-clipping", "annotation",
-            ],
-        }
-        timeline.append({"scene": index + 1, "year": year, "fact": fact, "location": location})
-
-    story["title"] = story["tieu_de"] = canonical
-    story["topicInput"] = topic
-    story["research"] = {key: value for key, value in research.items() if key != "extract"}
-    story["research"]["entityType"] = kind
-    story["research"]["timeline"] = timeline
-    story["entityVisualPlan"] = {
-        "mainEntity": canonical,
-        "mainEntityType": kind,
-        "archivalSearchTerms": [
-            f'"{canonical}" portrait Wikimedia Commons',
-            f'"{canonical}" historical photo',
-            f'"{canonical}" Wikimedia Commons',
-        ],
-        "mapsNeeded": [item["location"] for item in timeline if item["location"]],
-        "chartsNeeded": ["timeline"],
-    }
-
-    all_text = " ".join(scene["narration"].casefold() for scene in scenes)
-    relevant_tokens = [token for token in _tokens(canonical) if token not in STOP_WORDS]
-    if relevant_tokens and not any(token in all_text for token in relevant_tokens):
-        raise RuntimeError("Kịch bản không chứa dữ kiện nhận diện đúng chủ đề")
-    if any(phrase in all_text for phrase in BANNED_FILLER):
-        raise RuntimeError("Kịch bản còn chứa câu đệm chung chung bị cấm")
-
-    Path("assets/research.json").write_text(json.dumps(story["research"], ensure_ascii=False, indent=2), encoding="utf-8")
+    # Preserve requested scope in the title, but ground every scene in the
+    # resolved canonical subject and a distinct researched fact.
+    story["title"] = topic.strip(" \"'“”")
+    story["research"] = research
+    story["resolvedSubject"] = subject
+    story["researchFacts"] = facts
+    for index, scene in enumerate(scenes):
+        fact = facts[min(index, len(facts) - 1)]
+        scene["narration"] = fact
+        scene["headline"] = subject if index == 0 else (str(_year(fact) or "") or subject)
+        scene["keywords"] = list(dict.fromkeys([subject, *(_places(fact)), str(_year(fact) or "")]))[:5]
+        scene["visualPlan"] = _scene_visual_plan(fact, subject, index)
     return story
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--story", default="assets/story.json")
+    parser.add_argument("story")
     parser.add_argument("--topic", required=True)
+    parser.add_argument("--output")
     args = parser.parse_args()
-
     path = Path(args.story)
     story = json.loads(path.read_text(encoding="utf-8"))
     story = build_story(story, args.topic)
-    path.write_text(json.dumps(story, ensure_ascii=False, indent=2), encoding="utf-8")
-
-    Path("output").mkdir(exist_ok=True)
-    Path("output/script.txt").write_text("\n".join(scene["narration"] for scene in story["scenes"]), encoding="utf-8")
-    print(f"Chủ thể đã tách từ yêu cầu: {story['research']['resolvedSubject']}")
-    print(f"Đã nghiên cứu và lập kịch bản theo chủ đề: {story['research']['canonicalTitle']}")
-    print(f"Loại chủ đề: {story['research']['entityType']}")
-    print(f"Số dữ kiện mới: {len(story['research']['timeline'])}")
+    output = Path(args.output) if args.output else path
+    output.write_text(json.dumps(story, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"Đã nghiên cứu và lập kịch bản theo chủ đề: {story['resolvedSubject']}")
+    print(f"Số dữ kiện mới: {len(story['researchFacts'])}")
+    if _historical_scope(args.topic):
+        print("EDITORIAL GUARD: đã phân bố dữ kiện theo toàn tiến trình, không để một sự kiện cuối đời chiếm toàn video")
 
 
 if __name__ == "__main__":
