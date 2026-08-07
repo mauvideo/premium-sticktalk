@@ -15,8 +15,17 @@ from __future__ import annotations
 import json
 import os
 import re
+import sys
 import time
 import urllib.error
+from pathlib import Path
+
+# This file is invoked directly by make_video.sh. In that mode Python puts
+# scripts/ (not the repository root) on sys.path, so `from scripts import ...`
+# would fail. Add the repo root explicitly without changing the pipeline.
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from scripts import commercial_ai_pipeline as base
 
@@ -28,7 +37,6 @@ def _extract_json_stable(text: str) -> dict:
 
     decoder = json.JSONDecoder()
 
-    # Fast path: clean JSON.
     try:
         value = json.loads(text)
         if isinstance(value, dict):
@@ -36,8 +44,6 @@ def _extract_json_stable(text: str) -> dict:
     except json.JSONDecodeError:
         pass
 
-    # Gemini can occasionally append a second JSON object or explanatory text.
-    # Scan for the first complete JSON object and ignore trailing data.
     for match in re.finditer(r"\{", text):
         try:
             value, _end = decoder.raw_decode(text[match.start():])
@@ -72,7 +78,6 @@ def _gemini_only_ai_text(prompt: str, use_search: bool = False) -> tuple[str, st
     errors: list[str] = []
     for model_index, model in enumerate(models):
         os.environ["GEMINI_MODEL"] = model
-        # More patience on the primary model; fallback gets its own retry window.
         for retry in range(5):
             try:
                 text = base._gemini_text(prompt, use_search)
@@ -93,8 +98,6 @@ def _gemini_only_ai_text(prompt: str, use_search: bool = False) -> tuple[str, st
 
 
 def main() -> None:
-    # Monkey-patch only the two unstable boundaries; leave the rest of the
-    # commercial pipeline untouched.
     base._extract_json = _extract_json_stable
     base.ai_text = _gemini_only_ai_text
     base.main()
