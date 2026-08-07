@@ -1,14 +1,9 @@
 #!/usr/bin/env python3
 """Gemini-only stability wrapper for the commercial text pipeline.
 
-Keeps the existing research/script pipeline intact, but makes two failure modes
-more tolerant:
-- Gemini 429/503/transient errors: retry with exponential backoff and optional
-  Gemini fallback model.
-- Gemini JSON with trailing prose or multiple JSON objects: parse the first
-  complete JSON object instead of failing with `Extra data`.
-
-No OpenAI fallback is used here.
+Adds stable Gemini retries/JSON parsing and duration-aware prompts, including
+90-second scripts. Gemini remains text-only; visual assets are fetched by the
+separate web asset engine.
 """
 from __future__ import annotations
 
@@ -20,9 +15,6 @@ import time
 import urllib.error
 from pathlib import Path
 
-# This file is invoked directly by make_video.sh. In that mode Python puts
-# scripts/ (not the repository root) on sys.path, so `from scripts import ...`
-# would fail. Add the repo root explicitly without changing the pipeline.
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -34,16 +26,13 @@ def _extract_json_stable(text: str) -> dict:
     text = str(text or "").strip()
     text = re.sub(r"^```(?:json)?\s*", "", text, flags=re.I)
     text = re.sub(r"\s*```$", "", text)
-
     decoder = json.JSONDecoder()
-
     try:
         value = json.loads(text)
         if isinstance(value, dict):
             return value
     except json.JSONDecodeError:
         pass
-
     for match in re.finditer(r"\{", text):
         try:
             value, _end = decoder.raw_decode(text[match.start():])
@@ -51,7 +40,6 @@ def _extract_json_stable(text: str) -> dict:
             continue
         if isinstance(value, dict):
             return value
-
     raise json.JSONDecodeError("Không tìm thấy JSON object hợp lệ trong phản hồi Gemini", text, 0)
 
 
@@ -68,24 +56,20 @@ def _is_transient(exc: Exception) -> bool:
 def _gemini_only_ai_text(prompt: str, use_search: bool = False) -> tuple[str, str]:
     if not os.getenv("GEMINI_API_KEY", "").strip():
         raise RuntimeError("Cần GEMINI_API_KEY trong GitHub Secrets để Gemini nghiên cứu và viết kịch bản.")
-
     primary = os.getenv("GEMINI_MODEL", "gemini-3.6-flash").strip() or "gemini-3.6-flash"
     fallback = os.getenv("GEMINI_FALLBACK_MODEL", "gemini-3.5-flash").strip()
     models = [primary]
     if fallback and fallback != primary:
         models.append(fallback)
-
     errors: list[str] = []
     for model_index, model in enumerate(models):
         os.environ["GEMINI_MODEL"] = model
         for retry in range(5):
             try:
-                text = base._gemini_text(prompt, use_search)
-                return text, "gemini"
+                return base._gemini_text(prompt, use_search), "gemini"
             except Exception as exc:
                 errors.append(f"{model}: {exc}")
-                transient = _is_transient(exc)
-                if not transient:
+                if not _is_transient(exc):
                     break
                 if retry < 4:
                     delay = min(4 * (2 ** retry), 32)
@@ -93,13 +77,60 @@ def _gemini_only_ai_text(prompt: str, use_search: bool = False) -> tuple[str, st
                     time.sleep(delay)
         if model_index + 1 < len(models):
             print(f"Gemini chuyển model dự phòng: {models[model_index + 1]}")
-
     raise RuntimeError("Gemini thất bại sau retry: " + " | ".join(errors[-6:]))
+
+
+def _research_prompt(topic: str, resolved: dict, wiki: dict) -> str:
+    context = wiki.get("extract") or "(Không có Wikipedia context; chỉ nêu fact bạn chắc chắn.)"
+    return f"""
+Bạn là research editor tiếng Việt cho video Vox. Gemini CHỈ nghiên cứu và viết text.
+CHỦ ĐỀ: {topic}
+CHỦ THỂ: {resolved['canonicalSubject']}
+LOẠI: {resolved['entityType']}
+Ý ĐỊNH: {resolved['intent']}
+PHẠM VI: {resolved['scope']}
+NGỮ CẢNH THAM CHIẾU:
+{context}
+
+Tạo facts chính xác, không bịa, không lặp, phủ đúng câu hỏi. Mỗi fact phải đủ cụ thể để vừa viết lời thoại vừa tìm hình minh họa.
+Trả DUY NHẤT JSON:
+{{"summary":"2-4 câu","facts":[{{"id":"F1","claim":"một dữ kiện cụ thể","date":"nếu có","places":["..."],"entities":["..."],"visual_queries":["3-5 truy vấn ảnh web cụ thể bằng tiếng Anh hoặc tên riêng, mô tả đúng người/vật/hành động/bối cảnh của fact"]}}]}}
+Yêu cầu tối thiểu 12 facts để đủ dữ liệu cho cả video dài 90 giây; fact nào không chắc thì bỏ.
+visual_queries dùng cho Pexels, Pixabay, Unsplash và Openverse; KHÔNG dùng Wikimedia và Gemini KHÔNG tạo ảnh.
+""".strip()
+
+
+def _script_prompt(topic: str, duration: int, research: dict) -> str:
+    target = round(duration * 2.35)
+    if duration >= 90:
+        scene_rule = "90s: 13-17 cảnh, mỗi cảnh khoảng 4.5-7 giây"
+    elif duration >= 60:
+        scene_rule = "60s: 9-12 cảnh"
+    elif duration >= 45:
+        scene_rule = "45s: 7-9 cảnh"
+    else:
+        scene_rule = "30s: 5-7 cảnh"
+    fact_json = json.dumps({"canonicalSubject": research["canonicalSubject"], "intent": research["intent"], "facts": research["facts"]}, ensure_ascii=False)
+    return f"""
+Bạn là biên tập viên Vox documentary. Viết kịch bản tiếng Việt CHỈ từ FACTS bên dưới, không thêm dữ kiện mới.
+CHỦ ĐỀ: {topic}
+THỜI LƯỢNG CHÍNH XÁC CẦN NHẮM TỚI: {duration} giây
+MỤC TIÊU: khoảng {target} từ, sai số tối đa 10%.
+FACTS: {fact_json}
+
+Trả DUY NHẤT JSON:
+{{"title":"...","scenes":[{{"id":"scene-01","headline":"ngắn","narration":"1-2 câu tự nhiên, giàu thông tin","fact_ids":["F1"],"visual_queries":["3-5 truy vấn ảnh thật cụ thể bám chính xác câu thoại này"],"icons":["1-2 từ khóa icon đúng ngữ nghĩa cảnh, ví dụ dumbbell, heart, map, clock, phone, car, plane; để [] nếu không cần"]}}]}}
+Quy tắc số cảnh: {scene_rule}.
+Không lặp câu, không triết lý, không câu đệm. Mỗi scene phải có visual_queries riêng; ưu tiên ảnh thật về hành động/đối tượng đang được nói tới, không dùng ảnh người nổi tiếng không liên quan.
+narration là CHÍNH XÁC văn bản gửi sang VieNeu và dùng làm phụ đề.
+""".strip()
 
 
 def main() -> None:
     base._extract_json = _extract_json_stable
     base.ai_text = _gemini_only_ai_text
+    base.research_prompt = _research_prompt
+    base.script_prompt = _script_prompt
     base.main()
 
 
