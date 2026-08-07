@@ -53,14 +53,17 @@ def plan_entities(story,topic=None):
  for marker in PLACE_WORDS:locations += _unique(re.findall(rf"\b{re.escape(marker)}\s+([A-ZÀ-ỸĐ][\wÀ-ỹĐđ-]+(?:\s+[A-ZÀ-ỸĐ][\wÀ-ỹĐđ-]+){{0,3}})",text))
  locations=_unique(locations);events=[]
  for scene in scenes:events.append(_clean(scene.get("event") or scene.get("headline")))
- events=_unique(events);objects=_unique(supplied.get("visualObjects",[])) or ["tài liệu gốc","mốc thời gian","ảnh bối cảnh"]
+ events=_unique(events);objects=_unique(supplied.get("visualObjects",[]))
  plan={"mainEntity":subject,"mainEntityType":entity_type,"secondaryEntities":_unique(supplied.get("secondaryEntities",[])),"locations":locations,"timePeriods":years,"organizations":_unique(supplied.get("organizations",[])),"events":events,"visualObjects":objects,"mapsNeeded":[f"Bản đồ {p}" for p in locations[:3]],"chartsNeeded":["Dòng thời gian"] if years else [],"archivalSearchTerms":build_search_queries(subject,events[0] if events else "",locations[0] if locations else "",objects,entity_type)}
  for scene in scenes:
-  narration=_clean(scene.get("narration") or scene.get("loi_dan"));scene_years=YEAR.findall(narration);location=next((p for p in locations if _norm(p) in _norm(narration)),"");event=_clean(scene.get("event") or scene.get("headline") or narration[:120]);roles=["paper-background","texture","main-subject","context-evidence","data-map-icon","annotation","typography"]
+  narration=_clean(scene.get("narration") or scene.get("loi_dan"));scene_years=YEAR.findall(narration);location=next((p for p in locations if _norm(p) in _norm(narration)),"");event=_clean(scene.get("event") or scene.get("headline"));roles=["paper-background","texture","main-subject","context-evidence","data-map-icon","annotation","typography"]
   ai_queries=_unique(scene.get("visualQueries") or scene.get("visual_queries") or [])
-  fallback_queries=build_search_queries(subject,event,location,objects,entity_type)
+  # Ưu tiên visualQueries do story/research tạo cho từng scene. Chỉ dùng fallback khi AI không cung cấp.
+  fallback_queries=build_search_queries(subject,event,location,objects,entity_type) if not ai_queries else []
   search_queries=_unique(ai_queries+fallback_queries)[:12]
-  scene["entityVisualPlan"]={"mainSubject":subject,"mainSubjectType":entity_type,"identityRequired":entity_type=="person","supportingSubjects":_unique(_names(narration))[:4],"location":location,"timePeriod":scene_years[0] if scene_years else "","event":event,"visualEvidence":_unique([event,location]+objects)[:4],"searchQueries":search_queries,"assetRoles":roles};scene["assetRoles"]=roles
+  # Không dùng cả câu narration làm event/query vì dễ kéo ảnh lệch chủ đề.
+  visual_evidence=_unique([event,location]+objects)[:4]
+  scene["entityVisualPlan"]={"mainSubject":subject,"mainSubjectType":entity_type,"identityRequired":entity_type=="person","supportingSubjects":_unique(_names(narration))[:4],"location":location,"timePeriod":scene_years[0] if scene_years else "","event":event,"visualEvidence":visual_evidence,"searchQueries":search_queries,"assetRoles":roles};scene["assetRoles"]=roles
  story["entityVisualPlan"]=plan;story["resolvedEntityType"]=entity_type;story["topic"]=topic;apply_visual_plans(story);return story
 def main():
  p=argparse.ArgumentParser();p.add_argument("--story",default="assets/story.json");p.add_argument("--topic");a=p.parse_args();path=Path(a.story);story=plan_entities(json.loads(path.read_text(encoding="utf-8")),a.topic);path.write_text(json.dumps(story,ensure_ascii=False,indent=2),encoding="utf-8");print(f"VISUAL ENTITY: {story['entityVisualPlan']['mainEntity']} ({story['resolvedEntityType']})")
