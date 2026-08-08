@@ -4,43 +4,45 @@ from __future__ import annotations
 import re
 PAPER=["newspaper","torn paper","marker","highlight","tape","stamp"]
 CAMERAS=["push","pan left","pan right","parallax","soft rotate","slide"]
-TRANSITIONS=["paper slide","paper reveal","card stack","mask reveal","wipe","cut"]
+# Không dùng flash/white-frame/strobe. Chuyển cảnh luôn giữ một lớp nền đầy khung.
+TRANSITIONS=["paper slide","paper reveal","card stack","mask reveal","soft wipe","push cut"]
 COMPOSITIONS=["subject-left with evidence-right","subject-right with map-left","center cutout with document stack","diagonal archival collage","timeline foreground with portrait background","map route with cutout subject"]
 ICON_RULES=[
- ({"nhịp sinh học","đồng hồ sinh học","circadian rhythm"},"circadian clock"),
- ({"chu kỳ ngày đêm","mặt trời và mặt trăng","sun moon cycle"},"sun"),
- ({"ngủ đủ giấc","ngủ sâu","giấc ngủ sâu","deep sleep"},"sleep"),
- ({"năng lượng","hồi phục năng lượng","energy level"},"battery"),
- ({"đều đặn","nhất quán","thói quen hằng ngày","consistency"},"calendar"),
- ({"tập gym","phòng gym","tập tạ","nâng tạ","dumbbell","weight training"},"dumbbell"),
- ({"nhịp tim","tim mạch","heart rate"},"heart"),
- ({"điện thoại","phone","smartphone"},"phone"),
- ({"đi bộ","chạy bộ","khởi động","walking","running","warm up"},"walk"),
- ({"uống nước","nước uống","hydration"},"water"),
- ({"dinh dưỡng","bữa ăn","ăn uống","nutrition"},"food"),
- ({"giấc ngủ","nghỉ ngơi","sleep","rest"},"sleep"),
- ({"não bộ","sóng não","brain wave","brain"},"brain"),
- ({"công việc","làm việc","năng suất","productivity","work"},"work"),
- ({"bản đồ","địa điểm","vị trí địa lý","map"},"map"),
- ({"dòng thời gian","mốc thời gian","timeline"},"timeline"),
- ({"tài liệu","hồ sơ","văn kiện","document"},"document"),
- ({"quân đội","đại tướng","chiến dịch","trận đánh","binh sĩ","military"},"military"),
- ({"nhà máy","sản xuất công nghiệp","factory","industrial"},"factory"),
- ({"ô tô","xe hơi","car"},"car"),
- ({"tàu biển","con tàu","đại dương","ship"},"ship"),
- ({"máy bay","hàng không","airplane"},"airplane"),
- ({"sách giáo khoa","giáo dục","book"},"book"),
- ({"biểu đồ","số liệu thống kê","chart"},"chart"),
- ({"thành phố","đô thị","tòa nhà","building"},"building"),
+ ({"chuẩn bị","preparation"},["water bottle","sports clothes","clock 30m"]),
+ ({"ăn nhẹ","bữa ăn nhẹ","dinh dưỡng","nutrition","snack"},["protein shake","banana","apple"]),
+ ({"khởi động","xoay khớp","giãn cơ","warm up","stretch"},["stretch","rotate joint","activity"]),
+ ({"máy chạy","máy chạy bộ","treadmill"},["treadmill","running shoe"]),
+ ({"đi bộ","walking"},["running shoe","treadmill"]),
+ ({"cất tạ đúng vị trí","xếp tạ","trả tạ","weight rack"},["weight rack","checkmark"]),
+ ({"nhịp sinh học","đồng hồ sinh học","circadian rhythm"},["circadian clock","sun","moon"]),
+ ({"ngủ đủ giấc","ngủ sâu","giấc ngủ sâu","deep sleep"},["sleep","battery","moon"]),
+ ({"năng lượng","hồi phục năng lượng","energy level"},["battery","activity"]),
+ ({"đều đặn","nhất quán","thói quen hằng ngày","consistency"},["calendar","clock"]),
+ ({"tập gym","phòng gym","tập tạ","nâng tạ","dumbbell","weight training"},["dumbbell","activity"]),
+ ({"nhịp tim","tim mạch","heart rate"},["heart","activity"]),
+ ({"uống nước","nước uống","hydration"},["water bottle","water"]),
+ ({"giấc ngủ","nghỉ ngơi","sleep","rest"},["sleep","moon"]),
+ ({"não bộ","sóng não","brain wave","brain"},["brain","activity"]),
+ ({"công việc","làm việc","năng suất","productivity","work"},["work","calendar"]),
+ ({"nhà máy","sản xuất công nghiệp","factory","industrial"},["factory"]),
+ ({"bản đồ","địa điểm","vị trí địa lý","map"},["map"]),
+ ({"dòng thời gian","mốc thời gian","timeline"},["timeline"]),
+ ({"tài liệu","hồ sơ","văn kiện","document"},["document"]),
+ ({"quân đội","đại tướng","chiến dịch","trận đánh","binh sĩ","military"},["military"]),
+ ({"máy bay","hàng không","airplane"},["airplane"]),
+ ({"biểu đồ","số liệu thống kê","chart"},["chart"]),
 ]
-ALLOWED_ICON_HINTS={"dumbbell","gym","heart","phone","walk","water","food","sleep","brain","computer","laptop","map","timeline","clock","timer","document","military","factory","car","ship","airplane","plane","book","chart","building","landmark","person","sun","moon","battery","calendar","work","circadian","activity"}
+ALLOWED_ICON_HINTS={x for _,icons in ICON_RULES for x in icons}|{"gym","phone","car","ship","book","building","landmark","person","timer","computer","laptop"}
 def _norm(text:str)->str:return " ".join(re.findall(r"[\wÀ-ỹ]+",str(text).casefold()))
 def _pick(options:list[str],seed:int)->str:return options[seed%len(options)]
 def _semantic_icons(text:str,evidence:list[str])->list[str]:
  hay=_norm(text+" "+" ".join(evidence));icons=[]
- for required,icon in ICON_RULES:
-  if any(_norm(term) in hay for term in required) and icon not in icons:icons.append(icon)
- return icons[:2]
+ for required,mapped in ICON_RULES:
+  if any(_norm(term) in hay for term in required):
+   for icon in mapped:
+    if icon not in icons:icons.append(icon)
+ # 2-3 icon đúng ngữ nghĩa nếu cảnh có đủ tín hiệu; không chèn icon rác chỉ để đủ số lượng.
+ return icons[:3]
 def _scene_icons(scene:dict,text:str,evidence:list[str])->list[str]:
  semantic=_semantic_icons(text,evidence);ai=[]
  for raw in scene.get("icons") or []:
@@ -48,7 +50,10 @@ def _scene_icons(scene:dict,text:str,evidence:list[str])->list[str]:
   if not v:continue
   mapped=next((hint for hint in ALLOWED_ICON_HINTS if hint in v),None)
   if mapped and mapped in semantic and mapped not in ai:ai.append(mapped)
- return (ai or semantic)[:2]
+ merged=[]
+ for icon in [*ai,*semantic]:
+  if icon not in merged:merged.append(icon)
+ return merged[:3]
 def create_visual_plan(scene:dict,story:dict,scene_index:int)->dict:
  narration=str(scene.get("narration") or scene.get("loi_dan") or "")
  text=" ".join(str(scene.get(k,"")) for k in ("narration","loi_dan","sceneRole","storyProgress","imageFocus","headline","event"))
@@ -58,8 +63,8 @@ def create_visual_plan(scene:dict,story:dict,scene_index:int)->dict:
  if charts and ({"số","liệu","tăng","giảm","%","phần","trăm"}&tokens):data_layers.append({"type":"chart","label":charts[scene_index%len(charts)]})
  if time_period and time_period in narration:data_layers.append({"type":"timeline","label":time_period})
  if not data_layers and event:data_layers.append({"type":"evidence","label":event})
- secondary=[x for x in [event,location,*evidence] if x]
- return {"background":"archival paper collage","mainCharacter":entity.get("mainSubject") or story.get("title") or "documentary subject","secondaryObjects":secondary[:3],"icons":_scene_icons(scene,text,secondary),"paperElements":[_pick(PAPER,seed+scene_index),_pick(PAPER,seed+scene_index+2)],"camera":_pick(CAMERAS,seed+scene_index),"transition":_pick(TRANSITIONS,seed+scene_index),"highlight":event or scene.get("imageFocus") or scene.get("sceneRole") or "Dữ kiện chính","mood":"documentary","colorPalette":"cream black yellow red","composition":_pick(COMPOSITIONS,seed+scene_index),"dataLayers":data_layers[:3],"location":location,"timePeriod":time_period,"layerContract":entity.get("assetRoles") or ["paper-background","print-texture","main-subject","context-photo","semantic-icon","map-chart-timeline","annotation","typography"]}
+ secondary=[x for x in [event,location,*evidence] if x];icons=_scene_icons(scene,text,secondary)
+ return {"background":"archival paper collage","mainCharacter":entity.get("mainSubject") or story.get("title") or "documentary subject","secondaryObjects":secondary[:3],"icons":icons,"iconAnimation":{"type":"sequential-elastic-pop","frames":8,"staggerFrames":7,"overshoot":1.16,"idle":"float-wiggle","noFlash":True},"paperElements":[_pick(PAPER,seed+scene_index),_pick(PAPER,seed+scene_index+2)],"camera":_pick(CAMERAS,seed+scene_index),"transition":_pick(TRANSITIONS,seed+scene_index),"highlight":event or scene.get("imageFocus") or scene.get("sceneRole") or "Dữ kiện chính","mood":"documentary","colorPalette":"cream black yellow red","composition":_pick(COMPOSITIONS,seed+scene_index),"dataLayers":data_layers[:3],"location":location,"timePeriod":time_period,"noFlash":True,"layerContract":entity.get("assetRoles") or ["paper-background","print-texture","main-subject","context-photo","semantic-icon","map-chart-timeline","annotation","typography"]}
 def apply_visual_plans(story:dict)->dict:
  used=set()
  for index,scene in enumerate(story.get("scenes",[])):
