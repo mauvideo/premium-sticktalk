@@ -20,12 +20,13 @@ const SceneView:React.FC<{scene:Scene;style:string}>=({scene,style})=>{const pre
  <Caption scene={{...scene,subtitle:{...preset.subtitle,...scene.subtitle}}} accent={preset.colors.accent} foreground={preset.colors.foreground}/>
  </AbsoluteFill></CameraEngine></TransitionEngine>};
 
+type RenderStory=Story&{template?:string;project?:string;renderAudio?:boolean};
 export const StickTalkVideo:React.FC<Story>=(story)=>{
- const extended=story as Story&{template?:string;project?:string};
+ const extended=story as RenderStory;
  const {fps,durationInFrames}=useVideoConfig();
  let elapsedSeconds=0;
  return <AbsoluteFill style={{background:'#050711'}}>
-  {story.audio&&<Audio src={staticFile(story.audio)}/>} 
+  {story.audio&&extended.renderAudio!==false&&<Audio src={staticFile(story.audio)}/>} 
   {story.scenes.map((scene,sceneIndex)=>{
     const startFrame=Math.max(0,Math.round(elapsedSeconds*fps));
     elapsedSeconds+=Number(scene.duration||0);
