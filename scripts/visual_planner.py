@@ -6,21 +6,26 @@ PAPER=["newspaper","torn paper","marker","highlight","tape","stamp"]
 CAMERAS=["push","pan left","pan right","parallax","soft rotate","slide"]
 TRANSITIONS=["paper slide","paper reveal","card stack","mask reveal","wipe","cut"]
 COMPOSITIONS=["subject-left with evidence-right","subject-right with map-left","center cutout with document stack","diagonal archival collage","timeline foreground with portrait background","map route with cutout subject"]
-# Rules are intentionally phrase/specific-token based. Generic tokens such as "thời", "người", "sức"
-# previously caused the same clock/heart/document icons to appear in unrelated videos.
 ICON_RULES=[
+ ({"nhịp sinh học","đồng hồ sinh học","circadian rhythm"},"circadian clock"),
+ ({"chu kỳ ngày đêm","mặt trời và mặt trăng","sun moon cycle"},"sun"),
+ ({"ngủ đủ giấc","ngủ sâu","giấc ngủ sâu","deep sleep"},"sleep"),
+ ({"năng lượng","hồi phục năng lượng","energy level"},"battery"),
+ ({"đều đặn","nhất quán","thói quen hằng ngày","consistency"},"calendar"),
  ({"tập gym","phòng gym","tập tạ","nâng tạ","dumbbell","weight training"},"dumbbell"),
  ({"nhịp tim","tim mạch","heart rate"},"heart"),
  ({"điện thoại","phone","smartphone"},"phone"),
  ({"đi bộ","chạy bộ","khởi động","walking","running","warm up"},"walk"),
  ({"uống nước","nước uống","hydration"},"water"),
  ({"dinh dưỡng","bữa ăn","ăn uống","nutrition"},"food"),
- ({"ngủ nghỉ","giấc ngủ","nghỉ ngơi","sleep"},"sleep"),
+ ({"giấc ngủ","nghỉ ngơi","sleep","rest"},"sleep"),
+ ({"não bộ","sóng não","brain wave","brain"},"brain"),
+ ({"công việc","làm việc","năng suất","productivity","work"},"work"),
  ({"bản đồ","địa điểm","vị trí địa lý","map"},"map"),
  ({"dòng thời gian","mốc thời gian","timeline"},"timeline"),
  ({"tài liệu","hồ sơ","văn kiện","document"},"document"),
  ({"quân đội","đại tướng","chiến dịch","trận đánh","binh sĩ","military"},"military"),
- ({"nhà máy","sản xuất công nghiệp","factory"},"factory"),
+ ({"nhà máy","sản xuất công nghiệp","factory","industrial"},"factory"),
  ({"ô tô","xe hơi","car"},"car"),
  ({"tàu biển","con tàu","đại dương","ship"},"ship"),
  ({"máy bay","hàng không","airplane"},"airplane"),
@@ -28,7 +33,7 @@ ICON_RULES=[
  ({"biểu đồ","số liệu thống kê","chart"},"chart"),
  ({"thành phố","đô thị","tòa nhà","building"},"building"),
 ]
-ALLOWED_ICON_HINTS={"dumbbell","gym","heart","phone","walk","water","food","sleep","brain","computer","laptop","map","timeline","clock","timer","document","military","factory","car","ship","airplane","plane","book","chart","building","landmark","person"}
+ALLOWED_ICON_HINTS={"dumbbell","gym","heart","phone","walk","water","food","sleep","brain","computer","laptop","map","timeline","clock","timer","document","military","factory","car","ship","airplane","plane","book","chart","building","landmark","person","sun","moon","battery","calendar","work","circadian","activity"}
 def _norm(text:str)->str:return " ".join(re.findall(r"[\wÀ-ỹ]+",str(text).casefold()))
 def _pick(options:list[str],seed:int)->str:return options[seed%len(options)]
 def _semantic_icons(text:str,evidence:list[str])->list[str]:
@@ -37,7 +42,6 @@ def _semantic_icons(text:str,evidence:list[str])->list[str]:
   if any(_norm(term) in hay for term in required) and icon not in icons:icons.append(icon)
  return icons[:2]
 def _scene_icons(scene:dict,text:str,evidence:list[str])->list[str]:
- # AI icons are accepted only if the same semantic idea is present in this exact scene.
  semantic=_semantic_icons(text,evidence);ai=[]
  for raw in scene.get("icons") or []:
   v=str(raw).strip().casefold()
