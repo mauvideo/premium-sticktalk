@@ -14,7 +14,7 @@ while (($#)); do case "$1" in
 [[ "$DURATION" =~ ^(30|45|60|90)$ ]] || { echo "Thời lượng không hợp lệ: $DURATION" >&2; exit 2; }
 [[ "$ASPECT" =~ ^(9:16|16:9)$ ]] || { echo "Tỷ lệ không hợp lệ: $ASPECT" >&2; exit 2; }
 export VIDEO_PROJECT="documentary" VIDEO_TEMPLATE="vox-paper-collage" VIDEO_STYLE="vox_giay_cat" VIDEO_MOTION_LEVEL="high" VIDEO_SCRIPT_MODE="ai_research_grounded" VIDEO_CONTENT_FORMAT="narration" VIDEO_TONE="trung_tính" VIENEU_EMOTION="Kể chuyện"
-printf '%s\n' "=== PREMIUM STICKTALK COMMERCIAL PIPELINE ===" "Chủ đề: $IDEA" "Thời lượng: $DURATION giây" "Khung hình: $ASPECT" "Giọng VieNeu: $VOICE" "Quy trình: Gemini text → facts → kịch bản Vox theo đúng thời lượng → ảnh Pexels/Pixabay/Unsplash/Openverse → VieNeu + phụ đề cùng text → Remotion"
+printf '%s\n' "=== PREMIUM STICKTALK COMMERCIAL PIPELINE ===" "Chủ đề: $IDEA" "Thời lượng: $DURATION giây" "Khung hình: $ASPECT" "Giọng VieNeu: $VOICE" "Quy trình: Gemini text → facts → kịch bản Vox theo đúng thời lượng → tải ảnh về máy chủ tạm → VieNeu + phụ đề cùng text → Remotion chỉ đọc tài nguyên cục bộ"
 mkdir -p assets output remotion/public/assets
 
 PRIMARY_MODEL="${GEMINI_MODEL:-gemini-3.6-flash}"
@@ -32,7 +32,44 @@ PY
 
 python3 -m scripts.entity_visual_planner --story assets/story.json --topic "$IDEA"
 python3 -m scripts.asset_providers.manager
-rm -rf remotion/public/assets/generated-assets; mkdir -p remotion/public/assets/generated-assets; cp -R assets/generated-assets/. remotion/public/assets/generated-assets/
+
+# Đóng băng toàn bộ ảnh trước khi dựng: Remotion tuyệt đối không đọc ảnh trực tiếp từ web.
+rm -rf remotion/public/assets/generated-assets
+mkdir -p remotion/public/assets/generated-assets
+cp -R assets/generated-assets/. remotion/public/assets/generated-assets/
+python3 - <<'PY'
+import json, pathlib, re, sys
+story_path=pathlib.Path('assets/story.json')
+public=pathlib.Path('remotion/public')
+story=json.loads(story_path.read_text(encoding='utf-8'))
+remote=re.compile(r'^https?://',re.I)
+missing=[]; remote_refs=[]
+def check(value,label):
+    if not value:return
+    value=str(value)
+    if remote.match(value): remote_refs.append((label,value)); return
+    rel=value.replace('\\','/').lstrip('/')
+    if rel.startswith('assets/'):
+        target=public/rel
+    elif rel.startswith('generated-assets/'):
+        target=public/'assets'/rel
+    else:
+        return
+    if not target.exists() or target.stat().st_size < 1: missing.append((label,value))
+for i,scene in enumerate(story.get('scenes') or [],1):
+    check(scene.get('image'),f'phân cảnh {i} ảnh chính')
+    check(scene.get('asset'),f'phân cảnh {i} tài nguyên chính')
+    for j,v in enumerate(scene.get('assets') or [],1):check(v,f'phân cảnh {i} ảnh phụ {j}')
+if remote_refs:
+    print('LỖI: vẫn còn đường dẫn ảnh mạng trong dữ liệu dựng:')
+    for x in remote_refs:print(' -',*x)
+    sys.exit(20)
+if missing:
+    print('LỖI: ảnh cục bộ chưa được sao chép đầy đủ trước khi dựng:')
+    for x in missing:print(' -',*x)
+    sys.exit(21)
+print('KIỂM TRA ẢNH OK: toàn bộ ảnh dùng khi dựng đã nằm cục bộ trên máy chủ tạm.')
+PY
 
 python3 scripts/generate_tts.py --voice "$VOICE" --custom-voice-id "$CUSTOM_VOICE_ID" --emotion "Kể chuyện"
 cp assets/narration.mp3 remotion/public/assets/narration.mp3
@@ -40,13 +77,22 @@ python3 - <<'PY'
 import json
 p='assets/story.json'
 with open(p,encoding='utf-8') as h:s=json.load(h)
-s.update({'audio':'assets/narration.mp3','project':'documentary','template':'vox-paper-collage','style':'vox_giay_cat','motionLevel':'high','contentMode':'commercial-ai-grounded'})
+s.update({'audio':'assets/narration.mp3','project':'documentary','template':'vox-paper-collage','style':'vox_giay_cat','motionLevel':'high','contentMode':'commercial-ai-grounded','assetMode':'local-only'})
 with open(p,'w',encoding='utf-8') as h:json.dump(s,h,ensure_ascii=False,indent=2)
 PY
 
 [[ -d remotion/node_modules ]] || npm --prefix remotion install
 BROWSER="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"; ARGS=(); [[ -z "$BROWSER" ]] || ARGS+=(--browser-executable="$BROWSER")
-npx --prefix remotion remotion render remotion/src/index.ts StickTalk output/video.mp4 --props=assets/story.json --public-dir=remotion/public --codec=h264 "${ARGS[@]}"
+rm -f output/video.mp4
+# Giới hạn toàn bộ bước dựng để một khung hình lỗi không thể treo GitHub Actions vô hạn.
+RENDER_LIMIT=$((DURATION * 4 + 180))
+echo "Bắt đầu dựng từ tài nguyên cục bộ; giới hạn an toàn: ${RENDER_LIMIT}s"
+if command -v timeout >/dev/null 2>&1; then
+  timeout --signal=TERM --kill-after=20s "${RENDER_LIMIT}s" npx --prefix remotion remotion render remotion/src/index.ts StickTalk output/video.mp4 --props=assets/story.json --public-dir=remotion/public --codec=h264 --concurrency=2 "${ARGS[@]}"
+else
+  npx --prefix remotion remotion render remotion/src/index.ts StickTalk output/video.mp4 --props=assets/story.json --public-dir=remotion/public --codec=h264 --concurrency=2 "${ARGS[@]}"
+fi
+[[ -s output/video.mp4 ]] || { echo 'LỖI: Remotion kết thúc nhưng chưa tạo được MP4 hợp lệ.' >&2; exit 22; }
 ffmpeg -y -ss 00:00:03 -i output/video.mp4 -frames:v 1 -update 1 output/preview.png
 cp assets/story.json output/story.json
 [[ -f assets/research.json ]] && cp assets/research.json output/research.json || true
