@@ -20,4 +20,20 @@ const SceneView:React.FC<{scene:Scene;style:string}>=({scene,style})=>{const pre
  <Caption scene={{...scene,subtitle:{...preset.subtitle,...scene.subtitle}}} accent={preset.colors.accent} foreground={preset.colors.foreground}/>
  </AbsoluteFill></CameraEngine></TransitionEngine>};
 
-export const StickTalkVideo:React.FC<Story>=(story)=>{const extended=story as Story&{template?:string;project?:string};let start=0;return <AbsoluteFill style={{background:'#050711'}}>{story.audio&&<Audio src={staticFile(story.audio)}/>} {story.scenes.map((scene,sceneIndex)=>{const from=Math.round(start*30),durationInFrames=Math.max(1,Math.round(scene.duration*30));start+=scene.duration;const content=isVoxPaperCollageTemplate(extended.template)?<VoxScene scene={scene} story={extended} sceneIndex={sceneIndex}/>:isPaperCutDocumentaryTemplate(extended.template)?<PaperCutDocumentaryScene scene={scene as any} story={extended} sceneIndex={sceneIndex}/>:isOpenSourceMotivationTemplate(extended.template)?<OpenSourceMotivationScene scene={scene} story={extended}/>:isSketchStyle(story.style)?<PhacThaoScene scene={scene} variant={story.style}/>:<SceneView scene={scene} style={story.style}/>;return <Sequence key={scene.id} from={from} durationInFrames={durationInFrames}>{content}</Sequence>})}</AbsoluteFill>};
+export const StickTalkVideo:React.FC<Story>=(story)=>{
+ const extended=story as Story&{template?:string;project?:string};
+ const {fps,durationInFrames}=useVideoConfig();
+ let elapsedSeconds=0;
+ return <AbsoluteFill style={{background:'#050711'}}>
+  {story.audio&&<Audio src={staticFile(story.audio)}/>} 
+  {story.scenes.map((scene,sceneIndex)=>{
+    const startFrame=Math.max(0,Math.round(elapsedSeconds*fps));
+    elapsedSeconds+=Number(scene.duration||0);
+    const calculatedEnd=Math.round(elapsedSeconds*fps);
+    const endFrame=sceneIndex===story.scenes.length-1?durationInFrames:Math.min(durationInFrames,Math.max(startFrame+1,calculatedEnd));
+    const duration=Math.max(1,endFrame-startFrame);
+    const content=isVoxPaperCollageTemplate(extended.template)?<VoxScene scene={scene} story={extended} sceneIndex={sceneIndex}/>:isPaperCutDocumentaryTemplate(extended.template)?<PaperCutDocumentaryScene scene={scene as any} story={extended} sceneIndex={sceneIndex}/>:isOpenSourceMotivationTemplate(extended.template)?<OpenSourceMotivationScene scene={scene} story={extended}/>:isSketchStyle(story.style)?<PhacThaoScene scene={scene} variant={story.style}/>:<SceneView scene={scene} style={story.style}/>;
+    return <Sequence key={scene.id} from={startFrame} durationInFrames={duration}>{content}</Sequence>;
+  })}
+ </AbsoluteFill>;
+};
